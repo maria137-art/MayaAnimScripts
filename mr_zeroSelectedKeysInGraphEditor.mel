@@ -1,0 +1,17 @@
+// -------------------------------------------------------------------
+// SCRIPT: zeroSelectedKeysInGraphEditor 
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Zero the values of any keys selected in the Graph Editor.
+// 
+// -------------------------------------------------------------------
+
+
+proc zeroSelectedKeysInGraphEditor(){
+
+    keyframe -an keys -vc 0;
+}
+
+zeroSelectedKeysInGraphEditor;

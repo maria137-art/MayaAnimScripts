@@ -1,0 +1,35 @@
+// -------------------------------------------------------------------
+// SCRIPT: selectCurrentFrameKeysOnVisibleCurvesOfSelected 
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Select all keys of selected objects that are on the current frame and are on visible animCurves in the Graph Editor.
+// 
+// -------------------------------------------------------------------
+
+proc selectCurrentFrameKeysOfSelected(){
+	// Create an array from selected
+	string $sel[] = `ls -sl`;
+
+    // create array of visible curves in Graph Editor
+    // -cs flag means curves shown here
+	string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
+
+	// get current time
+	float $currentTime = `currentTime -q`;
+	// deselect all keys
+	selectKey -clear;
+		
+    //For each object selected
+	for ($i=0; $i < `size $sel`; $i++) 
+		{   
+		// from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
+		for ($curve in $visibleAnimCurvesInGraphEd){
+			selectKey -add  -t ($currentTime) ;// selects the keys on the active object from current frame onwards 
+		}		
+		print ("Done");
+	}
+}
+
+selectCurrentFrameKeysOnVisibleCurvesOfSelected;

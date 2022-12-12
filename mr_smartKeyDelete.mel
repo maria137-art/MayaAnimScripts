@@ -1,0 +1,72 @@
+// -------------------------------------------------------------------
+// SCRIPT: smartKeyDelete
+//
+// CREATORS / CREDIT: Maria Robertson / Aaron Koressel 
+//
+// DESCRIPTION: 
+// Deletes keys depending on the where the mouse pointer is hovering.
+// 
+// If mouse pointer is NOT above Graph Editor:
+//     - Delete all keys on current frame of selected objects.
+// If mouse pointer IS above Graph Editor:
+//     - Delete any selected animCurve keys.
+//     - If no keys are selected, delete any keys on the current frame that are on visible anim curves
+// 
+// -------------------------------------------------------------------
+
+proc smartKeyDelete(){   
+    // query selected keys
+    float $selectedKeys[] = `keyframe -q -sl` ;
+    // query cuurent frame
+    float $currentFrame = `currentTime -q`;
+    
+    // query panel that the mouse pointer is over
+    string $currentPanel = `getPanel -up`; 
+    
+    // if panel is not the Graph Editor
+    if($currentPanel != "graphEditor1") 
+    { 
+        print "Current panel is not Graph Editor";
+        // clear current frame keys of selected
+        timeSliderClearKey;
+    }
+    
+    // if panel is the Graph Editor
+    else {
+        print "Current panel is Graph Editor";
+        
+        //////////////////////////////////////////////////////////
+        // This section is a modified version of Aaron Koressel's ackDeleteKey script. Find his website here: http://aaronkoressel.com/index.php?nav=tools
+        //////////////////////////////////////////////////////////    
+    
+        // get graph outliner 
+        string $connection = `editor -q -mainListConnection graphEditor1GraphEd`;    
+        // get selection from outliner
+        string $visibleCurves[] = `expandSelectionConnectionAsArray $connection`;
+        
+        // create int
+        int $keyCount = 0;
+        // count selected keys
+        $keyCount = `keyframe -an keys -q -kc`; //check for selected curves
+        
+        // if no keys selected
+        if ($keyCount == 0) { 
+            /*
+            // old command, that would ignore selected curves in graph editor
+            timeSliderClearKey;
+            */
+            // for every visible curve
+            for ($curve in $visibleCurves){
+                // remove its key on the current frame
+                cutKey -t $currentFrame $curve;
+            }            
+        }     
+        
+        // if keys are selected 
+        else {
+            // delete them
+            cutKey -animation keys -clear;
+        }
+    }
+}
+smartKeyDelete;

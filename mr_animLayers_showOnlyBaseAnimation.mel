@@ -1,0 +1,17 @@
+// -------------------------------------------------------------------
+// SCRIPT: showOnlyBaseAnimation 
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Display only anim curves on the Base Animation layer.
+//
+// -------------------------------------------------------------------
+
+string $animLayers[] = getSelectedAnimLayer("AnimLayerTab");
+
+for ($item in $animLayers){
+        animLayerEditorOnSelect($item, 0);
+}
+animLayerEditorOnSelect "BaseAnimation" 1;
+

@@ -1,0 +1,25 @@
+// -------------------------------------------------------------------
+// SCRIPT: toggleLockHighlightedAttributes 
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// A toggle for locking and unlocking highlighted attributes.
+// 
+// -------------------------------------------------------------------
+
+string $selection[] = `ls -sl`;
+string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes`;
+
+for ($item in $selection){
+	for ($attributes in $selectedChannelBoxAttributes){
+	    string $individualAttribute = $item + "." + $attributes;
+	    if (`getAttr -lock $individualAttribute`) {
+            setAttr -lock false $individualAttribute; 	        
+	    } 
+	    else {  
+		    setAttr -lock true $individualAttribute;
+		}
+    }
+}
+

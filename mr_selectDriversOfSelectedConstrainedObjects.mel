@@ -1,0 +1,51 @@
+// -------------------------------------------------------------------
+// SCRIPT: selectDriversOfSelectedConstrainedObjects
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Select the drivers of any selected objects that are constrained by them.
+// 
+// -------------------------------------------------------------------
+
+
+// How to find driver of selected object -
+// Help from this link:
+// https://forums.cgsociety.org/t/how-to-query-a-constraintsOfSelected-target-list-without-knowing-the-constraint-type/1309588/2
+
+proc FindDrivers(){
+
+    string $selection[] = `ls -sl`;
+    string $constraintsOfSelected[] = `listConnections -type "constraint" $selection`;
+    string $foundTargets[];
+    
+    // remove duplicate listings in array
+    $constraintsOfSelected = stringArrayRemoveDuplicates($constraintsOfSelected);
+    
+    // for each constraint found
+    for ($item in $constraintsOfSelected ){
+        // make list of its targets
+        string $targetAttributes = ( $item + ".target" );
+        // list connections of targets
+        string $connections[] = `listConnections $targetAttributes`;
+        // remove duplicates
+        string $connectionsFlattened[] = stringArrayRemoveDuplicates($connections);
+        
+        // for each target mention, if
+        for ($constraint in $connectionsFlattened){
+            if ($constraint != $item ){
+                print ( $constraint + " is a target" ); 
+                
+                $foundTargets[size($foundTargets)] = $constraint;
+            }       
+        }
+    }
+    select $foundTargets;
+}
+
+
+FindDrivers();
+
+
+
+ 

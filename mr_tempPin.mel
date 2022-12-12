@@ -1,0 +1,57 @@
+// -------------------------------------------------------------------
+//  SCRIPT:        		tempPin
+//
+//  CREATORS / CREDIT:	Maria Robertson
+//
+//  DATE:           	2021-03-31
+//
+//  DESCRIPTION:    	Pins selected object/s to a temp locator, to be moved in worldspace. When script is run again, constrained objects are keyed on current frame, then pin is deleted.
+//
+//  USAGE:				Select object to be constrainted. Once edits are made, run script again to key object and delete temp locator.
+//                                        
+// -------------------------------------------------------------------
+ 
+if (`objExists TEMP_worldspace_locator`) 
+    {
+    select $gTempPinArray ;   
+    SetKeyTranslate;
+    SetKeyRotate;
+    
+    delete TEMP_worldspace_locator ;
+    }
+        else 
+        {     
+        global string $gTempPinArray[];
+        $gTempPinArray = `ls -sl`;  
+        
+        // makes a list (array) of your selected objects
+        spaceLocator -p 0 0 0 -n TEMP_worldspace_locator ;
+        setAttr "TEMP_worldspace_locatorShape.localScaleY" 10;
+        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10;
+        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10;
+
+         
+        // for every item you have selected, do this
+            for ($item in $gTempPinArray) 
+                { 
+            	select $item;
+            	select -tgl TEMP_worldspace_locator ;
+            	pointConstraint;
+            	orientConstraint;
+                }
+    
+            	select TEMP_worldspace_locator ;
+            	delete -constraints;
+            	
+            for ($item in $gTempPinArray) 
+                {    	
+            	select TEMP_worldspace_locator ;
+            	select -tgl $item ;
+            	pointConstraint -mo -weight 1;
+            	orientConstraint -mo -weight 1;		   
+                }  
+                
+        select TEMP_worldspace_locator ; 
+        }     	
+ 
+ 
