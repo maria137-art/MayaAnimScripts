@@ -1,0 +1,18 @@
+// -------------------------------------------------------------------
+// SCRIPT: moveHalfway_float
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Move Time Slider to the nearest floating number frame inbetween the next and previous keyframes.
+//
+// -------------------------------------------------------------------
+
+float $prevKeyframe = `findKeyframe -timeSlider -which previous`;
+
+float $nextKeyframe = `findKeyframe -timeSlider -which next`;
+
+float $midPoint = ($nextKeyframe + $prevKeyframe)/2;
+currentTime $midPoint;
+
+

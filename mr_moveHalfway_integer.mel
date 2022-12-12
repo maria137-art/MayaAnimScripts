@@ -1,0 +1,18 @@
+// -------------------------------------------------------------------
+// SCRIPT: moveHalfway_integer
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Move Time Slider to the nearest whole number frame inbetween the next and previous keyframes.
+//
+// -------------------------------------------------------------------
+
+int $prevKeyframe = `findKeyframe -timeSlider -which previous`;
+
+int $nextKeyframe = `findKeyframe -timeSlider -which next`;
+
+int $midPoint = ($nextKeyframe + $prevKeyframe)/2;
+currentTime $midPoint;
+
+
