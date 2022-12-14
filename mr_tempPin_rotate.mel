@@ -10,19 +10,19 @@
 // -------------------------------------------------------------------
 
 proc TempPinRotate(){
-
-if (`objExists TEMP_ROT_worldspace_locator`) 
-    {
-    select $gTempPinArray ;   
-    SetKeyTranslate;
-    SetKeyRotate;
+    string $objectsToPin[]; 
     
-    delete TEMP_ROT_worldspace_locator ;
+    if (`objExists TEMP_ROT_worldspace_locator`) {
+        select $objectsToPin ;   
+        SetKeyTranslate;
+        SetKeyRotate;
+        
+        delete TEMP_ROT_worldspace_locator ;
     }
-        else 
-        {     
-        global string $gTempPinArray[];
-        $gTempPinArray = `ls -sl`;  
+    
+    else {     
+        global string $objectsToPin[];
+        $objectsToPin = `ls -sl`;  
         
         // makes a list (array) of your selected objects // 
         spaceLocator -p 0 0 0 -n TEMP_ROT_worldspace_locator ;
@@ -32,26 +32,19 @@ if (`objExists TEMP_ROT_worldspace_locator`)
 
          
         // for every item you have selected, do this for loop // 
-            for ($item in $gTempPinArray) 
-                { 
-            	select $item;
-            	select -tgl TEMP_ROT_worldspace_locator ;
-            	pointConstraint;
-            	orientConstraint;
+            for ($item in $objectsToPin) { 
+            	pointConstraint $item TEMP_ROT_worldspace_locator;
+            	orientConstraint $item TEMP_ROT_worldspace_locator;
                 }
     
-            	select TEMP_ROT_worldspace_locator ;
-            	delete -constraints;
+            	delete -cn TEMP_ROT_worldspace_locator ;
             	
-            for ($item in $gTempPinArray) 
-                {    	
-            	select TEMP_ROT_worldspace_locator ;
-            	select -tgl $item ;
-            	orientConstraint -mo -weight 1;		   
+            for ($item in $objectsToPin) {    	
+            	orientConstraint -mo -weight 1 TEMP_ROT_worldspace_locator $item ;		   
                 }  
                 
         select TEMP_ROT_worldspace_locator ; 
-        }     	
+    }     	
 
 }
 

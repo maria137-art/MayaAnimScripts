@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------
-// SCRIPT: selectCurrentFrameKeysOfSelected 
+// SCRIPT: selectCurrentKeysOfSelected 
 //
 // CREATORS / CREDIT: Maria Robertson
 //
@@ -8,7 +8,7 @@
 // 
 // -------------------------------------------------------------------
 
-proc selectCurrentFrameKeysOfSelected(){
+proc SelectCurrentKeysOfSelected(){
     // Create an array from selected
     string $sel[] = `ls -sl`;
     
@@ -27,7 +27,6 @@ proc selectCurrentFrameKeysOfSelected(){
 		// add any keys at the current time to key selection
         selectKey -add  -t ($currentTime) ;
     }    
-    print ("Done");
 }
 
-selectCurrentFrameKeysOfSelected;
+SelectCurrentKeysOfSelected;

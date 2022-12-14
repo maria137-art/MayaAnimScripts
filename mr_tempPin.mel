@@ -11,19 +11,18 @@
 // -------------------------------------------------------------------
 
 proc TempPin(){
-
-if (`objExists TEMP_worldspace_locator`) 
-    {
-    select $gTempPinArray ;   
-    SetKeyTranslate;
-    SetKeyRotate;
+    string $objectsToPin[];  
     
-    delete TEMP_worldspace_locator ;
+    if (`objExists TEMP_worldspace_locator`) {
+        select $objectsToPin ;   
+        SetKeyTranslate;
+        SetKeyRotate;
+        
+        delete TEMP_worldspace_locator ;
     }
-        else 
-        {     
-        global string $gTempPinArray[];
-        $gTempPinArray = `ls -sl`;  
+    
+    else {     
+        string $objectsToPin[] = `ls -sl`;  
         
         // makes a list (array) of your selected objects
         spaceLocator -p 0 0 0 -n TEMP_worldspace_locator ;
@@ -33,27 +32,20 @@ if (`objExists TEMP_worldspace_locator`)
 
          
         // for every item you have selected, do this
-            for ($item in $gTempPinArray) 
-                { 
-            	select $item;
-            	select -tgl TEMP_worldspace_locator ;
-            	pointConstraint;
-            	orientConstraint;
-                }
-    
-            	select TEMP_worldspace_locator ;
-            	delete -constraints;
-            	
-            for ($item in $gTempPinArray) 
-                {    	
-            	select TEMP_worldspace_locator ;
-            	select -tgl $item ;
-            	pointConstraint -mo -weight 1;
-            	orientConstraint -mo -weight 1;		   
-                }  
+        for ($item in $objectsToPin) { 
+            	pointConstraint $item TEMP_worldspace_locator;
+            	orientConstraint $item TEMP_worldspace_locator;
+        }
+
+    	delete -cn TEMP_worldspace_locator ;
+
+        for ($item in $objectsToPin) {    	
+        	pointConstraint -mo -w 1 TEMP_worldspace_locator $item ;
+        	orientConstraint -mo -w 1 TEMP_worldspace_locator $item ;   
+        }  
                 
-        select TEMP_worldspace_locator ; 
-        }     	
+        select TEMP_worldspace_locator ;         
+    }     	
  }
 
 TempPin;

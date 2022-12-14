@@ -4,15 +4,19 @@
 // CREATORS / CREDIT: Maria Robertson
 //
 // DESCRIPTION: 
-// Move Time Slider to the nearest whole number frame inbetween the next and previous keyframes.
+// Move Time Slider to the nearest integering number frame inbetween the next and previous keyframes.
 //
 // -------------------------------------------------------------------
 
-int $prevKeyframe = `findKeyframe -timeSlider -which previous`;
+proc MoveHalfway_integer(){
+    // declare keyframes
+    integer $prevKeyframe = `findKeyframe -timeSlider -which previous`;  
+    integer $nextKeyframe = `findKeyframe -timeSlider -which next`;
+    
+    // get midpoint
+    integer $midPoint = ($nextKeyframe + $prevKeyframe)/2;
+    currentTime $midPoint;   
+}
 
-int $nextKeyframe = `findKeyframe -timeSlider -which next`;
-
-int $midPoint = ($nextKeyframe + $prevKeyframe)/2;
-currentTime $midPoint;
-
+MoveHalfway_integer;
 

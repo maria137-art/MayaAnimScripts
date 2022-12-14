@@ -8,10 +8,11 @@
 //
 // -------------------------------------------------------------------
 
-string $animLayers[] = getSelectedAnimLayer("AnimLayerTab");
-
-for ($item in $animLayers){
-        animLayerEditorOnSelect($item, 0);
+proc ShowOnlyBaseAnimation(){
+	// unhighlight all existing animation layers
+    setSelectedForAllLayers(0);
+    // highlight BaseAnimation
+    animLayerEditorOnSelect "BaseAnimation" 1;
 }
-animLayerEditorOnSelect "BaseAnimation" 1;
 
+ShowOnlyBaseAnimation;

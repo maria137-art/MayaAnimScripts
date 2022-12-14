@@ -1,33 +1,36 @@
 // -------------------------------------------------------------------
-// SCRIPT: clearAttributeKeys 
+// SCRIPT: clearAttributeKeys
 //
 // CREATORS / CREDIT: Maria Robertson
 //
 // DESCRIPTION: 
-// Delete all keys on any attributes highlighted in the Channel Box.
+// Clear all keys on highlighted attributes in the Channel Box for selected objects.
+// If no attributes are highlighted, all keys on selected objects will be cleared.
 // 
 // -------------------------------------------------------------------
 
-proc clearAttributeKeys(){
+proc ClearAttributeKeys(){
  
     // create array from selected objects
-    string $sel [] = ` ls -sl`;  
+    string $sel[] = ` ls -sl`;  
     // create array from highlighted attributes in channel box 
-    string $selAttr [] = ` channelBox -q -sma mainChannelBox`;
+    string $selAttr[] = ` channelBox -q -sma mainChannelBox`;
     
-	// if nothing highlighted, remove all attribute keys
-    if (size($selAttr) == 0){
+	// if nothing is highlighted, clear all attribute keys
+    if (size($selAttr) == 0) {
         cutKey;                
     }
     
-	// otherwise
-    else{
-        for ($node in $sel) {
-            for ($nodeAttr in $selAttr) {
-                cutKey ( $node+"."+$nodeAttr );
+    else {
+        // for every object that is selected
+        for ($item in $sel) {
+            // for each of its highlighted attribute
+            for ($attr in $selAttr) {
+                // clear it of keys
+                cutKey ($item+"."+$attr);
             }
         } 
     }
 }
 
-clearAttributeKeys();
+ClearAttributeKeys();

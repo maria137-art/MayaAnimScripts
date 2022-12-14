@@ -8,11 +8,15 @@
 //
 // -------------------------------------------------------------------
 
-float $prevKeyframe = `findKeyframe -timeSlider -which previous`;
+proc MoveHalfway_float(){
+    // declare keyframes
+    float $prevKeyframe = `findKeyframe -timeSlider -which previous`;  
+    float $nextKeyframe = `findKeyframe -timeSlider -which next`;
+    
+    // get midpoint
+    float $midPoint = ($nextKeyframe + $prevKeyframe)/2;
+    currentTime $midPoint;   
+}
 
-float $nextKeyframe = `findKeyframe -timeSlider -which next`;
-
-float $midPoint = ($nextKeyframe + $prevKeyframe)/2;
-currentTime $midPoint;
-
+MoveHalfway_float;
 

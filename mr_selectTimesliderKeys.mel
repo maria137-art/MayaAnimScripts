@@ -1,73 +1,68 @@
 // -------------------------------------------------------------------
 // SCRIPT: selectTimesliderKeys
 //
-// CREATORS / CREDIT: Maria Robertson / Brian Horgan
+// CREATORS / CREDIT: Maria Robertson / Brian Horgan / Jørn-Harald Paulsen
 //
 // DESCRIPTION: 
 // Select keys of selected objects within the timeslider range.
 //
-// A modification of a script by Brian Horgan, kindly provided on CGSociety:
+// A modification of a script by Brian Horgan, kindly provided on CGSociety,
+// with snippets from Jørn-Harald Paulsen's jh_getKeyObjs:
 // https://forums.cgsociety.org/t/selecting-all-keys-on-a-certain-frame/1563705/2
-//
-// USAGE: 
-// The script works by:
-// - Creating an array of selected objects
-// - Deselecting any selected objects without keyframes
-// - Selecting all keyframes of the selected objects that are both
-// 		- on visible curves in the Graph Editor
-// 		- and are within the timeslider range  
 //
 // Found this helpful when animating scenes with multiple shots inside.
 // -------------------------------------------------------------------
 
-// -------------------------------------------------------------------
-// 01. DEFINE TIMESLIDER RANGE
-// -------------------------------------------------------------------
-
-// define timeslider range
-float $timesliderStart = `playbackOptions -q -min`;
-float $timesliderEnd = `playbackOptions -q -max`;
-
-// create array of visible curves in default Graph Editor
-string $visibleAndimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
-
-
-// -------------------------------------------------------------------
-// 02. CREATE ARRAY OF SELECTED OBJECTS
-// -------------------------------------------------------------------
-
-//select the objects in the scene that have keys on them - from jh_getKeyObjs
-
-//Create an array from selected objects
-string $selectedObjects[] = `ls -sl`; 
-
-//Clear selection
-select -cl; 
-
-
-// -------------------------------------------------------------------
-// 03. TOGGLE-SELECT OBJECTS THAT ONLY HAVE KEYFRAMES
-// -------------------------------------------------------------------
-
-//For each object in the $selectedObjects array
-for ($i=0; $i < `size $selectedObjects`; $i++) 
-{
-    //If the object has any keyframe values, toggle-select it
-    if(`keyframe -q -keyframeCount $selectedObjects[$i]` != 0)
-        {
-        select -add $selectedObjects[$i];      
-        }
+proc SelectTimesliderKeys() {
+    
+    // -------------------------------------------------------------------
+    // 01. DEFINE TIMESLIDER RANGE
+    // -------------------------------------------------------------------
+    
+    // define timeslider range
+    float $startTime = `playbackOptions -q -min`;
+    float $endTime = `playbackOptions -q -max`;
+    
+    // create array of visible curves in default Graph Editor
+    string $visibleAndimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
+    
+    
+    // -------------------------------------------------------------------
+    // 02. CREATE ARRAY OF SELECTED OBJECTS
+    // -------------------------------------------------------------------
+     
+    // create an array of selected objects
+    string $sel[] = `ls -sl`;    
+    // deselect everything
+    select -cl; 
+    
+    
+    // -------------------------------------------------------------------
+    // 03. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES
+    // -------------------------------------------------------------------
+    
+    // for each object in $sel
+    for ($i=0; $i < `size $sel`; $i++) 
+    {
+        // if object has any keyframe values, select it
+        if(`keyframe -q -keyframeCount $sel[$i]` != 0)
+            {
+            select -add $sel[$i];      
+            }
+    }
+    
+    
+    // -------------------------------------------------------------------
+    // 04. SELECT KEYFRAMES WITHIN TIMESLIDER RANGE
+    // -------------------------------------------------------------------
+    
+    // clear key selection
+    selectKey -clear;
+    
+    // from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
+    for ($curve in $visibleAndimCurvesInGraphEd){
+        selectKey -tgl -time ($startTime + ":" + $endTime) $curve;
+    }
 }
 
-
-// -------------------------------------------------------------------
-// 04. SELECT KEYFRAMES WITHIN TIMESLIDER FOR SELECTED OBJECTS
-// -------------------------------------------------------------------
-
-// clear key selection
-selectKey -clear;
-
-// from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
-for ($curve in $visibleAndimCurvesInGraphEd){
-    selectKey -tgl -time ($timesliderStart + ":" + $timesliderEnd) $curve;
-}
+SelectTimesliderKeys;

@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------
-// SCRIPT: selectCurrentFrameKeysOnVisibleCurvesOfSelected 
+// SCRIPT: selectCurrentKeysOnVisibleCurvesOfSelected 
 //
 // CREATORS / CREDIT: Maria Robertson
 //
@@ -8,7 +8,7 @@
 // 
 // -------------------------------------------------------------------
 
-proc selectCurrentFrameKeysOfSelected(){
+proc SelectCurrentKeysOnVisibleCurvesOfSelected(){
 	// Create an array from selected
 	string $sel[] = `ls -sl`;
 
@@ -26,10 +26,10 @@ proc selectCurrentFrameKeysOfSelected(){
 		{   
 		// from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
 		for ($curve in $visibleAnimCurvesInGraphEd){
-			selectKey -add  -t ($currentTime) ;// selects the keys on the active object from current frame onwards 
+		    // select keys on current frame onwards 
+			selectKey -add  -t ($currentTime) ;
 		}		
-		print ("Done");
 	}
 }
 
-selectCurrentFrameKeysOnVisibleCurvesOfSelected;
+SelectCurrentKeysOnVisibleCurvesOfSelected;

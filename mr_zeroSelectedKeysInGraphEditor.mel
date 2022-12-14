@@ -9,9 +9,10 @@
 // -------------------------------------------------------------------
 
 
-proc zeroSelectedKeysInGraphEditor(){
+proc ZeroSelectedKeysInGraphEditor(){
 
     keyframe -an keys -vc 0;
+	
 }
 
-zeroSelectedKeysInGraphEditor;
+ZeroSelectedKeysInGraphEditor;

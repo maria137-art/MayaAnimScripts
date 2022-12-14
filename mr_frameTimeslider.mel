@@ -1,0 +1,58 @@
+// -------------------------------------------------------------------
+// SCRIPT: frameTimeslider
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DATE: 2022-12-14
+//
+// DESCRIPTION: 
+// A version of FrameSelectedWithoutChildren.
+// - Only frames within the Time Slider range, rather than the entire scene.
+// - Only shows animCurves of highlighted animation animLayer.
+// 
+// Can be helpful as a hotkey, if wanted to focus on a range and not select relevant keys each time you want to frame it.
+// 
+// -------------------------------------------------------------------
+
+proc FrameInsideFrameRange(){
+
+    // -------------------------------------------------------------------
+    // 01. DEFINE FRAME VIEW
+    // -------------------------------------------------------------------
+ 
+    // define timeslider range
+    float $start = `playbackOptions -q -min` ;
+    float $end = `playbackOptions -q -max` ;
+    
+    // define difference (use abs to account for negative frame numbers)
+    $range = `abs ($start - $end)`;
+   
+    // value to multiply timeslider range, to set a comfortable buffer amount
+    float $bufferDivider = 0.1 ;
+      
+    // define buffer
+    float $frameBuffer =  $range * $bufferDivider ;         
+   
+    // reframe the Graph Editor
+    animView -startTime (`playbackOptions -query -minTime` - $frameBuffer) -endTime (`playbackOptions -query -maxTime` + $frameBuffer) graphEditor1GraphEd;
+
+    // -------------------------------------------------------------------
+    // 01. SHOW ONLY ANIM CURVES ON HIGHLIGHTED ANIMATION LAYERS
+    // -------------------------------------------------------------------
+
+    // create array of highlighted animation animLayer
+    string $animLayer[] = getSelectedAnimLayer("AnimLayerTab") ;
+       
+    // for every animation layer
+    for ($item in $animLayer){
+        // rehighlight it, to refresh the Graph Editor anim curves
+        animLayerEditorOnSelect($item, 1);
+    }
+    
+}
+
+
+FrameInsideFrameRange;
+
+
+ 

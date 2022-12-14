@@ -8,7 +8,8 @@
 // 
 // -------------------------------------------------------------------
 
-proc zeroSelectedChannelBoxAttr(){
+proc ZeroSelectedChannelBoxAttr(){
+    
     // create array from selection
     string $sel[] = `ls -sl`;
     // create array of selected attributes in the Channel Box
@@ -23,4 +24,5 @@ proc zeroSelectedChannelBoxAttr(){
         }
     }    
 }
-zeroSelectedChannelBoxAttr()
+
+ZeroSelectedChannelBoxAttr;

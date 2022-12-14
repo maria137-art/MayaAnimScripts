@@ -8,18 +8,34 @@
 // 
 // -------------------------------------------------------------------
 
-string $selection[] = `ls -sl`;
-string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes`;
+proc ToggleLockHighlightedAttributes(){
+    
+    // declare variables
+    string $sel[] = `ls -sl`;
+    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes`;
+    
 
-for ($item in $selection){
-	for ($attributes in $selectedChannelBoxAttributes){
-	    string $individualAttribute = $item + "." + $attributes;
-	    if (`getAttr -lock $individualAttribute`) {
-            setAttr -lock false $individualAttribute; 	        
-	    } 
-	    else {  
-		    setAttr -lock true $individualAttribute;
-		}
+    // for every selected item      
+    for ($item in $sel){
+        
+        // for each of its highlighted attributes
+    	for ($attr in $selectedChannelBoxAttributes){
+    	    
+    	    string $individualAttr = $item + "." + $attr;
+    	    
+    	    // if its locked, unlock it
+    	    if (`getAttr -lock $individualAttr`) {
+                setAttr -lock false $individualAttr; 	        
+    	    } 
+    	    
+    	    // otherwise lock it
+    	    else {  
+    		    setAttr -lock true $individualAttr;
+    		}
+        }
     }
+
 }
+
+ToggleLockHighlightedAttributes;
 

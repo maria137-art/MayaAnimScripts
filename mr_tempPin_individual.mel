@@ -11,11 +11,11 @@
 // -------------------------------------------------------------------
 
 proc TempPinIndividual(){
-
-// -------------------------------------------------------------------
-// 01. CHECK IF TEMP GROUP ALREADY EXISTS
-// -------------------------------------------------------------------
     
+    // -------------------------------------------------------------------
+    // 01. CHECK IF TEMP GROUP ALREADY EXISTS
+    // -------------------------------------------------------------------
+        
     // if TEMP_worldspace_locator_grp already exists
     if (`objExists TEMP_worldspace_locator_grp`) {
         
@@ -26,11 +26,11 @@ proc TempPinIndividual(){
         // delete
         delete TEMP_worldspace_locator_grp;
     }
-
-// -------------------------------------------------------------------
-// 02. CREATE TEMP PIN FOR EACH SELECTED OBJECT
-// -------------------------------------------------------------------
     
+    // -------------------------------------------------------------------
+    // 02. CREATE TEMP PIN FOR EACH SELECTED OBJECT
+    // -------------------------------------------------------------------
+        
     else {     
         // create array from selected
         string $sel[] = `ls -sl`;           

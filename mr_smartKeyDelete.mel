@@ -14,7 +14,7 @@
 // 
 // -------------------------------------------------------------------
 
-proc smartKeyDelete(){   
+proc SmartKeyDelete(){   
     // query selected keys
     float $selectedKeys[] = `keyframe -q -sl` ;
     // query cuurent frame
@@ -47,7 +47,8 @@ proc smartKeyDelete(){
         // create int
         int $keyCount = 0;
         // count selected keys
-        $keyCount = `keyframe -an keys -q -kc`; //check for selected curves
+        // check for selected curves
+        $keyCount = `keyframe -an keys -q -kc`;
         
         // if no keys selected
         if ($keyCount == 0) { 
@@ -69,4 +70,5 @@ proc smartKeyDelete(){
         }
     }
 }
-smartKeyDelete;
+
+SmartKeyDelete;
