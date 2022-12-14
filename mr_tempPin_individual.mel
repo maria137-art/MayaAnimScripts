@@ -1,0 +1,73 @@
+// -------------------------------------------------------------------
+// SCRIPT: tempPin_individual
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// - Pins selected object/s to a temp locator, to be moved in worldspace. 
+// - When script is run again, constrained objects are keyed on the current frame, and the pin then deleted.
+// 
+// 
+// -------------------------------------------------------------------
+
+proc TempPinIndividual(){
+
+// -------------------------------------------------------------------
+// 01. CHECK IF TEMP GROUP ALREADY EXISTS
+// -------------------------------------------------------------------
+    
+    // if TEMP_worldspace_locator_grp already exists
+    if (`objExists TEMP_worldspace_locator_grp`) {
+        
+        // set key on all children of TEMP_worldspace_locator_grp
+        select (`listRelatives -c TEMP_worldspace_locator_grp`);
+        SetKeyTranslate;
+        SetKeyRotate;
+        // delete
+        delete TEMP_worldspace_locator_grp;
+    }
+
+// -------------------------------------------------------------------
+// 02. CREATE TEMP PIN FOR EACH SELECTED OBJECT
+// -------------------------------------------------------------------
+    
+    else {     
+        // create array from selected
+        string $sel[] = `ls -sl`;           
+                        
+        // if nothing is selected
+    	if (size($sel) == 0){
+        	// reminds you to select something //
+        	// make sure -title is unique, otherwise dialog won't trigger
+        	confirmDialog -title "Error" -message "Select object/s to pin.";
+        }   
+        
+        else{    
+            // create group
+            group -em -name TEMP_worldspace_locator_grp;
+             
+            // for every item selected
+            for ($item in $sel) { 
+                // create a temp
+                $tempPin = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")`; 
+                                      	            	            	
+            	pointConstraint $item $tempPin;
+            	orientConstraint $item $tempPin;
+    
+            	delete -cn $tempPin; 
+            	
+            	// place locators in group
+            	parent $tempPin TEMP_worldspace_locator_grp;	
+            	            	
+            	// reverse constraints
+            	pointConstraint -mo -w 1 $tempPin $item ;
+            	orientConstraint -mo -w 1 $tempPin $item ;  	
+            }	     	           	
+        }              
+        // select group before exiting
+        select TEMP_worldspace_locator_grp;               
+    }     	
+}
+
+TempPinIndividual;
+

@@ -1,0 +1,58 @@
+// -------------------------------------------------------------------
+// SCRIPT: tempPin_rotate
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+//
+// DESCRIPTION: Pins selected object/s to a single temp locator, to be only rotated in worldspace. When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
+//
+//                                        
+// -------------------------------------------------------------------
+
+proc TempPinRotate(){
+
+if (`objExists TEMP_ROT_worldspace_locator`) 
+    {
+    select $gTempPinArray ;   
+    SetKeyTranslate;
+    SetKeyRotate;
+    
+    delete TEMP_ROT_worldspace_locator ;
+    }
+        else 
+        {     
+        global string $gTempPinArray[];
+        $gTempPinArray = `ls -sl`;  
+        
+        // makes a list (array) of your selected objects // 
+        spaceLocator -p 0 0 0 -n TEMP_ROT_worldspace_locator ;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleY" 10;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10;
+
+         
+        // for every item you have selected, do this for loop // 
+            for ($item in $gTempPinArray) 
+                { 
+            	select $item;
+            	select -tgl TEMP_ROT_worldspace_locator ;
+            	pointConstraint;
+            	orientConstraint;
+                }
+    
+            	select TEMP_ROT_worldspace_locator ;
+            	delete -constraints;
+            	
+            for ($item in $gTempPinArray) 
+                {    	
+            	select TEMP_ROT_worldspace_locator ;
+            	select -tgl $item ;
+            	orientConstraint -mo -weight 1;		   
+                }  
+                
+        select TEMP_ROT_worldspace_locator ; 
+        }     	
+
+}
+
+TempPinRotate;

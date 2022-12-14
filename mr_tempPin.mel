@@ -1,16 +1,17 @@
 // -------------------------------------------------------------------
-//  SCRIPT:        		tempPin
+// SCRIPT: tempPin
 //
-//  CREATORS / CREDIT:	Maria Robertson
+// CREATORS / CREDIT: Maria Robertson
 //
-//  DATE:           	2021-03-31
+// DATE: 2021-03-31
 //
-//  DESCRIPTION:    	Pins selected object/s to a temp locator, to be moved in worldspace. When script is run again, constrained objects are keyed on current frame, then pin is deleted.
+// DESCRIPTION: Pins selected object/s to a single temp locator, to be moved in worldspace. When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
 //
-//  USAGE:				Select object to be constrainted. Once edits are made, run script again to key object and delete temp locator.
 //                                        
 // -------------------------------------------------------------------
- 
+
+proc TempPin(){
+
 if (`objExists TEMP_worldspace_locator`) 
     {
     select $gTempPinArray ;   
@@ -53,5 +54,6 @@ if (`objExists TEMP_worldspace_locator`)
                 
         select TEMP_worldspace_locator ; 
         }     	
- 
- 
+ }
+
+TempPin;

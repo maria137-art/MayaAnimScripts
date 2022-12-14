@@ -1,0 +1,111 @@
+// -------------------------------------------------------------------
+// SCRIPT: tempPin_pivotFromSelected
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// DESCRIPTION: 
+// Pivot a temp pin / temp pin group created from mr_ scripts from the last selected object.
+//
+// - Creates an offset group for an existing TEMP_worldspace_locator group
+// - Zeroes out it's values and maintain rotation axis
+// - Then have that group pivoted by the current selected object
+// 
+// REQUIREMENTS:
+// Must have mr_findDriversOfSelected.mel in order to use the procedure FindDriversOfSelected
+//
+// Can be used with following scripts:
+// - mr_tempPin.mel
+// - mr_tempPinIndividual.mel
+//
+
+// RESEARCH THAT HELPED:
+// For listing relatives - https://forums.cgsociety.org/t/list-all-parents-of-an-object-mel/1806687/2
+// For better understanding MEL and strings / arrays - https://forums.cgsociety.org/t/mel-compare-strings/1487805/4
+// -------------------------------------------------------------------
+
+proc TempPinPivotFromSelected(){
+    
+    // declare variables
+    string $target = "TEMP_worldspace_locator";
+    string $pivot[0] = `ls -sl`;
+    
+    // -------------------------------------------------------------------
+    // 01. CHECK IF OFFSET GROUP ALREADY EXISTS
+    // -------------------------------------------------------------------
+    
+            
+    // if the offset group already exists
+    if (`objExists TEMP_pivot_offset`) 
+        {
+        // set keys on it
+        select $target;   
+        SetKeyTranslate;
+        SetKeyRotate;
+        
+        parent -w $target;
+        /*
+        // select the original drivers of the offset
+		// uses procedure from the script "mr_findDriversOfSelected.mel"
+        FindDriversOfSelected;
+        */
+        
+        // delete the group
+        delete TEMP_pivot_offset ;
+        }
+        
+    // -------------------------------------------------------------------
+    // 02. MAIN SCRIPT
+    // -------------------------------------------------------------------   
+            
+    // if a TEMP_worldspace_locator exists
+    else if (`objExists TEMP_worldspace_locator`) {
+                
+        // -------------------------------------------------------------------
+        // 02A. CHECK SELECTION
+        // -------------------------------------------------------------------       
+         
+        // if nothing or more than one object is selected
+    	if (size($pivot) != 1){
+        	// give error
+        	// NOTE - make sure -title is unique, otherwise dialog won't trigger
+        	confirmDialog -title "Error A" -message "Select one object to pivot from.";
+        }    
+        
+        // if a TEMP_worldspace_locator is selected as the pivot
+        else if ($pivot[0] == $target){
+            // give error
+            confirmDialog -title "Error B" -message "Can't use a Temp Pin as a pivot.";
+        }
+    
+        // -------------------------------------------------------------------
+        // 02B. CREATE OFFSET GROUP TO PIVOT
+        // -------------------------------------------------------------------       
+        
+        else{
+            // create offset group to pivot
+            string $nullGroup = `group -em -name TEMP_pivot_offset`;     
+            parentConstraint -w 1 $target $nullGroup;   
+            // NOTE - have to specifically name the constraint to delete, otherwise the null
+            // group itself gets deleted too if "delete -cn" is used     
+            delete ($nullGroup + "_parentConstraint1");
+            
+            // parent constrain target to offset group
+            parent $target $nullGroup;            
+            parentConstraint -mo -w 1 $pivot $nullGroup;            
+            select $pivot;
+        }
+    }
+    
+     // -------------------------------------------------------------------
+    // 03. GIVE ERROR IF NO TEMP PINS EXIST
+    // -------------------------------------------------------------------
+       
+    // if a TEMP_worldspace_locator doesn't exist
+    else {
+        // reminds you to select something //
+        // make sure -title is unique, otherwise dialog won't trigger
+        confirmDialog -title "Error C" -message "Create TEMP_worldspace_locators first.";  
+    }
+}
+
+TempPinPivotFromSelected;
