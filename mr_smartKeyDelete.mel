@@ -26,14 +26,14 @@ proc SmartKeyDelete(){
     // if panel is not the Graph Editor
     if($currentPanel != "graphEditor1") 
     { 
-        print "Current panel is not Graph Editor";
+        print "Current panel is not Graph Editor. \n";
         // clear current frame keys of selected
         timeSliderClearKey;
     }
     
     // if panel is the Graph Editor
     else {
-        print "Current panel is Graph Editor";
+        print "Current panel is Graph Editor. \n";
         
         //////////////////////////////////////////////////////////
         // This section is a modified version of Aaron Koressel's ackDeleteKey script. Find his website here: http://aaronkoressel.com/index.php?nav=tools

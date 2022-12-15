@@ -1,0 +1,328 @@
+// -------------------------------------------------------------------
+// SCRIPT: changeWorldspacePivot 
+//
+// CREATORS / CREDIT: Maria Robertson / Daniel Fotheringham
+//
+// DESCRIPTION: 
+// Based on Daniel Fotheringham's demo: https://youtu.be/MjYXR0Ts1sE?t=3087 at 51:27 - 54:00
+//
+// Bake objects in the parent space of a worldspace pivot.
+// Makes it easier to clean curves when travelling in different directions.
+//
+// e.g. if a character travels diagonally in a straight line, the movement is represented in trans x and z axis.
+// But if baked inside a pivot pointing in the same direction, it will be represented by just trans z.
+//
+// -------------------------------------------------------------------
+
+// INSTRUCTIONS:
+// This scripts works differently depending when it is run and what is selected when activated.
+//
+// PHASE 1:
+// If it doesn't already exist, create a locator called TEMP_PIVOT_loc.
+// - If nothing is selected, pivot will be created at origin.
+// - If one or more objects are selected, pivot will be created at the average position and orientation the 
+// object/s are travelling in, between the current and next frame.
+//
+// PHASE 2:
+// If TEMP_PIVOT_loc exists with no children, create baked offset locators inside the pivot
+// for each selected object.
+//
+// PHASE 3:
+// If TEMP_PIVOT_loc contains children, bake the originally selected objects to offset, and delete the pivot.
+//
+// -------------------------------------------------------------------
+// 
+// WISH LIST
+// ============
+// - Save control keys + tangents, and apply it to the bake
+// - Delete redundant keys
+// 
+// RESEARCH THAT HELPED
+// Why current time didn't work - https://forums.cgsociety.org/t/using-getattr-t-to-do-time-delay/805166/2
+//
+// -------------------------------------------------------------------
+
+proc WorldspacePivot(){
+    
+    // declare strings  
+    string $sel[] = `ls -sl` ;
+	string $tempPivot = "TEMP_PIVOT_loc" ;	   	
+	string $pivotLocators[] ; 
+    // clear $pivotLocators, in case already used
+    clear $pivotLocators ; 
+    	    
+    // -------------------------------------------------------------------
+    // 01. IF TEMP_PIVOT_loc ALREADY EXISTS
+    // -------------------------------------------------------------------   
+    
+    if(`objExists "TEMP_PIVOT_loc"`) {
+            	   	
+    	string $pivotChildren[] = `listRelatives -c $tempPivot` ;	
+    	
+        // -------------------------------------------------------------------
+        // 02. IF TEMP PIVOT HAS CHILDREN, BAKE THE ORIGINAL TARGETS AND DELETE PIVOT
+        // -------------------------------------------------------------------   
+  	
+        if (size ($pivotChildren) > 1) {
+            select $pivotChildren ;
+            FindConstraintTargets ;
+            
+        	BakeSelected ;    
+        	
+        	delete $tempPivot ;
+        }
+
+        else {    
+
+            // -------------------------------------------------------------------
+            // 03. GIVE ERROR IF NOTHING SELECTED   
+            // ------------------------------------------------------------------- 
+                     
+            // give error if nothing is selected
+    		if (size($sel) == 0){
+        		// reminds you to select something //
+        		// make sure -title is unique, otherwise dialog won't trigger
+        		confirmDialog -title "Error A" -message "Select object/s to pivot." ;
+        	}  
+        	
+       	    // -------------------------------------------------------------------
+            // 03. RUN SCRIPT ON EACH SELECTED OBJECT
+            // ------------------------------------------------------------------- 
+                	
+        	// for each control selected
+        	for ($item in $sel) {	   
+        	 
+                // -------------------------------------------------------------------
+                // 04. GIVE ERROR IF TEMP PIVOT IS SELECTED
+                // ------------------------------------------------------------------- 
+      		   
+        	    // if selected item is temp pivot
+            	if ($item == $tempPivot) {
+        			confirmDialog -title "Error B" -message ("Select object/s to pivot.") ;
+        			// end For Loop
+        			break ;
+        		}
+        	
+        		// -------------------------------------------------------------------
+                // 04. SET-UP OFFSET LOCATORS
+                // -------------------------------------------------------------------   
+                  		           	         
+            	else {           	         
+            	
+        		    // create a locator
+        			spaceLocator -p 0 0 0 -n ($item + "_pivot_loc") ;
+        			// add locator to $pivotLocators array
+        			$pivotLocators[size($pivotLocators)] = ($item + "_pivot_loc") ; 
+                    
+                    // match position and orientation of new locator to temp pivot      
+        			pointConstraint $tempPivot ($item + "_pivot_loc") ;
+        			orientConstraint $tempPivot ($item + "_pivot_loc") ;
+        			
+        			// delete any connections / delete constraints
+        			delete -cn;
+                    
+                    // make locator bigger
+        			setAttr ($item + "_pivot_loc.localScaleX") 18 ;
+        			setAttr ($item + "_pivot_loc.localScaleY") 18 ;
+        			setAttr ($item + "_pivot_loc.localScaleZ") 18 ;
+           
+                   // constrain controls to the offset locators
+        			pointConstraint $item ($item + "_pivot_loc") ;
+        			orientConstraint -mo $item ($item + "_pivot_loc") ;
+        			
+                    // place offset locator inside temp pivot
+        	        parent ($item + "_pivot_loc") $tempPivot ;
+            	    
+                }
+                
+        		// -------------------------------------------------------------------
+                // 04. BAKE OFFSET LOCATORS
+                // -------------------------------------------------------------------   
+                                           
+                // bake pivot locators
+            	select $pivotLocators;
+            	  
+            	BakeSelected ;  
+            	
+            	// give $i value of 0. If size of $pivotLocators is greater than 0, increase $i value by 1
+            	// and run script
+                for ($i=0; $i < `size $pivotLocators`; $i++) {                
+                	pointConstraint $pivotLocators[$i] $sel[$i] ;
+                	orientConstraint -mo $pivotLocators[$i] $sel[$i] ;
+                }
+        	    
+        	    select $tempPivot ;
+        	    
+            }  
+        }        
+    }
+
+
+    // -------------------------------------------------------------------
+    // 01. IF TEMP_PIVOT_loc DOES NOT EXISTS
+    // -------------------------------------------------------------------  
+            
+    // if TEMP_PIVOT_loc doesn't exist 
+    else {
+        
+        // -------------------------------------------------------------------
+        // 02. IF ONE OR MORE OBJECTS ARE SELECTED
+        // -------------------------------------------------------------------    
+              
+        // if something is selected
+        if (size ($sel) != 0) {         
+            
+            // create string from the last item selected
+            select $sel ;
+            string $lastInSelected[0] = `ls -sl -tail 1` ; 
+            
+            CreateTEMPPivot ;         
+                    
+            // point and orient constrain locator to specified axis on current frame              
+            /*
+            // with axis skipss
+            pointConstraint -skip y $lastInSelected TEMP_PIVOT_loc;  
+            orientConstraint -skip x -skip z $lastInSelected TEMP_PIVOT_loc;              
+            */
+            
+            // average position and rotation of temp locator between selected
+            for ($item in $sel) {
+                 pointConstraint $item $tempPivot ;  
+                 orientConstraint $item $tempPivot ;  
+            }                         
+                                 
+            // declare time
+            $currentFrame = `currentTime -q` ; 
+            $nextFrame = `currentTime -q` + 1 ; 
+
+            // -------------------------------------------------------------------
+            // 03. AIM PIVOT LOCATOR IN DIRECTION OF MOVEMENT, BASED ON CURRENT FRAME
+            // -------------------------------------------------------------------    
+                      
+            // Research for using vector data: 
+            // https://forums.cgsociety.org/t/find-position-between-2-points/1286034/4
+            // Research on error "An array expression element must be a scalar value"
+            // https://forums.cgsociety.org/t/n-array-expression-element-must-be-a-scalar-value/1203879
+     
+            // get co-ordinates of worldspace locator attached to object
+            float $a1 = `getAttr -time $currentFrame $tempPivot.translateX`; 
+            float $a2 = `getAttr -time $currentFrame $tempPivot.translateY`; 
+            float $a3 = `getAttr -time $currentFrame $tempPivot.translateZ`;  
+            
+            float $b1 = `getAttr -time $nextFrame $tempPivot.translateX`; 
+            float $b2 = `getAttr -time $nextFrame $tempPivot.translateY`; 
+            float $b3 = `getAttr -time $nextFrame $tempPivot.translateZ`; 
+            
+            // delete constraints
+            DeleteConstraints $tempPivot ;
+ 
+            //convert to vector
+        	vector $v1 = {$a1,$a2,$a3} ;
+        	vector $v2 = {$b1,$b2,$b3} ;
+                
+        	// calculate direction vector
+            vector $d = $v2-$v1 ;	 
+            // normalize
+            vector $nd = $d/mag($d) ;             
+            // convert back to float
+	        float $newP[] = {$nd.x,$nd.y,$nd.z} ;
+	  
+            // aim based on World Up Vector on next frame
+            currentTime $nextFrame ;   
+            select $lastInSelected ;
+            select -tgl $tempPivot ;
+            aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "vector" -worldUpVector $newP[0] $newP[1] $newP[2] ;       
+            DeleteConstraints $tempPivot ;
+            // go back to original frame
+            currentTime $currentFrame ; 
+                     
+            select $sel ;
+            print "Run mr_changeWorldspacePivot again when ready, to baked selected objects under the pivot.\n";
+            
+        }  
+              
+        
+        // -------------------------------------------------------------------
+        // 02. IF NOTHING IS SELECTED
+        // -------------------------------------------------------------------   
+            
+            // if nothing is selected
+        else {
+            
+            // create TEMP_PIVOT_loc locator
+        	warning("No TEMP_PIVOT_loc exists. Creating one now.");
+            
+            CreateTEMPPivot ;
+            
+            select $tempPivot ;
+                           
+        }
+
+    }    
+    
+}
+
+ 
+// -------------------------------------------------------------------
+// PROCEDURES
+// -------------------------------------------------------------------   
+       
+proc FindConstraintTargets(){
+    
+    string $queryTargets[] = `ls -sl`;
+    // declare all constraint connections on selected
+    string $connections[] = `listConnections -type "constraint" $queryTargets` ;
+    // remove duplicate listings
+    $connections = stringArrayRemoveDuplicates($connections) ;     
+    
+    // find the parent of each connection
+    string $targets[] = `listRelatives -p $connections` ;
+    // remove duplicate listings
+    $targets = stringArrayRemoveDuplicates($targets) ;
+    
+    if (size($targets) == 0 ) {
+        print "No targets found. \n" ;
+    }  
+    else {
+        select $targets ;
+    }
+
+}
+
+// -------------------------------------------------------------------
+
+proc BakeSelected() {
+    
+    // declare time range
+	float $startTime = `playbackOptions -q -min`;
+	float $endTime = `playbackOptions -q -max`;
+	
+    refresh -suspend 1 ;
+	bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+	delete -sc ;
+	filterCurve ;
+	delete -cn ;
+	refresh -suspend 0 ;
+	
+}
+
+// -------------------------------------------------------------------
+
+proc CreateTEMPPivot() { 
+    string $currentSelection[] = `ls -sl` ;
+    spaceLocator -p 0 0 0 -n "TEMP_PIVOT_loc" ;
+          
+    // set locator scale
+    setAttr "TEMP_PIVOT_loc.localScaleZ" 100 ;
+    setAttr "TEMP_PIVOT_loc.localScaleX" 100 ;
+    setAttr "TEMP_PIVOT_loc.localScaleY" 100 ;
+    
+    // reselect the previous selection, before locator was created
+    select $currentSelection ;
+}
+
+// -------------------------------------------------------------------
+// RUN MAIN PROCEDURE
+// ------------------------------------------------------------------- 
+
+WorldspacePivot;

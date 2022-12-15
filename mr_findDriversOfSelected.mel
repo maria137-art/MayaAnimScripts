@@ -40,7 +40,7 @@ proc FindDriversOfSelected(){
         }
     }
     
-    if (size($foundTargets) == 1){
+    if (size($foundTargets) == 0){
         print "No drivers found.\n";
     }   
     else {
