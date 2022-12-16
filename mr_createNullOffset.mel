@@ -1,0 +1,90 @@
+// -------------------------------------------------------------------
+// SCRIPT: createNullOffsetFromSelected 
+//
+// CREATORS / CREDIT: Maria Robertson
+//
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// Script to put selected objects in an offset group within their original hierarchy.
+// Offset groups match selected object's positioning, to zero out their values.
+//
+// Can be helpful when modifying rigs.
+// Can't be used with referenced rigs.
+//
+// USAGE:
+// Best to run this on the original bind pose of the rig.
+//
+// REQUIREMENTS:
+// Any requirements / prerequisites needed.
+//
+// -------------------------------------------------------------------
+//
+// RESEARCH THAT HELPED:
+// For listing relatives
+// https://forums.cgsociety.org/t/list-all-parents-of-an-object-mel/1806687/2
+// 
+// TO DO:
+// - make a fix if the selObject isn't in a hierarchy yet
+// - give error if selected object already has an offset
+//
+// -------------------------------------------------------------------
+
+proc CreateNullOffset() {
+    
+    // make array from selected
+    string $sel[] = `ls -sl` ;
+    
+    // for every item selected
+    for ($item in $sel) {
+        
+        // -------------------------------------------------------------------
+        // 01. PREPARATION
+        // -------------------------------------------------------------------
+    
+        // make sure their attributes are unlocked, for clean parenting
+        setAttr -lock false ($item + ".tx") ;
+        setAttr -lock false ($item + ".ty") ;
+        setAttr -lock false ($item + ".tz") ;
+        setAttr -lock false ($item + ".rx") ;
+        setAttr -lock false ($item + ".ry") ;
+        setAttr -lock false ($item + ".rz") ;
+        
+        // create group
+        $null = `group -em -name ($item + "_offset_grp")` ;
+        
+        // match position
+        parentConstraint -w 1 -n ($null + "_parentConstraint1") $item $null 
+        
+        // delete constraint and place in hierarchy
+        delete ($null + "_parentConstraint1") ;
+        
+        // -------------------------------------------------------------------
+        // 02. PARENT NULLS
+        // -------------------------------------------------------------------       
+      
+        // list parents of selected
+        string $parents[] = `listRelatives -ap $item` ;
+    
+        // parent them
+        parent $null $parents[0] ;
+        parent $item $null ;
+        
+        // lock attributes of offset group
+        setAttr -lock true ($null + ".tx") ;
+        setAttr -lock true ($null + ".ty") ;
+        setAttr -lock true ($null + ".tz") ;
+        setAttr -lock true ($null + ".rx") ;
+        setAttr -lock true ($null + ".ry") ;
+        setAttr -lock true ($null + ".rz") ;
+        setAttr -lock true ($null + ".sx") ;
+        setAttr -lock true ($null + ".sy") ;
+        setAttr -lock true ($null + ".sz") ;
+        setAttr -lock true ($null + ".v") ;
+          
+    }
+
+}
+
+CreateNullOffset();
+
