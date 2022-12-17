@@ -8,7 +8,6 @@
 // DESCRIPTION: 
 // A bunch of mini-scripts to help work with animation layers faster.
 // Took a while to research which commands to use, and gathered them here.
-// Some do the same thing in a different way, will list both in case useful.
 // 
 // USAGE:
 // Will list each mini-script as a procedure.
@@ -43,7 +42,7 @@ AnimLayer_ShowOnlyBaseAnimation ;
 
 
 // -------------------------------------------------------------------
-// A. SELECT OBJECTS ON HIGHLIGHTED ANIM LAYERS - VERSION A
+// B. SELECT OBJECTS ON HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
 
 proc AnimLayer_SelectHighlightedAnimLayerObjects_A() {
@@ -51,23 +50,6 @@ proc AnimLayer_SelectHighlightedAnimLayerObjects_A() {
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
     // select any objects on them
     layerEditorSelectObjectAnimLayer($highlightedAnimLayers) ;
-}
-
-// -------------------------------------------------------------------
-// B. SELECT OBJECTS ON HIGHLIGHTED ANIM LAYERS - VERSION B
-// -------------------------------------------------------------------
-
-proc AnimLayer_SelectHighlightedAnimLayerObjects_B () {
-    
-    // for every anim layer that exists
-    for ($item in `ls -type "animLayer"`){
-        // if the anim layer is selected
-        if (`animLayer -q -selected $item`){
-            // select any objects on it
-            string $highlightedAnimLayers[] = {$item};
-            layerEditorSelectObjectAnimLayer -tgl ($highlightedAnimLayers) ;
-        }
-    }
 }
 
 
@@ -83,6 +65,7 @@ proc AnimLayer_SelectAnimLayerNode() {
     select $highlightedAnimLayers ;
     
 }
+
 
 // -------------------------------------------------------------------
 // D. SELECT WEIGHT OF HIGHLIGHTED ANIM LAYERS
@@ -105,6 +88,7 @@ proc  AnimLayer_SelectWeightOfAnimLayers() {
     }
 }
 
+
 // -------------------------------------------------------------------
 // E. KEYFRAME WEIGHT OF HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
@@ -124,6 +108,7 @@ proc AnimLayer_KeyWeightNodes() {
     }    
 }
 
+
 // -------------------------------------------------------------------
 // F. SHOW ONLY ANIM CURVES OF HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
@@ -142,6 +127,7 @@ proc AnimLayer_ShowOnlyHighlightedAnimLayerCurves() {
             animLayerEditorOnSelect($item, 1) ;
     }
 } 
+
 
 // -------------------------------------------------------------------
 // G. GROUP HIGHLIGHTED ANIM LAYERS
@@ -163,6 +149,7 @@ proc AnimLayer_CreateParentGroup() {
         animLayer -edit -parent Group $item ;
     }
 }
+
 
 // -------------------------------------------------------------------
 // H. TOGGLE LOCK HIGHLIGHED ANIM LAYES
@@ -189,6 +176,7 @@ proc AnimLayer_ToggleLock() {
     	}
     }
 }
+
 
 // -------------------------------------------------------------------
 // I. FIND WHICH SCRIPT CONTAINS THE MAYA COMMAND SPECIFIED
