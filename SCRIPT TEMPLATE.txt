@@ -1,36 +1,40 @@
 // -------------------------------------------------------------------
-// SCRIPT: name 
+// SCRIPT:  
 //
-// CREATORS / CREDIT: Maria Robertson / 
+// CREATORS / CREDIT: MARIA ROBERTSON
 //
-// DATE: date first working version was made
 //
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
-// Brief overview of script.
 // 
-// e.g.
-// If mouse pointer is NOT above Graph Editor:
-//     - Delete all keys on current frame of selected objects.
+// 
 // 
 // USAGE:
-// Any specific steps needed.
+// 
 //
 // REQUIREMENTS:
-// Any requirements / prerequisites needed.
+// 
 //
 // -------------------------------------------------------------------
 //
 // RESEARCH THAT HELPED:
-// General links that helped when writing. Links to specific sections will be linked directly next to the section.
+// General links that helped when writing. Help for specific sections will be linked directly next to it.
 // 
 // TO DO:
-// - A
-// - B
+// - 
+// - 
 //
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
-// 01. SECTION HEADER
+// 00. SECTION HEADER
 // -------------------------------------------------------------------
+
+	// -------------------------------------------------------------------
+	// 01. SECTION HEADER
+	// -------------------------------------------------------------------
+	
+		// -------------------------------------------------------------------
+		// 02. SECTION HEADER
+		// -------------------------------------------------------------------
