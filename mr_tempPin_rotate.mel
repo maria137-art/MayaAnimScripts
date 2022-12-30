@@ -1,40 +1,47 @@
 // -------------------------------------------------------------------
 // SCRIPT: tempPin_rotate
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
-//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
 //
 // DESCRIPTION: Pins selected object/s to a single temp locator, to be only rotated in worldspace. When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
+// 
+// ------------------------------------------------------------------- 
 //
-//                                        
+// RUN COMMAND:
+// TempPinRotate() ;
+//                            
 // -------------------------------------------------------------------
 
-proc TempPinRotate(){
-    string $objectsToPin[]; 
+global proc TempPinRotate() {
+
+    string $objectsToPin[] ; 
     
     if (`objExists TEMP_ROT_worldspace_locator`) {
         select $objectsToPin ;   
-        SetKeyTranslate;
-        SetKeyRotate;
+        SetKeyTranslate ;
+        SetKeyRotate ;
         
         delete TEMP_ROT_worldspace_locator ;
     }
     
     else {     
-        global string $objectsToPin[];
-        $objectsToPin = `ls -sl`;  
+
+        global string $objectsToPin[] ;
+        $objectsToPin = `ls -sl` ;  
         
         // makes a list (array) of your selected objects // 
         spaceLocator -p 0 0 0 -n TEMP_ROT_worldspace_locator ;
-        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleY" 10;
-        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10;
-        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleY" 10 ;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10 ;
+        setAttr "TEMP_ROT_worldspace_locatorShape.localScaleZ" 10 ;
 
          
         // for every item you have selected, do this for loop // 
             for ($item in $objectsToPin) { 
-            	pointConstraint $item TEMP_ROT_worldspace_locator;
-            	orientConstraint $item TEMP_ROT_worldspace_locator;
+            	pointConstraint $item TEMP_ROT_worldspace_locator ;
+            	orientConstraint $item TEMP_ROT_worldspace_locator ;
                 }
     
             	delete -cn TEMP_ROT_worldspace_locator ;
@@ -47,5 +54,3 @@ proc TempPinRotate(){
     }     	
 
 }
-
-TempPinRotate;

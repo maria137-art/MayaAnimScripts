@@ -1,7 +1,11 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: selectTimesliderKeys
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson / Brian Horgan / Jørn-Harald Paulsen
+// CREATORS: Maria Robertson
+// CREDIT: Brian Horgan / Jørn-Harald Paulsen
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Select keys of selected objects within the timeslider range.
@@ -10,21 +14,28 @@
 // with snippets from Jørn-Harald Paulsen's jh_getKeyObjs:
 // https://forums.cgsociety.org/t/selecting-all-keys-on-a-certain-frame/1563705/2
 //
+// EXAMPLE USES:
 // Found this helpful when animating scenes with multiple shots inside.
-// -------------------------------------------------------------------
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// SelectTimesliderKeys() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc SelectTimesliderKeys() {
+global proc SelectTimesliderKeys() {
     
     // -------------------------------------------------------------------
     // 01. DEFINE TIMESLIDER RANGE
     // -------------------------------------------------------------------
     
     // define timeslider range
-    float $startTime = `playbackOptions -q -min`;
-    float $endTime = `playbackOptions -q -max`;
+    float $startTime = `playbackOptions -q -min` ;
+    float $endTime = `playbackOptions -q -max` ;
     
     // create array of visible curves in default Graph Editor
-    string $visibleAndimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
+    string $visibleAndimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
     
     
     // -------------------------------------------------------------------
@@ -32,9 +43,9 @@ proc SelectTimesliderKeys() {
     // -------------------------------------------------------------------
      
     // create an array of selected objects
-    string $sel[] = `ls -sl`;    
+    string $sel[] = `ls -sl` ;    
     // deselect everything
-    select -cl; 
+    select -cl ; 
     
     
     // -------------------------------------------------------------------
@@ -45,9 +56,8 @@ proc SelectTimesliderKeys() {
     for ($i=0; $i < `size $sel`; $i++) 
     {
         // if object has any keyframe values, select it
-        if(`keyframe -q -keyframeCount $sel[$i]` != 0)
-            {
-            select -add $sel[$i];      
+        if(`keyframe -q -keyframeCount $sel[$i]` != 0) {
+            select -add $sel[$i] ;      
             }
     }
     
@@ -57,12 +67,10 @@ proc SelectTimesliderKeys() {
     // -------------------------------------------------------------------
     
     // clear key selection
-    selectKey -clear;
+    selectKey -clear ;
     
     // from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
-    for ($curve in $visibleAndimCurvesInGraphEd){
-        selectKey -tgl -time ($startTime + ":" + $endTime) $curve;
+    for ($curve in $visibleAndimCurvesInGraphEd) {
+        selectKey -tgl -time ($startTime + ":" + $endTime) $curve ;
     }
 }
-
-SelectTimesliderKeys;

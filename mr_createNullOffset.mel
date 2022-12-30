@@ -1,19 +1,26 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: createNullOffsetFromSelected 
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
-//
+// CREATORS: Maria Robertson
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // This script places selected objects in an offset group within their original hierarchy.
 // The Offset group will match the selected object's translation and rotation, to zero out their values.
 //
+// EXAMPLE USES:
 // Can be helpful when modifying rigs.
 // Can't be used with referenced rigs.
 //
-// USAGE:
-// Best to run this on the original bind pose of the rig.
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// CreateNullOffset() ;
+//
+// INSTRUCTIONS:
+// It's best to run this on the original bind pose of the rig.
 //
 // REQUIREMENTS:
 // Any requirements / prerequisites needed.
@@ -27,11 +34,11 @@
 // The endsWith command: https://help.autodesk.com/cloudhelp/2016/CHS/Maya-LT-Tech-Docs/Commands/endsWith.html
 // Learnt of it because of this post: https://forums.autodesk.com/t5/maya-programming/selecting-all-polygon-objects-in-the-scene-with-a-certain-prefix/td-p/4240087
 //
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc CreateNullOffset() {
+global proc CreateNullOffset() {
 
-    string $sel[] = `ls -sl`;
+    string $sel[] = `ls -sl` ;
     
     // -------------------------------------------------------------------
     // 01. CHECK IF SELECTION IS VALID
@@ -45,13 +52,13 @@ proc CreateNullOffset() {
             
         // check if item is already in a custom offset group
         if (endsWith ($parent[0],"_offset_grp")) {
-            print "Selected is already in an offset_grp. \n" ;
+            print "NOTE: The selected item is already in an offset_grp. \n" ;
             break ;
         }    
         
         // check if item itself is an offset group
         else if  (endsWith ($item,"_offset_grp")) {
-            print "Selected is an offset group. \n" ;
+            print "NOTE: The selected item is an offset group. \n" ;
             break ;
         }  
         
@@ -106,6 +113,3 @@ proc CreateNullOffset() {
         }       
     }
 }
-
-CreateNullOffset();
-

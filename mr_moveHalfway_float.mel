@@ -1,22 +1,28 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: moveHalfway_float
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Move Time Slider to the nearest floating number frame inbetween the next and previous keyframes.
+// 
+// ------------------------------------------------------------------- 
 //
-// -------------------------------------------------------------------
+// RUN COMMAND:
+// MoveHalfway_Float ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc MoveHalfway_float(){
-    // declare keyframes
-    float $prevKeyframe = `findKeyframe -timeSlider -which previous`;  
-    float $nextKeyframe = `findKeyframe -timeSlider -which next`;
+global proc MoveHalfway_Float() {
+
+    // initialize keyframes
+    float $prevKeyframe = `findKeyframe -timeSlider -which previous` ;  
+    float $nextKeyframe = `findKeyframe -timeSlider -which next` ;
     
     // get midpoint
-    float $midPoint = ($nextKeyframe + $prevKeyframe)/2;
-    currentTime $midPoint;   
+    float $midPoint = ($nextKeyframe + $prevKeyframe)/2 ;
+    currentTime $midPoint ;   
 }
-
-MoveHalfway_float;
-

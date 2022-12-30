@@ -1,30 +1,36 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: findConstraintTargets
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
-//
-// DATE: 2022-12-14
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Select any targets that the selected object is constraining.
 // 
 // -------------------------------------------------------------------
 //
+// RUN COMMAND:
+// FindConstraintTargets() ;
+//
+// -------------------------------------------------------------------
 // RESEARCH THAT HELPED:
 // How to find driver of selected object - https://forums.cgsociety.org/t/how-to-query-a-connectionsOfSelected-target-list-without-knowing-the-constraint-type/1309588/2
-// -------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc FindConstraintTargets(){
+global proc FindConstraintTargets() {
 
     // declare all constraint connections on selected
     string $connections[] = `listConnections -type "constraint"` ;
     // remove duplicate listings
     $connections = stringArrayRemoveDuplicates($connections) ;
         
-    string $targets[];
+    string $targets[] ;
     
     // find the parent of each connection
-    string $targets[] = `listRelatives -p $connections`;
+    $targets = `listRelatives -p $connections` ;
     // remove duplicate listings
     $targets = stringArrayRemoveDuplicates($targets) ;
     
@@ -35,8 +41,6 @@ proc FindConstraintTargets(){
         select $targets ;
     }
 }
-
-FindConstraintTargets;
 
 
 

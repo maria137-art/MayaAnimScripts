@@ -1,36 +1,45 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: clearAttributeKeys
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
 //
 // DESCRIPTION: 
 // Clear all keys on highlighted attributes in the Channel Box for selected objects.
 // If no attributes are highlighted, all keys on selected objects will be cleared.
+//
+// ------------------------------------------------------------------- 
 // 
-// -------------------------------------------------------------------
+// RUN COMMAND:
+// ClearAttributeKeys() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc ClearAttributeKeys(){
+global proc ClearAttributeKeys() {
  
     // create array from selected objects
-    string $sel[] = ` ls -sl`;  
+    string $sel[] = ` ls -sl` ;  
     // create array from highlighted attributes in channel box 
-    string $selAttr[] = ` channelBox -q -sma mainChannelBox`;
+    string $selAttr[] = ` channelBox -q -sma mainChannelBox` ;
     
-	// if nothing is highlighted, clear all attribute keys
+	// if nothing is highlighted,
     if (size($selAttr) == 0) {
+        // clear all attribute keys
         cutKey;                
     }
     
+    // otherwise
     else {
-        // for every object that is selected
+        // for every object selected
         for ($item in $sel) {
-            // for each of its highlighted attribute
+            // for each of its highlighted attributes
             for ($attr in $selAttr) {
-                // clear it of keys
-                cutKey ($item+"."+$attr);
+                // clear its keys
+                cutKey ($item+"."+$attr) ;
             }
         } 
     }
-}
 
-ClearAttributeKeys();
+}

@@ -1,32 +1,31 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
 // SCRIPT: animLayerTools
+// VERSION: 0001
 //
-// CREATORS / CREDIT: MARIA ROBERTSON / ERIC PAVEY
-//
+// CREATORS: Maria Robertson
+// CREDIT: Eric Pavey
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // A bunch of mini-scripts to help work with animation layers faster.
-// Took a while to research which commands to use, and gathered them here.
-// 
-// USAGE:
-// Will list each mini-script as a procedure.
+// Took a while to research which commands to use, so gathered them here.
+//
 // This was made while learning MEL, so lots of commenting below.
 //
 // -------------------------------------------------------------------
 //
 // RESEARCH THAT HELPED:
-// A great website by Eric Pavey for MEL info. Under the AnimLayer tags, lots of snippets
-// on anim layers. - http://mayamel.tiddlyspot.com
+// A great website by Eric Pavey for MEL info. Under the AnimLayer tag, there are 
+// lots of snippets on anim layers: http://mayamel.tiddlyspot.com
 // 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+// -------------------------------------------------------------------
+// 00. SHOW ONLY ANIM CURVES OF BASE ANIMATION
 // -------------------------------------------------------------------
 
-
-// -------------------------------------------------------------------
-// A. SHOW ONLY ANIM CURVES OF BASE ANIMATION
-// -------------------------------------------------------------------
-
-proc AnimLayer_ShowOnlyBaseAnimation() {
+global proc AnimLayer_ShowOnlyBaseAnimation() {
     
     // By default in the Graph Editor, selecting an object will display its curves on all
     // existing anim layers, even if locked or hidden.
@@ -38,14 +37,39 @@ proc AnimLayer_ShowOnlyBaseAnimation() {
     animLayerEditorOnSelect "BaseAnimation" 1 ;
 }
 
-AnimLayer_ShowOnlyBaseAnimation ;
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
 
 // -------------------------------------------------------------------
-// B. SELECT OBJECTS ON HIGHLIGHTED ANIM LAYERS
+// 00. SHOW ONLY ANIM CURVES OF HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
 
-proc AnimLayer_SelectHighlightedAnimLayerObjects_A() {
+global proc AnimLayer_ShowOnlyHighlightedAnimLayerCurves() {
+      
+    // Display only anim curves of highlighted animation layers for selected objects.
+    
+    // create array of highlighted anim layers
+    string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab");
+    
+    // for every highlighted anim layer
+    for ($item in $highlightedAnimLayers){
+            // rehighlight it (to refresh the Graph Editor)
+            // NOTE - 1 means highlight the layer, 0 means deselect it.
+            animLayerEditorOnSelect($item, 1) ;
+    }
+} 
+
+// the above procedure could be used with a scriptJob, so that this is automatically run whenever there is a change in selected objects
+int $scriptJob_ShowOnlyHighlightedAnimLayerCurves = `scriptJob -e SelectionChanged AnimLayer_ShowOnlyHighlightedAnimLayerCurves` ;
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+// -------------------------------------------------------------------
+// 00. SELECT OBJECTS ON HIGHLIGHTED ANIM LAYERS
+// -------------------------------------------------------------------
+
+global proc AnimLayer_SelectHighlightedAnimLayerObjects_A() {
     // create array of highlighted anim layers
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
     // select any objects on them
@@ -53,26 +77,30 @@ proc AnimLayer_SelectHighlightedAnimLayerObjects_A() {
 }
 
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
 // -------------------------------------------------------------------
-// C. SELECT HIGHLIGHTED ANIM LAYERS NODES
+// 00. SELECT HIGHLIGHTED ANIM LAYERS NODES
 // -------------------------------------------------------------------
 
-proc AnimLayer_SelectAnimLayerNode() {
+global proc AnimLayer_SelectAnimLayerNode() {
 
     // create array of highlighted anim layers
-    string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab");
+    string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
     // reselect them
     select $highlightedAnimLayers ;
     
 }
 
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
 // -------------------------------------------------------------------
-// D. SELECT WEIGHT OF HIGHLIGHTED ANIM LAYERS
+// 00. SELECT WEIGHT OF HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
 
 // Select the weights of selected animation layers
-proc  AnimLayer_SelectWeightOfAnimLayers() {
+global proc AnimLayer_SelectWeightOfAnimLayers() {
     
     // create array of highlighted anim layers
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
@@ -80,8 +108,8 @@ proc  AnimLayer_SelectWeightOfAnimLayers() {
     select -cl  ;
     
     // for each anim layer
-    for ($item in $highlightedAnimLayers){
-        if (`animLayer -q -selected $item`){
+    for ($item in $highlightedAnimLayers) {
+        if (`animLayer -q -selected $item`) {
             // add to selection
             select -add ($item + ".wgth") ;
         }
@@ -89,11 +117,13 @@ proc  AnimLayer_SelectWeightOfAnimLayers() {
 }
 
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
 // -------------------------------------------------------------------
-// E. KEYFRAME WEIGHT OF HIGHLIGHTED ANIM LAYERS
+// 00. KEYFRAME WEIGHT OF HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
 
-proc AnimLayer_KeyWeightNodes() {
+global proc AnimLayer_KeyWeightNodes() {
     
     // create array of highlighted anim layers
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab");
@@ -109,33 +139,15 @@ proc AnimLayer_KeyWeightNodes() {
 }
 
 
-// -------------------------------------------------------------------
-// F. SHOW ONLY ANIM CURVES OF HIGHLIGHTED ANIM LAYERS
-// -------------------------------------------------------------------
-
-proc AnimLayer_ShowOnlyHighlightedAnimLayerCurves() {
-      
-    // Display only anim curves of highlighted animation layers for selected objects.
-    
-    // create array of highlighted anim layers
-    string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab");
-    
-    // for every highlighted anim layer
-    for ($item in $highlightedAnimLayers){
-            // rehighlight it (to refresh the Graph Editor)
-            // NOTE - 1 means highlight the layer, 0 means deselect it.
-            animLayerEditorOnSelect($item, 1) ;
-    }
-} 
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
 
 // -------------------------------------------------------------------
-// G. GROUP HIGHLIGHTED ANIM LAYERS
+// 00. GROUP HIGHLIGHTED ANIM LAYERS
 // -------------------------------------------------------------------
 
 // Create parent group for selected Animation Layers
 
-proc AnimLayer_CreateParentGroup() {
+global proc AnimLayer_CreateParentGroup() {
     
     // create array of highlighted anim layers
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
@@ -151,13 +163,15 @@ proc AnimLayer_CreateParentGroup() {
 }
 
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
 // -------------------------------------------------------------------
-// H. TOGGLE LOCK HIGHLIGHED ANIM LAYES
+// 00. TOGGLE LOCK HIGHLIGHED ANIM LAYES
 // -------------------------------------------------------------------
 
 // Toggle locking selected animation layers
 
-proc AnimLayer_ToggleLock() {
+global proc AnimLayer_ToggleLock() {
     
     // create array of highlighted anim layers
     string $highlightedAnimLayers[] = getSelectedAnimLayer("AnimLayerTab") ;
@@ -178,12 +192,14 @@ proc AnimLayer_ToggleLock() {
 }
 
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
 // -------------------------------------------------------------------
-// I. FIND WHICH SCRIPT CONTAINS THE MAYA COMMAND SPECIFIED
+// 00. FIND WHICH SCRIPT CONTAINS THE MAYA COMMAND SPECIFIED
 // -------------------------------------------------------------------
 
 // Find which script contains the Maya command specified.
 // Helpful when trying to understand what it does.
 
-whatIs layerEditorSelectObjectAnimLayer;
+whatIs layerEditorSelectObjectAnimLayer ;
 

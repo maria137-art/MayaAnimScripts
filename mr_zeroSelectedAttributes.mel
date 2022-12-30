@@ -1,28 +1,34 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: zeroSelectedChannelBoxAttr 
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Zero out the values of selected attributes in the Channel Box.
 // 
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// ZeroSelectedChannelBoxAttr() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc ZeroSelectedChannelBoxAttr(){
+global proc ZeroSelectedChannelBoxAttr() {
     
     // create array from selection
-    string $sel[] = `ls -sl`;
+    string $sel[] = `ls -sl` ;
     // create array of selected attributes in the Channel Box
-    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes`;
+    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
     
     // for every item in selection
-    for ($item in $sel){
+    for ($item in $sel) {
         // for each of it's selected attributes
-    	for ($attribute in $selectedChannelBoxAttributes){
+    	for ($attribute in $selectedChannelBoxAttributes) {
             // zero the attribute value
-            setAttr ($item + "." + $attribute) 0; 	        
+            setAttr ($item + "." + $attribute) 0 ; 	        
         }
     }    
 }
-
-ZeroSelectedChannelBoxAttr;

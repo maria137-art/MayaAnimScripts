@@ -1,0 +1,133 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// SCRIPT: animLayer_createNewEmptyAdditiveLayerWithSameTimingAsBaseAnimation
+// VERSION: 0002
+//
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// Create a new additive animation layer for selected objects that has the same
+// number of keyframes as the BaseAnimation layer.
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// AnimLayer_NewEmptyLayerWithSameTimingAsBaseAnimation() ;
+//
+// ------------------------------------------------------------------- 
+//
+// RESEARCH THAT HELPED:
+// A forum post discussing ways to remove duplicates from floats / ints:
+// https://forums.cgsociety.org/t/remove-duplicates-from-int-float-array/1484496/3
+//
+// https://download.autodesk.com/us/maya/2011help/Commands/setKeyframe.html
+//
+// WISH LIST:
+// - Improve on copy keyframe timing aspect of script
+//
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 2022-12-29
+// Adjusted script to properly make empty keys on the anim layer, using the -identity
+// flag on setKeyframe.
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//      CREATE EMPTY ADDITIVE LATER FOR SELECTED, WITH BASE TIMING      //                    
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+global proc AnimLayer_NewEmptyLayerWithSameTimingAsBaseAnimation() {
+    
+    // create string from selected
+    string $sel[] = `ls -sl` ;
+
+    // create A new animLayer
+    string $newAnimLayer = ` animLayer` ;    
+    // add the selected objects to the animLayer
+    animLayer -e -addSelectedObjects $newAnimLayer ;
+           
+    // remove the visibility attributes of selecetd from the animLayer
+    for ($item in $sel) {
+        animLayer -edit -removeAttribute ($item + ".v") $newAnimLayer ;        
+    }
+
+    // unhighlight all existing animation layers
+    setSelectedForAllLayers(0) ;
+    // highlight just BaseAnimation
+    animLayerEditorOnSelect "BaseAnimation" 1 ;
+    
+            
+    // for every selected item
+    for ($item in $sel) {
+         
+        // -------------------------------------------------------------------
+        // 02. GET EACH FRAME THAT THE SELECTED OBJECT IS KEYED ON
+        // -------------------------------------------------------------------
+        
+        // query all keyframes of the item
+        select $item ; 
+        float $keyframesArray[] = `keyframe -q $item` ;
+        // remove any duplicates 
+        $keyframesArray = floatArrayRemoveDuplicates($keyframesArray) ;
+        
+        // -------------------------------------------------------------------
+        // 02. KEY THE NEW ANIMLAYER
+        // -------------------------------------------------------------------#
+           
+        // for every keyframe found earlier on BaseAnimation  
+        for ($frame in $keyframesArray) {                   
+            // set a key on the frame on the new anim layer
+            // NOTE! have to use the -identity flag in order to nullify the effect of 
+            // the anim layer
+            setKeyframe -al $newAnimLayer -id -t $frame $item ; 
+        }    
+               
+    }
+    
+     // highlight the new anim layer is active        
+    setSelectedForAllLayers(0) ;
+    animLayerEditorOnSelect $newAnimLayer 1 ;
+    
+    // end with reselecting the original selection
+    select $sel ;
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//            PROCEDURE TO REMOVE DUPLICATES IN FLOAT ARRAYS            //          
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// from https://forums.cgsociety.org/t/remove-duplicates-from-int-float-array/1484496/3
+
+global proc float[] floatArrayRemoveDuplicates( float $floatArr[] ) {
+    float $results[] ;
+ 
+    for( $floatAr in $floatArr ) {
+        int $isFound = false ;
+        
+        for( $item in $results ) {
+            if( $floatAr == $item ) {
+                $isFound = true ;
+                break ;
+            }
+        }       
+        if( $isFound == false )
+            $results[size($results)] = $floatAr ;
+    }
+    return $results ;
+}
+

@@ -1,55 +1,67 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: findDriversOfSelected
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Select the drivers of any selected object that are constrained by them.
+//
+// UPDATE! - Found a neater script for this by Tim van Huseen in this Autodesk post:
+// https://forums.autodesk.com/t5/maya-ideas/constraint-objects-view-or-select-the-object-it-s-constraint-to/idi-p/7960702
+// 
+// -------------------------------------------------------------------
+//
+// RUN COMMAND:
+// FindDriversOfSelected() ;
 // 
 // -------------------------------------------------------------------
 //
 // RESEARCH THAT HELPED:
 // How to find driver of selected object - https://forums.cgsociety.org/t/how-to-query-a-constraintsOfSelected-target-list-without-knowing-the-constraint-type/1309588/2
-// -------------------------------------------------------------------
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc FindDriversOfSelected(){
+global proc FindDriversOfSelected() { 
 
-    string $selection[] = `ls -sl`;
-    string $constraintsOfSelected[] = `listConnections -type "constraint" $selection`;
-    string $foundTargets[];
+    string $sel[] = `ls -sl` ;
+    string $constraintsOfSelected[] = `listConnections -type "constraint" $sel` ;
+    string $foundTargets[] ;
     
     // remove duplicate listings in array
-    $constraintsOfSelected = stringArrayRemoveDuplicates($constraintsOfSelected);
+    $constraintsOfSelected = stringArrayRemoveDuplicates($constraintsOfSelected) ;
     
     // for each constraint found
-    for ($item in $constraintsOfSelected){
+    for ($item in $constraintsOfSelected) {
         // make list of its targets
-        string $targetAttributes = ($item + ".target");
+        string $targetAttributes = ($item + ".target") ;
         // list connections of targets
-        string $connections[] = `listConnections $targetAttributes`;
+        string $connections[] = `listConnections $targetAttributes` ;
         // remove duplicates
-        string $connectionsFlattened[] = stringArrayRemoveDuplicates($connections);
+        string $connectionsFlattened[] = stringArrayRemoveDuplicates($connections) ;
         
         // for each target mention, if
-        for ($constraint in $connectionsFlattened){
-            if ($constraint != $item ){
-                print ( $constraint + " is a target.\n" ); 
+        for ($constraint in $connectionsFlattened) {
+            if ($constraint != $item ) {
+                print ( $constraint + " is a target.\n" ) ; 
                 
-                $foundTargets[size($foundTargets)] = $constraint;
+                $foundTargets[size($foundTargets)] = $constraint ;
             }       
         }
     }
     
-    if (size($foundTargets) == 0){
-        print "No drivers found.\n";
+    if (size($foundTargets) == 0) {
+        print "No drivers found.\n" ;
     }   
     else {
-        select $foundTargets;        
+        select $foundTargets ;        
     }
            
 }
 
-FindDriversOfSelected;
+
 
 
 

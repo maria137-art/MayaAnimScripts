@@ -1,32 +1,38 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: selectCurrentKeysOfSelected 
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Select all keys of selected objects that are on the current frame.
 // 
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// SelectCurrentKeysOfSelected() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc SelectCurrentKeysOfSelected(){
+global proc SelectCurrentKeysOfSelected() {
+
     // Create an array from selected
-    string $sel[] = `ls -sl`;
+    string $sel[] = `ls -sl` ;
     
     // create array of visible curves in Graph Editor
     // -cs flag means curves shown here
-    string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
+    string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
     
 	// get current time
-    float $currentTime = `currentTime -q`;
+    float $currentTime = `currentTime -q` ;
     // deselect all keys
-    selectKey -clear;   
+    selectKey -clear ;   
 		
     //For each object selected
-    for ($i=0; $i < `size $sel`; $i++)
-        {  
+    for ($i=0; $i < `size $sel`; $i++) {  
 		// add any keys at the current time to key selection
         selectKey -add  -t ($currentTime) ;
     }    
 }
-
-SelectCurrentKeysOfSelected;

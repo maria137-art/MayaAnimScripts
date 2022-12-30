@@ -1,40 +1,48 @@
-// -------------------------------------------------------------------
-// SCRIPT: tempPin
-//
-// CREATORS / CREDIT: Maria Robertson
-//
-// DATE: 2021-03-31
-//
-// DESCRIPTION: Pins selected object/s to a single temp locator, to be moved in worldspace. When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
-//
-//                                        
-// -------------------------------------------------------------------
 
-proc TempPin(){
-    string $objectsToPin[];  
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: tempPin
+// VERSION: 0000
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// - Pins selected object/s to a single temp locator, to be moved in worldspace. 
+// - When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// TempPin() ;
+//               
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc TempPin() {
+
+    string $objectsToPin[] ;  
     
     if (`objExists TEMP_worldspace_locator`) {
         select $objectsToPin ;   
-        SetKeyTranslate;
-        SetKeyRotate;
+        SetKeyTranslate ;
+        SetKeyRotate ;
         
         delete TEMP_worldspace_locator ;
     }
     
     else {     
-        string $objectsToPin[] = `ls -sl`;  
+        string $objectsToPin[] = `ls -sl` ;  
         
         // makes a list (array) of your selected objects
         spaceLocator -p 0 0 0 -n TEMP_worldspace_locator ;
-        setAttr "TEMP_worldspace_locatorShape.localScaleY" 10;
-        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10;
-        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10;
+        setAttr "TEMP_worldspace_locatorShape.localScaleY" 10 ;
+        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10 ;
+        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10 ;
 
          
         // for every item you have selected, do this
         for ($item in $objectsToPin) { 
-            	pointConstraint $item TEMP_worldspace_locator;
-            	orientConstraint $item TEMP_worldspace_locator;
+            	pointConstraint $item TEMP_worldspace_locator ;
+            	orientConstraint $item TEMP_worldspace_locator ;
         }
 
     	delete -cn TEMP_worldspace_locator ;
@@ -47,5 +55,3 @@ proc TempPin(){
         select TEMP_worldspace_locator ;         
     }     	
  }
-
-TempPin;

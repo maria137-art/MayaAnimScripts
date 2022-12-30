@@ -1,41 +1,46 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: toggleLockHighlightedAttributes 
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // A toggle for locking and unlocking highlighted attributes.
 // 
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// ToggleLockHighlightedAttributes() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc ToggleLockHighlightedAttributes(){
+global proc ToggleLockHighlightedAttributes() {
     
-    // declare variables
-    string $sel[] = `ls -sl`;
-    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes`;
+    // initialize variables
+    string $sel[] = `ls -sl` ;
+    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
     
 
     // for every selected item      
-    for ($item in $sel){
+    for ($item in $sel) {
         
         // for each of its highlighted attributes
-    	for ($attr in $selectedChannelBoxAttributes){
+    	for ($attr in $selectedChannelBoxAttributes) {
     	    
-    	    string $individualAttr = $item + "." + $attr;
+    	    string $individualAttr = $item + "." + $attr ;
     	    
     	    // if its locked, unlock it
     	    if (`getAttr -lock $individualAttr`) {
-                setAttr -lock false $individualAttr; 	        
+                setAttr -lock false $individualAttr ; 	        
     	    } 
     	    
     	    // otherwise lock it
     	    else {  
-    		    setAttr -lock true $individualAttr;
+    		    setAttr -lock true $individualAttr ;
     		}
         }
     }
 
 }
-
-ToggleLockHighlightedAttributes;
-

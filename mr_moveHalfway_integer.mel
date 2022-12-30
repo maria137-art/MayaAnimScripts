@@ -1,22 +1,28 @@
-// -------------------------------------------------------------------
-// SCRIPT: moveHalfway_integer
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: moveHalfway_int
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Move Time Slider to the nearest integering number frame inbetween the next and previous keyframes.
+// 
+// ------------------------------------------------------------------- 
 //
-// -------------------------------------------------------------------
+// RUN COMMAND:
+// MoveHalfway_Int() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc MoveHalfway_integer(){
-    // declare keyframes
-    integer $prevKeyframe = `findKeyframe -timeSlider -which previous`;  
-    integer $nextKeyframe = `findKeyframe -timeSlider -which next`;
+global proc MoveHalfway_Int() {
+    
+    // initialize keyframes
+    int $prevKeyframe = `findKeyframe -timeSlider -which previous` ;  
+    int $nextKeyframe = `findKeyframe -timeSlider -which next` ;
     
     // get midpoint
-    integer $midPoint = ($nextKeyframe + $prevKeyframe)/2;
-    currentTime $midPoint;   
+    int $midPoint = ($nextKeyframe + $prevKeyframe)/2 ;
+    currentTime $midPoint ;   
 }
-
-MoveHalfway_integer;
-

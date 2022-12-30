@@ -1,73 +1,97 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin_individual
+// VERSION: 0000
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
 //
 // DESCRIPTION: 
 // - Pins selected object/s to a temp locator, to be moved in worldspace. 
+// - All temp locators are placed in a group, located at their average position and orientation.
 // - When script is run again, constrained objects are keyed on the current frame, and the pin then deleted.
 // 
-// 
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// TempPinIndividual() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc TempPinIndividual(){
+global proc TempPinIndividual() {
+
+    // -------------------------------------------------------------------
+    // 01. INITIALIZE VARIABLES
+    // -------------------------------------------------------------------
+    
+    // create array from selected
+    string $sel[] = `ls -sl` ; 
+    
+    string $groupName = "TEMP_worldspace_locator_grp" ;
+    
+    string $tempPointConstraint[0] ;
+    string $tempOrientConstraint[0] ;
     
     // -------------------------------------------------------------------
-    // 01. CHECK IF TEMP GROUP ALREADY EXISTS
+    // 00. CHECK IF TEMP GROUP ALREADY EXISTS
     // -------------------------------------------------------------------
         
     // if TEMP_worldspace_locator_grp already exists
-    if (`objExists TEMP_worldspace_locator_grp`) {
-        
+    if (`objExists $groupName`) {
+              
         // set key on all children of TEMP_worldspace_locator_grp
-        select (`listRelatives -c TEMP_worldspace_locator_grp`);
-        SetKeyTranslate;
-        SetKeyRotate;
+        select (`listRelatives -c $groupName`) ;
+        SetKeyTranslate ;
+        SetKeyRotate ;
         // delete
-        delete TEMP_worldspace_locator_grp;
+        delete $groupName ;
+        
     }
     
     // -------------------------------------------------------------------
-    // 02. CREATE TEMP PIN FOR EACH SELECTED OBJECT
+    // 00. CREATE TEMP PIN FOR EACH SELECTED OBJECT
     // -------------------------------------------------------------------
         
     else {     
-        // create array from selected
-        string $sel[] = `ls -sl`;           
-                        
+                           
         // if nothing is selected
-    	if (size($sel) == 0){
-        	// reminds you to select something //
-        	// make sure -title is unique, otherwise dialog won't trigger
-        	confirmDialog -title "Error" -message "Select object/s to pin.";
+        if (size($sel) == 0) {
+            // reminds you to select something //
+            // make sure -title is unique, otherwise dialog won't trigger
+            confirmDialog -title "Error" -message "Select object/s to pin. \n" ;
         }   
         
-        else{    
+        else {    
             // create group
-            group -em -name TEMP_worldspace_locator_grp;
-             
+            group -em -name $groupName ;
+            
+            // position group at the average position and orientation of every item selected
+            for ($item in $sel) {
+                 $tempPointConstraint = `pointConstraint $item $groupName` ;  
+                 $tempOrientConstraint = `orientConstraint $item $groupName` ;  
+            }              
+            delete $tempPointConstraint $tempOrientConstraint ;
+            
             // for every item selected
             for ($item in $sel) { 
                 // create a temp
-                $tempPin = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")`; 
-                                      	            	            	
-            	pointConstraint $item $tempPin;
-            	orientConstraint $item $tempPin;
+                $tempPin = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")` ; 
+                                                                        
+                pointConstraint $item $tempPin ;
+                orientConstraint $item $tempPin ;
     
-            	delete -cn $tempPin; 
-            	
-            	// place locators in group
-            	parent $tempPin TEMP_worldspace_locator_grp;	
-            	            	
-            	// reverse constraints
-            	pointConstraint -mo -w 1 $tempPin $item ;
-            	orientConstraint -mo -w 1 $tempPin $item ;  	
-            }	     	           	
-        }              
+                delete -cn $tempPin ; 
+                
+                // place locators in group
+                parent $tempPin $groupName ;    
+                                
+                // reverse constraints
+                pointConstraint -mo -w 1 $tempPin $item ;
+                orientConstraint -mo -w 1 $tempPin $item ;      
+            }                       
+        }
+                      
         // select group before exiting
-        select TEMP_worldspace_locator_grp;               
-    }     	
+        select $groupName ;               
+    }       
 }
-
-TempPinIndividual;
-

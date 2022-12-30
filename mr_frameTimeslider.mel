@@ -1,23 +1,41 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: frameTimeslider
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
 //
-// DATE: 2022-12-14
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // A version of FrameSelectedWithoutChildren.
 // - Only frames within the Time Slider range, rather than the entire scene.
 // - Only shows animCurves of highlighted animation animLayer.
 // 
+// EXAMPLE USES:
 // Can be helpful as a hotkey, if wanted to focus on a range and not select relevant keys each time you want to frame it.
-// 
-// -------------------------------------------------------------------
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// FrameInsidePlaybackRange() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc FrameInsideFrameRange(){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//               FOCUS GRAPH EDITOR INSIDE PLAYBACK RANGE               //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+global proc FrameInsidePlaybackRange() {
 
     // -------------------------------------------------------------------
-    // 01. DEFINE FRAME VIEW
+    // 01. INITIALIZE VARIABLES
     // -------------------------------------------------------------------
  
     // define timeslider range
@@ -25,7 +43,7 @@ proc FrameInsideFrameRange(){
     float $end = `playbackOptions -q -max` ;
     
     // define difference (use abs to account for negative frame numbers)
-    $range = `abs ($start - $end)`;
+    $range = `abs ($start - $end)` ;
    
     // value to multiply timeslider range, to set a comfortable buffer amount
     float $bufferDivider = 0.1 ;
@@ -33,8 +51,12 @@ proc FrameInsideFrameRange(){
     // define buffer
     float $frameBuffer =  $range * $bufferDivider ;         
    
+    // -------------------------------------------------------------------
+    // 01. REFRAME GRAPH EDITOR
+    // -------------------------------------------------------------------
+
     // reframe the Graph Editor
-    animView -startTime (`playbackOptions -query -minTime` - $frameBuffer) -endTime (`playbackOptions -query -maxTime` + $frameBuffer) graphEditor1GraphEd;
+    animView -startTime (`playbackOptions -query -minTime` - $frameBuffer) -endTime (`playbackOptions -query -maxTime` + $frameBuffer) graphEditor1GraphEd ;
 
     // -------------------------------------------------------------------
     // 01. SHOW ONLY ANIM CURVES ON HIGHLIGHTED ANIMATION LAYERS
@@ -44,15 +66,9 @@ proc FrameInsideFrameRange(){
     string $animLayer[] = getSelectedAnimLayer("AnimLayerTab") ;
        
     // for every animation layer
-    for ($item in $animLayer){
+    for ($item in $animLayer) {
         // rehighlight it, to refresh the Graph Editor anim curves
-        animLayerEditorOnSelect($item, 1);
+        animLayerEditorOnSelect($item, 1) ;
     }
     
 }
-
-
-FrameInsideFrameRange;
-
-
- 

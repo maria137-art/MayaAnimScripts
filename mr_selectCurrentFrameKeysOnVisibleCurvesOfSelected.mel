@@ -1,29 +1,37 @@
-// -------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: selectCurrentKeysOnVisibleCurvesOfSelected 
+// VERSION: 0001
 //
-// CREATORS / CREDIT: Maria Robertson
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
 //
 // DESCRIPTION: 
 // Select all keys of selected objects that are on the current frame and are on visible animCurves in the Graph Editor.
 // 
-// -------------------------------------------------------------------
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// SelectCurrentKeysOnVisibleCurvesOfSelected() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc SelectCurrentKeysOnVisibleCurvesOfSelected(){
+proc SelectCurrentKeysOnVisibleCurvesOfSelected() {
+
 	// Create an array from selected
-	string $sel[] = `ls -sl`;
+	string $sel[] = `ls -sl` ;
 
     // create array of visible curves in Graph Editor
     // -cs flag means curves shown here
-	string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd`;
+	string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
 
 	// get current time
-	float $currentTime = `currentTime -q`;
+	float $currentTime = `currentTime -q` ;
 	// deselect all keys
-	selectKey -clear;
+	selectKey -clear ;
 		
     //For each object selected
-	for ($i=0; $i < `size $sel`; $i++) 
-		{   
+	for ($i=0; $i < `size $sel`; $i++) {   
 		// from Maya command help page: https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
 		for ($curve in $visibleAnimCurvesInGraphEd){
 		    // select keys on current frame onwards 
@@ -31,5 +39,3 @@ proc SelectCurrentKeysOnVisibleCurvesOfSelected(){
 		}		
 	}
 }
-
-SelectCurrentKeysOnVisibleCurvesOfSelected;
