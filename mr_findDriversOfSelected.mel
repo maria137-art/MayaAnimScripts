@@ -4,12 +4,13 @@
 // VERSION: 0001
 //
 // CREATORS: Maria Robertson
+// CREDIT: claydough from CGsociety (for code snippet)
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
-// Select the drivers of any selected object that are constrained by them.
+// Select the drivers of any selected objects that are constrained by them.
 //
-// UPDATE! - Found a neater script for this by Tim van Huseen in this Autodesk post:
+// UPDATE! - Found another script for this by Tim van Huseen in this Autodesk post:
 // https://forums.autodesk.com/t5/maya-ideas/constraint-objects-view-or-select-the-object-it-s-constraint-to/idi-p/7960702
 // 
 // -------------------------------------------------------------------
