@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin
-// VERSION: 0000
+// VERSION: 0001
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -14,44 +14,53 @@
 //
 // RUN COMMAND:
 // TempPin() ;
-//               
+//
+// REQUIREMENTS:
+// Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
+//                           
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc TempPin() {
 
-    string $objectsToPin[] ;  
-    
-    if (`objExists TEMP_worldspace_locator`) {
-        select $objectsToPin ;   
+    string $tempPinLocName = "TEMP_worldspace_locator" ;
+
+    if (`objExists $tempPinLocName`) {
+        select $tempPinLocName ;
+        
+        // use procedure
+        FindConstraintTargets() ;
+                     
         SetKeyTranslate ;
         SetKeyRotate ;
         
-        delete TEMP_worldspace_locator ;
+        delete $tempPinLocName ;      
     }
     
     else {     
-        string $objectsToPin[] = `ls -sl` ;  
+
+        string $sel[] = `ls -sl` ;  
         
-        // makes a list (array) of your selected objects
-        spaceLocator -p 0 0 0 -n TEMP_worldspace_locator ;
-        setAttr "TEMP_worldspace_locatorShape.localScaleY" 10 ;
-        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10 ;
-        setAttr "TEMP_worldspace_locatorShape.localScaleZ" 10 ;
+        // create the temp locator
+        spaceLocator -p 0 0 0 -n $tempPinLocName ;
+        setAttr ($tempPinLocName + "Shape.localScaleY") 10 ;
+        setAttr ($tempPinLocName + "Shape.localScaleZ") 10 ;
+        setAttr ($tempPinLocName + "Shape.localScaleZ") 10 ;
 
          
-        // for every item you have selected, do this
-        for ($item in $objectsToPin) { 
-            	pointConstraint $item TEMP_worldspace_locator ;
-            	orientConstraint $item TEMP_worldspace_locator ;
+        // place the locator at the average position and orientation between
+        // the selected objects   
+        for ($item in $sel) { 
+            pointConstraint $item $tempPinLocName ;
+            orientConstraint $item $tempPinLocName ;
         }
 
-    	delete -cn TEMP_worldspace_locator ;
+        delete -cn $tempPinLocName ;
 
-        for ($item in $objectsToPin) {    	
-        	pointConstraint -mo -w 1 TEMP_worldspace_locator $item ;
-        	orientConstraint -mo -w 1 TEMP_worldspace_locator $item ;   
+        for ($item in $sel) {       
+            pointConstraint -mo -w 1 $tempPinLocName $item ;
+            orientConstraint -mo -w 1 $tempPinLocName $item ;   
         }  
                 
-        select TEMP_worldspace_locator ;         
-    }     	
+        select $tempPinLocName ;         
+    }       
  }

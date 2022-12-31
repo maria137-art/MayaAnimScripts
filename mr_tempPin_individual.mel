@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin_individual
-// VERSION: 0000
+// VERSION: 0001
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -16,6 +16,9 @@
 // RUN COMMAND:
 // TempPinIndividual() ;
 //
+// REQUIREMENTS:
+// Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
+//                           
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc TempPinIndividual() {
@@ -23,9 +26,6 @@ global proc TempPinIndividual() {
     // -------------------------------------------------------------------
     // 01. INITIALIZE VARIABLES
     // -------------------------------------------------------------------
-    
-    // create array from selected
-    string $sel[] = `ls -sl` ; 
     
     string $groupName = "TEMP_worldspace_locator_grp" ;
     
@@ -41,11 +41,14 @@ global proc TempPinIndividual() {
               
         // set key on all children of TEMP_worldspace_locator_grp
         select (`listRelatives -c $groupName`) ;
+        
+        // run procedure
+        FindConstraintTargets() ;
+        
         SetKeyTranslate ;
         SetKeyRotate ;
         // delete
         delete $groupName ;
-        
     }
     
     // -------------------------------------------------------------------
@@ -53,41 +56,50 @@ global proc TempPinIndividual() {
     // -------------------------------------------------------------------
         
     else {     
-                           
+        
+        string $sel[] = `ls -sl` ; 
+
         // if nothing is selected
         if (size($sel) == 0) {
             // reminds you to select something //
             // make sure -title is unique, otherwise dialog won't trigger
             confirmDialog -title "Error" -message "Select object/s to pin. \n" ;
-        }   
+        } 
+      
         
         else {    
-            // create group
+
+            // create a group
             group -em -name $groupName ;
             
             // position group at the average position and orientation of every item selected
             for ($item in $sel) {
                  $tempPointConstraint = `pointConstraint $item $groupName` ;  
                  $tempOrientConstraint = `orientConstraint $item $groupName` ;  
-            }              
+            }            
+
+            // remove constraints
             delete $tempPointConstraint $tempOrientConstraint ;
+            
             
             // for every item selected
             for ($item in $sel) { 
-                // create a temp
-                $tempPin = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")` ; 
-                                                                        
-                pointConstraint $item $tempPin ;
-                orientConstraint $item $tempPin ;
-    
-                delete -cn $tempPin ; 
+
+                // create a locator
+                $tempPinLocator = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")` ; 
                 
-                // place locators in group
-                parent $tempPin $groupName ;    
+                // position and orient it at its target                                                     
+                pointConstraint $item $tempPinLocator ;
+                orientConstraint $item $tempPinLocator ;
+                delete -cn $tempPinLocator ; 
+                
+                // place the locator in the group
+                parent $tempPinLocator $groupName ;    
                                 
                 // reverse constraints
-                pointConstraint -mo -w 1 $tempPin $item ;
-                orientConstraint -mo -w 1 $tempPin $item ;      
+                pointConstraint -mo -w 1 $tempPinLocator $item ;
+                orientConstraint -mo -w 1 $tempPinLocator $item ;   
+  
             }                       
         }
                       
