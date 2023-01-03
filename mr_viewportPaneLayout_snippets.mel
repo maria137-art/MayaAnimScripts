@@ -1,0 +1,57 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// SCRIPT: viewportPaneLayout_snippets
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// A collection of commands to customize pane layouts more than the Maya default.
+// 
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+
+// -------------------------------------------------------------------
+// 00. SINGLE PANE
+// -------------------------------------------------------------------
+
+// single pane
+switchPanes single 0 ; 
+
+
+// -------------------------------------------------------------------
+// 00. TWO PANES
+// -------------------------------------------------------------------
+
+// two panes side by side
+TwoSideBySideViewArrangement;
+// or
+switchPanes vertical2 0 ; 
+
+
+// two panes stacked
+switchPanes horizontal2 0 ; 
+
+
+// -------------------------------------------------------------------
+// 00. FOUR PANES
+// -------------------------------------------------------------------
+
+// four panes side by side
+switchPanes vertical4 0 ;
+
+
+// four panes stacked
+switchPanes horizontal4 0 ;
+
+
+// four panes in a square
+FourViewArrangement ;
+
+
+// three panes above one pane
+switchPanes top4 0 ;
+
+
+

@@ -1,18 +1,25 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: toggleLockHighlightedAttributes 
+// SCRIPT: toggleLockHighlightedChannelBoxAttributes 
 // VERSION: 0001
 //
 // CREATORS: Maria Robertson
+// CREDIT: Brian Horgan / Michiel Duvekot
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
-// A toggle for locking and unlocking highlighted attributes.
+// A toggle for locking and unlocking highlighted attributes in the Channel Box.
 // 
 // ------------------------------------------------------------------- 
 //
 // RUN COMMAND:
 // ToggleLockHighlightedAttributes() ;
+// 
+// ------------------------------------------------------------------- 
+// 
+// RESEARCH THAT HELPED: 
+// Code was based on what provided by Horganovski and mduvekoton CGSociety.
+// https://forums.cgsociety.org/t/check-or-ignore-locked-coordinate-attributes/1470963
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -20,14 +27,14 @@ global proc ToggleLockHighlightedAttributes() {
     
     // initialize variables
     string $sel[] = `ls -sl` ;
-    string $selectedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
+    string $highlightedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
     
 
     // for every selected item      
     for ($item in $sel) {
         
         // for each of its highlighted attributes
-    	for ($attr in $selectedChannelBoxAttributes) {
+    	for ($attr in $highlightedChannelBoxAttributes) {
     	    
     	    string $individualAttr = $item + "." + $attr ;
     	    
