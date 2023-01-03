@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: changeWorldspacePivot 
-// VERSION: 0007
+// VERSION: 0008
 //
 // CREATORS: Maria Robertson 
 // CREDIT: Daniel Fotheringham
@@ -22,21 +22,23 @@
 // WorldspacePivot() ;
 //
 // INSTRUCTIONS:
-// This scripts works differently depending when it is run and what is selected when activated.
+// This scripts works differently depending when it is run and what is selected at the time.
 //
-// PHASE 1:
-//     If it doesn't already exist, create a locator called TEMP_PIVOT_loc.
-//     - If nothing is selected, pivot will be created at origin.
-//     - If one or more objects are selected, pivot will be created at the average position and orientation the 
+// PHASE 1 - CREATE THE PIVOT:
+//     If it doesn't already exist, create a locator to be the pivot.
+//     - If nothing is selected, the pivot will be created at origin.
+//     - If one or more objects are selected, the pivot will be created at the average position and orientation the 
 //     object/s are travelling in, between the current and next frame.
 //
-// PHASE 2:
+// PHASE 2 - SELECT OBJECTS TO BE PIVOTED:
 //     If TEMP_PIVOT_loc exists with no children, create baked offset locators inside the pivot
 //     for each selected object.
 //
-// PHASE 3:
+// PHASE 3 - BAKE EVERYTHING CONNECTED TO THE PIVOT:
 //     If TEMP_PIVOT_loc contains children, bake the originally selected objects to offset, and delete the pivot.
 //
+//
+// 
 // -------------------------------------------------------------------
 //
 // RESEARCH THAT HELPED:
@@ -68,12 +70,16 @@ global proc WorldspacePivot() {
     string $sel[] = `ls -sl` ;
 	string $tempPivot = "TEMP_PIVOT_loc" ;	   	
 	string $pivotLocators[] ; 
+
+    // declare time range
+    float $startTime = `playbackOptions -q -min`;
+    float $endTime = `playbackOptions -q -max`;
     	    
     // -------------------------------------------------------------------
     // 01. IF TEMP_PIVOT_loc ALREADY EXISTS
     // -------------------------------------------------------------------   
     
-    if(`objExists "TEMP_PIVOT_loc"`) {
+    if(`objExists $tempPivot`) {
             	   	
     	string $pivotChildren[] = `listRelatives -c $tempPivot` ;	
     	
@@ -85,7 +91,13 @@ global proc WorldspacePivot() {
             select $pivotChildren ;
             FindConstraintTargets ;
             
-        	BakeSelected ;    
+                // bake and delete connections
+        	    refresh -suspend 1 ;
+                bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+                delete -sc ;
+                filterCurve ;
+                delete -cn ;
+                refresh -suspend 0 ;  
         	
         	delete $tempPivot ;
         }
@@ -160,7 +172,13 @@ global proc WorldspacePivot() {
                 // bake pivot locators
             	select $pivotLocators;
             	  
-            	BakeSelected ;  
+                // bake and delete connections
+                refresh -suspend 1 ;
+                bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+                delete -sc ;
+                filterCurve ;
+                delete -cn ;
+                refresh -suspend 0 ;  
             	
             	// give $i value of 0. If size of $pivotLocators is greater than 0, increase $i value by 1
             	// and run script
@@ -177,10 +195,10 @@ global proc WorldspacePivot() {
 
 
     // -------------------------------------------------------------------
-    // 01. IF TEMP_PIVOT_loc DOES NOT EXISTS
+    // 01. IF $tempPivot DOES NOT EXISTS
     // -------------------------------------------------------------------  
             
-    // if TEMP_PIVOT_loc doesn't exist 
+    // if $tempPivot doesn't exist 
     else {
         
         // -------------------------------------------------------------------
@@ -194,13 +212,19 @@ global proc WorldspacePivot() {
             select $sel ;
             string $lastInSelected[0] = `ls -sl -tail 1` ; 
             
-            CreateTEMPPivot ;         
-                    
+            // create locator
+            spaceLocator -p 0 0 0 -n $tempPivot ;
+                  
+            // set locator scale
+            setAttr ($tempPivot + ".localScaleZ") 100 ;
+            setAttr ($tempPivot + ".localScaleX") 100 ;
+            setAttr ($tempPivot + ".localScaleY") 100 ;     
+                            
             // point and orient constrain locator to specified axis on current frame              
             /*
             // with axis skipss
-            pointConstraint -skip y $lastInSelected TEMP_PIVOT_loc;  
-            orientConstraint -skip x -skip z $lastInSelected TEMP_PIVOT_loc;              
+            pointConstraint -skip y $lastInSelected $tempPivot ;  
+            orientConstraint -skip x -skip z $lastInSelected $tempPivot ;              
             */
             
             // average position and rotation of temp locator between selected
@@ -267,10 +291,16 @@ global proc WorldspacePivot() {
             // if nothing is selected
         else {
             
-            // create TEMP_PIVOT_loc locator
-        	warning("No TEMP_PIVOT_loc exists. Creating one now.") ;
+            // create $tempPivot locator
+        	warning("No temp pivot locator exists. Creating one now.") ;
             
-            CreateTEMPPivot ;
+            // create locator
+            spaceLocator -p 0 0 0 -n $tempPivot ;
+      
+            // set locator scale
+            setAttr ($tempPivot + ".localScaleZ") 100 ;
+            setAttr ($tempPivot + ".localScaleX") 100 ;
+            setAttr ($tempPivot + ".localScaleY") 100 ;   
             
             select $tempPivot ;
                            
@@ -313,36 +343,3 @@ proc FindConstraintTargets() {
     }
 
 }
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-proc BakeSelected() {
-    
-    // declare time range
-	float $startTime = `playbackOptions -q -min`;
-	float $endTime = `playbackOptions -q -max`;
-	
-    refresh -suspend 1 ;
-	bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
-	delete -sc ;
-	filterCurve ;
-	delete -cn ;
-	refresh -suspend 0 ;
-	
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-proc CreateTEMPPivot() { 
-    string $currentSelection[] = `ls -sl` ;
-    spaceLocator -p 0 0 0 -n "TEMP_PIVOT_loc" ;
-          
-    // set locator scale
-    setAttr "TEMP_PIVOT_loc.localScaleZ" 100 ;
-    setAttr "TEMP_PIVOT_loc.localScaleX" 100 ;
-    setAttr "TEMP_PIVOT_loc.localScaleY" 100 ;
-    
-    // reselect the previous selection, before locator was created
-    select $currentSelection ;
-}
-
