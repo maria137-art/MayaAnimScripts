@@ -59,9 +59,6 @@ global proc AnimLayer_ShowOnlyHighlightedAnimLayerCurves() {
     }
 } 
 
-// the above procedure could be used with a scriptJob, so that this is automatically run whenever there is a change in selected objects
-int $scriptJob_ShowOnlyHighlightedAnimLayerCurves = `scriptJob -e SelectionChanged AnimLayer_ShowOnlyHighlightedAnimLayerCurves` ;
-
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------ 
 
