@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: moveHalfway_float
-// VERSION: 0001
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // -------------------------------------------------------------------
@@ -13,10 +13,28 @@
 //
 // RUN COMMAND:
 // MoveHalfway_Float ;
-//
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 0002: If no objects are selected, script will jump to midpoint of playback range.
+//  
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc MoveHalfway_Float() {
+    
+    // create string from selected
+    string $sel = `ls -sl` ;
+    
+    if(size($sel) == 0) {
+        // define timeslider range
+        float $startTime = `playbackOptions -q -min` ;
+        float $endTime = `playbackOptions -q -max` ;
+        
+        // get midpoint of range
+        float $midTime = ($startTime + $endTime)/2 ;
+        currentTime $midTime ;   
+    }
+    
+    else {
 
     // initialize keyframes
     float $prevKeyframe = `findKeyframe -timeSlider -which previous` ;  
@@ -25,4 +43,6 @@ global proc MoveHalfway_Float() {
     // get midpoint
     float $midPoint = ($nextKeyframe + $prevKeyframe)/2 ;
     currentTime $midPoint ;   
+
+    }   
 }
