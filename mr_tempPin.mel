@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin
-// VERSION: 0001
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -17,7 +17,10 @@
 //
 // REQUIREMENTS:
 // Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
-//                           
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
+//                       
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc TempPin() {
@@ -50,15 +53,15 @@ global proc TempPin() {
         // place the locator at the average position and orientation between
         // the selected objects   
         for ($item in $sel) { 
-            pointConstraint $item $tempPinLocName ;
-            orientConstraint $item $tempPinLocName ;
+            catch (`pointConstraint $item $tempPinLocName`) ;
+            catch (`orientConstraint $item $tempPinLocName`) ;
         }
 
         delete -cn $tempPinLocName ;
 
         for ($item in $sel) {       
-            pointConstraint -mo -w 1 $tempPinLocName $item ;
-            orientConstraint -mo -w 1 $tempPinLocName $item ;   
+            catch (`pointConstraint -mo -w 1 $tempPinLocName $item`) ;
+            catch (`orientConstraint -mo -w 1 $tempPinLocName $item`) ;   
         }  
                 
         select $tempPinLocName ;         
