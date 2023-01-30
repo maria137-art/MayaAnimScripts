@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin_individual
-// VERSION: 0001
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -18,6 +18,9 @@
 //
 // REQUIREMENTS:
 // Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
 //                           
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -89,16 +92,16 @@ global proc TempPinIndividual() {
                 $tempPinLocator = `spaceLocator -p 0 0 0 -n ("TEMP_worldspace_" + $item + "_loc")` ; 
                 
                 // position and orient it at its target                                                     
-                pointConstraint $item $tempPinLocator ;
-                orientConstraint $item $tempPinLocator ;
+                catch (`pointConstraint $item $tempPinLocator`) ;
+                catch (`orientConstraint $item $tempPinLocator`) ;
                 delete -cn $tempPinLocator ; 
                 
                 // place the locator in the group
                 parent $tempPinLocator $groupName ;    
                                 
                 // reverse constraints
-                pointConstraint -mo -w 1 $tempPinLocator $item ;
-                orientConstraint -mo -w 1 $tempPinLocator $item ;   
+                catch (`pointConstraint -mo -w 1 $tempPinLocator $item`) ;
+                catch (`orientConstraint -mo -w 1 $tempPinLocator $item`) ;   
   
             }                       
         }
