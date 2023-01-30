@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: tempPin_rotate
-// VERSION: 0002
+// VERSION: 0004
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -15,7 +15,11 @@
 //
 // REQUIREMENTS:
 // Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
-//                           
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 0003: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
+// 0004: Keeping locator point constrained to objects, so that it follows them.
+//                            
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc TempPinRotate() {
@@ -44,26 +48,31 @@ global proc TempPinRotate() {
         
         // create the temp locator
         spaceLocator -p 0 0 0 -n $tempPinRotLocName ;
+        setAttr ($tempPinRotLocName + "Shape.localScaleX") 10 ;
         setAttr ($tempPinRotLocName + "Shape.localScaleY") 10 ;
-        setAttr ($tempPinRotLocName + "Shape.localScaleZ") 10 ;
         setAttr ($tempPinRotLocName + "Shape.localScaleZ") 10 ;
 
          
-        // place the locator at the average position and orientation between
-        // the selected objects   
+        // rotate locator at the average orientation of selected objects   
         for ($item in $sel) { 
-            pointConstraint $item $tempPinRotLocName ;
-            orientConstraint $item $tempPinRotLocName ;
+            catch (`orientConstraint $item $tempPinRotLocName`) ;
         }
         
-        // delete its constraints
+        // delete the orient constrains 
         delete -cn $tempPinRotLocName ;
         
-        // now orient constrain the selected objects to the locator
-        for ($item in $sel) {       
-            orientConstraint -mo -weight 1 $tempPinRotLocName $item ;          
-        }  
+        // place locator at the average position of the selected objects   
+        // then orient constrain the selected objects to the locator
+        for ($item in $sel) { 
+            catch (`pointConstraint $item $tempPinRotLocName`) ;
+            catch (`orientConstraint -mo -weight 1 $tempPinRotLocName $item`) ;      
+        }
         
+        // lock translate of locator
+        setAttr  -lock true ($tempPinRotLocName + ".translateX");
+        setAttr  -lock true ($tempPinRotLocName + ".translateY");
+        setAttr  -lock true ($tempPinRotLocName + ".translateZ");
+  
         select $tempPinRotLocName ; 
     }       
 
