@@ -1,0 +1,89 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: mr_toggleUndockedWindows
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// CREDIT: siproductions (CGSociety) https://forums.cgsociety.org/t/close-all-maya-windows/1357835/4
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Toggle the visibility of all undocked windows.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// ToggleUndockedWindows() ;
+//
+// INSTRUCTIONS: 
+// Run the following command: mr_toggleUndockedWindows
+//  
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+
+global proc ToggleUndockedWindows() {
+    
+
+    // ------------------------------------------------------------------- 
+    // 01. INITIALIZE VARIABLES
+    // ------------------------------------------------------------------- 
+
+    // create array for all undocked windows
+    string $allMayaWindows[] = `lsUI -windows` ;
+    // create array of windows to ignore
+    string $windowsToIgnore[] = { "CommandWindow","ConsoleWindow","MayaWindow","ColorEditor" } ;
+    // remove any windows in $windowsToIgnore from $allMayaWindows
+    string $extraWindows[] = stringArrayRemove($windowsToIgnore, $allMayaWindows) ;
+    
+    // initialize integer to use as conditioning
+    int $ToggleVisibleWindowsCondition = 0 ;    
+
+    
+
+    // ------------------------------------------------------------------- 
+    // 01. CHECK IF ANY WINDOW IS VISIBILE
+    // ------------------------------------------------------------------- 
+
+    // for every window in $extraWindows
+    for ($window in $extraWindows) {    
+
+        // if any of them are visible
+        if (`window -q -visible $extraWindows`) {
+
+            print "Found a visible window. \n" ;
+
+            // change the int condition to 1
+            $ToggleVisibleWindowsCondition = 1 ;
+
+            // end the for loop
+            break ;
+        }   
+    }    
+
+    // ------------------------------------------------------------------- 
+    // 01. TOGGLE ALL WINDOWS OFF
+    // ------------------------------------------------------------------- 
+
+    if ($ToggleVisibleWindowsCondition == 0) {
+
+        print "Make undocked windows visible. \n" ;
+        // for every window in $extraWindows
+        for ($window in $extraWindows) {
+            // hide it
+            window -e -visible true $window ; 
+        }      
+    }
+
+    // ------------------------------------------------------------------- 
+    // 01. TOGGLE ALL WINDOWS ON
+    // ------------------------------------------------------------------- 
+
+    if ($ToggleVisibleWindowsCondition == 1) {
+        print "Close undocked windows. \n" ;
+        // for every window in $extraWindows
+        for ($window in $extraWindows) {
+            // hide it
+            window -e -visible false $window ; 
+        }       
+    }
+
+}
