@@ -1,0 +1,30 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: selectVisibleAnimCurves
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// CREDIT: Aaron Koressel
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Select all visible animCurves in the Graph Editor.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// SelectVisibleAnimCurves() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc SelectVisibleAnimCurves () {
+    
+
+    // Aaron Koressel's ackDeleteKey script uses these two lines to query visible Graph Editor curves 
+    // get graph outliner 
+    string $connection = `editor -q -mainListConnection graphEditor1GraphEd` ;    
+    // get animCurve selection from outliner
+    string $visibleCurves[] = `expandSelectionConnectionAsArray $connection` ;
+    
+    selectKey -add -k $visibleCurves ;
+      
+}
