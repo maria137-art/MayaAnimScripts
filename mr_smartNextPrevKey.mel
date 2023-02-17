@@ -1,0 +1,92 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: mr_smartNextPrevKey
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Changes the current time to the previous or next key, depending on the where the mouse pointer is hovering.
+// 
+// If mouse pointer is NOT above Graph Editor:
+//     - Will jump to the next/prev key visible in the Timeslider
+// If mouse pointer IS above Graph Editor:
+//     - Will jump to the next/prev key visible in the Graph Editor
+// 
+// EXAMPLE USES:
+// Can be helpful if wanting more control over which keys to jump between.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// SmartNextKeyframe() ;
+// SmartPrevKeyframe() ;
+//
+// INSTRUCTIONS: 
+// Assign the commands to a hotkey for quick flipping!
+// I like to use SHIFT + Z for prev key, and SHIFT + X for next key.
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                             SMART NEXT KEY                           //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+global proc SmartNextKeyframe() { 
+    
+    // create array of all visible curves
+    string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
+    // query panel that the mouse pointer is over
+    string $currentPanel = `getPanel -up`; 
+    
+    // if panel is not the Graph Editor
+    if($currentPanel != "graphEditor1") { 
+        print "Current panel is not Graph Editor. \n" ;
+        // use Maya's default command to go to Next Key
+        currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -timeSlider -which next` : `findKeyframe -which next`) ;
+    }
+    
+    // if panel is the Graph Editor
+    else {
+        // create array of all visible curves
+        string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
+        // go to the next keyframe
+        currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -which next $visibleAnimCurvesInGraphEd` : `findKeyframe -which next`) ;   
+    }
+}  
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                             SMART PREV KEY                           //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+global proc SmartPrevKeyframe() {
+    
+    // create array of all visible curves
+    string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
+    // query panel that the mouse pointer is over
+    string $currentPanel = `getPanel -up`; 
+        
+    // if panel is not the Graph Editor
+    if($currentPanel != "graphEditor1") { 
+        print "Current panel is not Graph Editor. \n" ;
+        // use Maya's default command to go to Previous Key
+        currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -timeSlider -which previous` : `findKeyframe -which previous`) ;
+    }
+    
+    // if panel is the Graph Editor
+    else {   
+        // create array of all visible curves
+        string $visibleAnimCurvesInGraphEd[] = `animCurveEditor -q -cs graphEditor1GraphEd` ;
+        // go to the previous keyframe
+        currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -which previous $visibleAnimCurvesInGraphEd` : `findKeyframe -which previous`) ;
+    }
+} 
