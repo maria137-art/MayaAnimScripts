@@ -1,0 +1,65 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: changeManipMode_individual
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Change the Axis Orientation mode of the Move and Rotate manipulators together.
+// e.g. changing the Move manipulator's mode to World will set the Rotate's manip mode to World as well.
+// 
+// 
+// EXAMPLE USES:
+// Assign the run command to a hotkey, to toggle modes of whichever of the manipulators are currently being used.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// ChangeManipMode_individual() ;
+//
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 2023-03-29 - V1
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+proc ChangeManipMode() {
+    
+
+    string $manip_Trans = `manipMoveContext -q -mode Move`;
+    
+    // if mode is World
+    if ($manip_Trans == 2) {
+        // change to Object
+        manipMoveContext -edit -mode 0 Move ;  
+    }
+    
+    // if mode is not Object
+    else {
+        // change to World
+        manipMoveContext -edit -mode 2 Move ;  
+    }
+
+
+    string $manip_Rot = `manipRotateContext -q -mode Rotate` ;
+    
+        // if mode is Object
+        if ($manip_Rot == 0) {
+            // change to World
+            manipRotateContext -edit -mode 1 Rotate ;
+        }
+        
+        // if mode is World
+        if ($manip_Rot == 1) {
+            // change to Gimbal
+            manipRotateContext -edit -mode 2 Rotate ;
+        }
+        
+        // if mode is Gimbal
+        if ($manip_Rot == 2) {
+            // change to Object
+            manipRotateContext -edit -mode 0 Rotate ;
+        }     
+}
+    
