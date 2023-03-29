@@ -1,0 +1,216 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: tempPin_pivotFromFollowSet
+// VERSION: WIP
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Create a temp pivot to pivot from a predetermined object.
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// TempPin_CreateFollowSelectionSet() ;
+// TempPin_PivotFromFollowSelectionSet() ;
+//
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                      CREATE A SELECTION SET TO FOLLOW                //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+global proc TempPin_CreateFollowSelectionSet() {
+    
+    // initialize variables
+    string $objToFollowSetName = "objToFollowSet" ;
+
+    // if nothing or more than one object is selected
+    if (size(`ls -sl`) != 1) {        
+        // give an error
+        // NOTE: make sure -title is unique, otherwise dialog won't trigger
+        confirmDialog -title "Error A" -message "Select one object to remember to pivot from." ;
+    } 
+    
+    // if $objToFollowSetName already exists
+    else if(`objExists($objToFollowSetName)`){
+        delete $objToFollowSetName ;
+    }
+    
+    
+    // create a selection set from the selected object
+    $objToFollowSet = `sets -n "objToFollowSet"`;
+ 
+     
+}
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                    TEMP PIVOT FROM SELECTION SET                     //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+global proc TempPin_PivotFromFollowSelectionSet() {
+
+
+    // -------------------------------------------------------------------
+    // 01. INITIALIZE VARIABLES
+    // -------------------------------------------------------------------
+     
+    string $objToPivot[0] = `ls -sl` ;
+    string $tempPivotOffsetGroupName = "TEMP_pivot_offset" ;
+
+    string $objToFollowSetName = "objToFollowSet" ;  
+    select -r objToFollowSet ;
+    string $followObject[0] = `ls -sl` ;
+
+ 
+    // -------------------------------------------------------------------
+    // 01. IF AN OFFSET GROUP ALREADY EXISTS, KEY THE TARGETS AND DELETE THE GROUP
+    // -------------------------------------------------------------------
+          
+    // if an offset group already exists
+    if (`objExists $tempPivotOffsetGroupName`) {
+        
+        // delete its connections
+        delete -cn $tempPivotOffsetGroupName ;   
+        // create array of its children
+        string $tempPivotOffsetGroupChildren[0] = `listRelatives -c $tempPivotOffsetGroupName` ;
+       
+        // set keys on the child
+        select $tempPivotOffsetGroupChildren ;
+        FindConstraintTargets ;
+        ng follow locator, made in mr_
+//
+        SetKeyTranslate ;
+        SetKeyRotate ;
+        
+        // delete the group
+        delete $tempPivotOffsetGroupName ;
+    }
+        
+
+    //////////////////////////////////////////////////////////////////////////
+    // -------------------------------------------------------------------- //
+    //                                                                      //
+    //                          FOR A SOLO TEMP LOCATOR                     //
+    //                                                                      //
+    // -------------------------------------------------------------------- //
+    ////////////////////////////////////////////////////////////////////////// 
+
+            
+    // if a selection set exists
+    else if (`objExists $objToFollowSetName`) {
+              
+        // -------------------------------------------------------------------
+        // 02. CHECK SELECTION
+        // -------------------------------------------------------------------       
+         
+        // if nothing or more than one object is selected
+        if (size($objToPivot) != 1) {        
+            // give an error
+            // NOTE: make sure -title is unique, otherwise dialog won't trigger
+            confirmDialog -title "Error A" -message "Select one object to pivot from." ;
+        }    
+        
+        // or if a follow locator is selected as the pivot
+        else if ($objToPivot[0] == $followObject[0]) {
+            // give an error
+            confirmDialog -title "Error B" -message "Can't use a Follow Locator as a pivot." ;
+        }
+        
+    
+        // -------------------------------------------------------------------
+        // 02. CREATE AN OFFSET GROUP TO PIVOT
+        // -------------------------------------------------------------------       
+        
+        else {
+
+            // create an offset group to pivot
+            string $tempPivotOffsetGroup = `group -em -name $tempPivotOffsetGroupName` ;     
+            pointConstraint -w 1 $followObject[0] $tempPivotOffsetGroup ;
+            orientConstraint -w 1 $followObject[0] $tempPivotOffsetGroup ;
+            
+            // NOTE: have to specifically name the constraint to delete, otherwise the null
+            // group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used     
+            delete ($tempPivotOffsetGroup + "_orientConstraint1") ;
+                      
+			// create locator for object to pivot
+			string $tempObjLocator[0] = `spaceLocator -n ($objToPivot[0] + "_temp_pivot_loc")` ;
+			// parent under group to offset
+			parent $tempObjLocator $tempPivotOffsetGroup ;
+			
+			// parent constrain $tempObjLocator to $objToPivot
+			parentConstraint -w 1 $objToPivot[0] $tempObjLocator[0] ;
+			delete -cn $tempObjLocator[0] ;
+			
+			// parent constrain $tempObjLocator to $objToPivot
+			parentConstraint -mo -w 1 $tempObjLocator[0] $objToPivot[0] ;
+			
+            select $tempPivotOffsetGroup ;            
+
+        }
+    }
+
+
+    
+    //////////////////////////////////////////////////////////////////////////
+    // -------------------------------------------------------------------- //
+    //                                                                      //
+    //                        IF NO TEMP PINS EXIST                         //
+    //                                                                      //
+    // -------------------------------------------------------------------- //
+    //////////////////////////////////////////////////////////////////////////   
+       
+    // if both of the conditions don't exist
+    else {
+
+        // reminds you to select something //
+        // make sure -title is unique, otherwise dialog won't trigger
+        confirmDialog -title "Error C" -message "Create a follow locator first." ;  
+
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                         SUPPORTING PROCEDURES                        //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+proc FindConstraintTargets() {
+    
+    string $queryTargets[] = `ls -sl`;
+    // declare all constraint connections on selected
+    string $connections[] = `listConnections -type "constraint" $queryTargets` ;
+    // remove duplicate listings
+    $connections = stringArrayRemoveDuplicates($connections) ;     
+    
+    // find the parent of each connection
+    string $targets[] = `listRelatives -p $connections` ;
+    // remove duplicate listings
+    $targets = stringArrayRemoveDuplicates($targets) ;
+    
+    if (size($targets) == 0 ) {
+        print "No targets found. \n" ;
+    }  
+    else {
+        select $targets ;
+    }
+
+}
