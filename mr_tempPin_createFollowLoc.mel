@@ -1,0 +1,64 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: tempPin_createFollowLocators
+// VERSION: 0002
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// - Creates a locator constrained to selected object/s, in worldspace. 
+// - When script is run again, the locator are deleted.
+//
+// Initially to help toggle between animating an IK control in its default space, to
+// then pivoting around a predetermined locator. 
+// For help to pose faster, best used as a hotkey.
+//
+// EXAMPLE USES:
+// e.g. for moving an IK hand around a chest
+// - Use mr_tempPin_createFollowLoc.mel proc to create a locator that follows the chest
+// - Run mr_tempPin_pivotFromFollowLoc.mel proc when you'd like to pivot around that follow locator
+// - When ready to switch back to the regular space of the control, 
+// run mr_tempPin_pivotFromFollowLoc.mel proc again
+// - Repeat as needed
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// TempPin_CreateFollowLocators() ;
+//                       
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc TempPin_CreateFollowLocators() {
+    
+    string $followLocName = "Follow_loc" ;
+
+    if (`objExists $followLocName`) {
+        select $followLocName ;
+        
+        // use procedure
+        FindConstraintTargets() ;
+
+        delete $followLocName ;      
+    }
+    
+    else {     
+
+        string $sel[] = `ls -sl` ;  
+        
+        // create the temp locator
+        spaceLocator -p 0 0 0 -n $followLocName ;
+        setAttr ($followLocName + "Shape.localScaleY") 10 ;
+        setAttr ($followLocName + "Shape.localScaleZ") 10 ;
+        setAttr ($followLocName + "Shape.localScaleZ") 10 ;
+
+         
+        // place the locator at the average position and orientation between
+        // the selected objects   
+        for ($item in $sel) { 
+            catch (`pointConstraint $item $followLocName`) ;
+            catch (`orientConstraint $item $followLocName`) ;
+        }
+                
+        select $followLocName ;         
+    }       
+ }
