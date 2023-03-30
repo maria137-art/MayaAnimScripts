@@ -22,21 +22,22 @@
 // WorldspacePivot() ;
 //
 // INSTRUCTIONS:
-// This scripts works differently depending when it is run and what is selected at the time.
+// This scripts works differently depending when it is run and what is selected at the time. It has 3 phases.
 //
 // PHASE 1 - CREATE THE PIVOT:
 //     If it doesn't already exist, create a locator to be the pivot.
-//     - If nothing is selected, the pivot will be created at origin.
-//     - If one or more objects are selected, the pivot will be created at the average position and orientation the 
-//     object/s are travelling in, between the current and next frame.
+//          - If nothing is selected, the pivot will be created at origin.
+//          - If one or more objects are selected, the pivot will be created at the average position and orientation that
+//            the object/s are travelling in, between the current and next frame.
 //
 // PHASE 2 - SELECT OBJECTS TO BE PIVOTED:
 //     If TEMP_PIVOT_loc exists with no children, create baked offset locators inside the pivot
 //     for each selected object.
+//     
+//     Position TEMP_PIVOT_loc as wanted.
 //
 // PHASE 3 - BAKE EVERYTHING CONNECTED TO THE PIVOT:
 //     If TEMP_PIVOT_loc contains children, bake the originally selected objects to offset, and delete the pivot.
-//
 //
 // 
 // -------------------------------------------------------------------
@@ -91,13 +92,13 @@ global proc WorldspacePivot() {
             select $pivotChildren ;
             FindConstraintTargets ;
             
-                // bake and delete connections
-        	    refresh -suspend 1 ;
-                bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
-                delete -sc ;
-                filterCurve ;
-                delete -cn ;
-                refresh -suspend 0 ;  
+            // bake and delete connections
+    	    refresh -suspend 1 ;
+            bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+            delete -sc ;
+            filterCurve ;
+            delete -cn ;
+            refresh -suspend 0 ;  
         	
         	delete $tempPivot ;
         }
@@ -129,6 +130,7 @@ global proc WorldspacePivot() {
         	    // if selected item is temp pivot
             	if ($item == $tempPivot) {
         			confirmDialog -title "Error B" -message ("Select object/s to pivot.") ;
+                    
         			// end For Loop
         			break ;
         		}
