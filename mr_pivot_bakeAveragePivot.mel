@@ -1,0 +1,312 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: bakeAveragePivot 
+// VERSION: 0008    
+//
+// CREATORS: Maria Robertson 
+// CREDIT: Daniel Fotheringham
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// Based on Daniel Fotheringham's demo: https://youtu.be/MjYXR0Ts1sE?t=3087 at 51:27 - 54:00
+//
+// Bake objects in the parent space of a worldspace pivot.
+// Makes it easier to clean curves when travelling in different directions.
+//
+// e.g. if a character travels diagonally in a straight line, the movement is represented in trans x and z axis.
+// But if baked inside a pivot pointing in the same direction, it will be represented by just trans z.
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// BakeAverageLocator() ;
+//
+// INSTRUCTIONS:
+// This scripts works differently depending when it is run and what is selected at the time. It has 3 phases.
+//
+// PHASE 1 - CREATE THE PIVOT:
+//     If it doesn't already exist, create a locator to be the pivot.
+//          - If nothing is selected, the pivot will be created at origin.
+//          - If one or more objects are selected, the pivot will be created at the average position and orientation that
+//            the object/s are travelling in, between the current and next frame.
+//
+// PHASE 2 - SELECT OBJECTS TO BE PIVOTED:
+//     If TEMP_PIVOT_loc exists with no children, create baked offset locators inside the pivot
+//     for each selected object.
+//     
+//     Position TEMP_PIVOT_loc as wanted.
+//
+// PHASE 3 - BAKE EVERYTHING CONNECTED TO THE PIVOT:
+//     If TEMP_PIVOT_loc contains children, bake the originally selected objects to offset, and delete the pivot.
+// 
+// -------------------------------------------------------------------
+//
+// RESEARCH THAT HELPED:
+// Why current time didn't work - https://forums.cgsociety.org/t/using-getattr-t-to-do-time-delay/805166/2
+// 
+// WISH LIST:
+// - Save control keys + tangents, and apply it to the bake
+// - Delete redundant keys
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                      CREATE A WORLDSPACE PIVOT                       //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc BakeAverageLocator() {
+
+    // -------------------------------------------------------------------
+    // 01. INITIALIZE VARIABLES
+    // -------------------------------------------------------------------  
+
+    // initialize strings  
+    string $sel[] = `ls -sl` ;
+    string $pivotLocators[] ; 
+
+    string $averagePivot = "averagePivot_loc" ;   
+    string $averagePivotOffset = "averagePivot_loc_offset" ;    
+
+
+    // declare time range
+    float $startTime = `playbackOptions -q -min`;
+    float $endTime = `playbackOptions -q -max`;
+            
+    // -------------------------------------------------------------------
+    // 01. IF averagePivot_loc ALREADY EXISTS
+    // -------------------------------------------------------------------   
+    
+    if (`objExists $averagePivot`) {
+                    
+        string $pivotChildren[] = `listRelatives -c $averagePivot` ;    
+        
+        // -------------------------------------------------------------------
+        // 02. IF TEMP PIVOT HAS CHILDREN, BAKE THE ORIGINAL TARGETS AND DELETE PIVOT
+        // -------------------------------------------------------------------   
+    
+        if (size ($pivotChildren) > 1) {
+            select $pivotChildren ;
+            FindConstraintTargets ;
+            
+            // bake and delete connections
+            refresh -suspend 1 ;
+            bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+            delete -sc ;
+            filterCurve ;
+            delete -cn ;
+            refresh -suspend 0 ;  
+            
+            delete $averagePivot ;
+        }
+
+        else {    
+
+            // -------------------------------------------------------------------
+            // 03. GIVE ERROR IF NOTHING SELECTED   
+            // ------------------------------------------------------------------- 
+                     
+            // give error if nothing is selected
+            if (size($sel) == 0){
+                // reminds you to select something //
+                // make sure -title is unique, otherwise dialog won't trigger
+                confirmDialog -title "Error A" -message "Select object/s to pivot. \n" ;
+            }  
+            
+            // -------------------------------------------------------------------
+            // 03. RUN SCRIPT ON EACH SELECTED OBJECT
+            // ------------------------------------------------------------------- 
+                    
+            // for each control selected
+            for ($item in $sel) {      
+             
+                // -------------------------------------------------------------------
+                // 04. GIVE ERROR IF TEMP PIVOT IS SELECTED
+                // ------------------------------------------------------------------- 
+               
+                // if selected item is temp pivot
+                if ($item == $averagePivot) {
+                    confirmDialog -title "Error B" -message ("Select object/s to pivot. \n") ;
+                    
+                    // end For Loop
+                    break ;
+                }
+            
+                // -------------------------------------------------------------------
+                // 04. SET-UP OFFSET LOCATORS
+                // -------------------------------------------------------------------   
+
+                
+                                         
+                else {                       
+                
+                    // create a locator
+                    spaceLocator -p 0 0 0 -n ($item + "_pivot_loc") ;
+                    // add locator to $pivotLocators array
+                    $pivotLocators[size($pivotLocators)] = ($item + "_pivot_loc") ; 
+             
+                    // match position and orientation of new locator to temp pivot      
+                    pointConstraint $averagePivot ($item + "_pivot_loc") ;
+                    orientConstraint $averagePivot ($item + "_pivot_loc") ;
+                    
+                    // delete any connections / delete constraints
+                    delete -cn;
+                    
+                    // make locator bigger
+                    setAttr ($item + "_pivot_loc.localScaleX") 18 ;
+                    setAttr ($item + "_pivot_loc.localScaleY") 18 ;
+                    setAttr ($item + "_pivot_loc.localScaleZ") 18 ;
+           
+                   // constrain controls to the offset locators
+                    pointConstraint $item ($item + "_pivot_loc") ;
+                    orientConstraint -mo $item ($item + "_pivot_loc") ;
+                    
+                    // place offset locator inside temp pivot
+                    parent ($item + "_pivot_loc") $averagePivot ;
+                    
+                }
+                
+                // -------------------------------------------------------------------
+                // 04. BAKE OFFSET LOCATORS
+                // -------------------------------------------------------------------   
+                                           
+                // bake pivot locators
+                select $pivotLocators;
+                  
+                // bake and delete connections
+                refresh -suspend 1 ;
+                bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+                delete -sc ;
+                filterCurve ;
+                delete -cn ;
+                refresh -suspend 0 ;  
+                
+                // give $i value of 0. If size of $pivotLocators is greater than 0, increase $i value by 1
+                // and run script
+                for ($i=0; $i < `size $pivotLocators`; $i++) {                
+                    pointConstraint $pivotLocators[$i] $sel[$i] ;
+                    orientConstraint -mo $pivotLocators[$i] $sel[$i] ;
+                }
+                
+                select $averagePivot ;
+                
+            }  
+        }        
+    }
+
+
+    // -------------------------------------------------------------------
+    // 01. IF $averagePivot DOES NOT EXIST
+    // -------------------------------------------------------------------  
+            
+    // if $averagePivot doesn't exist 
+    else {
+        
+        // -------------------------------------------------------------------
+        // 02. IF ONE OR MORE OBJECTS ARE SELECTED
+        // -------------------------------------------------------------------    
+              
+        // if something is selected
+        if (size ($sel) != 0) {         
+            
+            // create string from the last item selected
+            select $sel ;
+            string $lastInSelected[0] = `ls -sl -tail 1` ; 
+            
+            // create locator
+            spaceLocator -p 0 0 0 -n $averagePivot ;
+                
+            // create null parent for $averagePivot 
+            group -n $averagePivotOffset ;
+                           
+            // set locator scale
+            setAttr ($averagePivot + ".localScaleZ") 100 ;
+            setAttr ($averagePivot + ".localScaleX") 100 ;
+            setAttr ($averagePivot + ".localScaleY") 100 ;     
+                                     
+            // average position and rotation of averagePivotOffset between selected
+            for ($item in $sel) {
+                 pointConstraint $item $averagePivotOffset ;  
+                 orientConstraint $item $averagePivotOffset ;  
+            }                         
+                                 
+            // bake and delete connections
+            refresh -suspend 1 ;
+            bakeResults -simulation true -t ($startTime+":"+$endTime) -sampleBy 1 -disableImplicitControl true -preserveOutsideKeys true -sparseAnimCurveBake false -removeBakedAttributeFromLayer false -removeBakedAnimFromLayer false -bakeOnOverrideLayer false -minimizeRotation true -controlPoints false ;
+            delete -sc ;
+            filterCurve ;
+            delete -cn ;
+            refresh -suspend 0 ;  
+
+            // select $averagePivot
+            select $averagePivot
+            
+            print "Run mr_BakeWorldspacePivot again when ready, to baked selected objects under the pivot.\n" ;
+            
+        }  
+              
+        
+        // -------------------------------------------------------------------
+        // 02. IF NOTHING IS SELECTED
+        // -------------------------------------------------------------------   
+            
+            // if nothing is selected
+        else {
+            
+            // create $averagePivot locator
+            warning("No temp pivot locator exists. Creating one now.") ;
+            
+            // create locator
+            spaceLocator -p 0 0 0 -n $averagePivot ;
+      
+            // set locator scale
+            setAttr ($averagePivot + ".localScaleZ") 100 ;
+            setAttr ($averagePivot + ".localScaleX") 100 ;
+            setAttr ($averagePivot + ".localScaleY") 100 ;   
+            
+            select $averagePivot ;
+                           
+        }
+
+    }    
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//                         SUPPORTING PROCEDURES                        //
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+proc FindConstraintTargets() {
+    
+    string $queryTargets[] = `ls -sl`;
+    // declare all constraint connections on selected
+    string $connections[] = `listConnections -type "constraint" $queryTargets` ;
+    // remove duplicate listings
+    $connections = stringArrayRemoveDuplicates($connections) ;     
+    
+    // find the parent of each connection
+    string $targets[] = `listRelatives -p $connections` ;
+    // remove duplicate listings
+    $targets = stringArrayRemoveDuplicates($targets) ;
+    
+    if (size($targets) == 0 ) {
+        print "No targets found. \n" ;
+    }  
+    else {
+        select $targets ;
+    }
+
+}

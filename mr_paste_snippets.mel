@@ -1,0 +1,50 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// SCRIPT: pastingTools
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// Snippets of code to help hotkey different ways of pasting keys in the graph editor.
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+/*
+// paste merge
+float $currentTime = `currentTime -q` ;
+pasteKey -time $currentTime -float $currentTime -option merge -copies 1 -connect 0 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+
+// paste insert connect
+float $currentTime = `currentTime -q` ;
+pasteKey -time $currentTime -float $currentTime -option insert -copies 1 -connect 1 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+
+
+// paste replace merge
+float $currentTime = `currentTime -q` ;
+pasteKey -option replaceCompletely -copies 1 -connect 0 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+pasteKey -time $currentTime -float $currentTime -option insert -copies 1 -connect 1 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+
+// paste replace insert connect
+float $currentTime = `currentTime -q` ;
+pasteKey -option replaceCompletely -copies 1 -connect 0 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+pasteKey -time $currentTime -float $currentTime -option merge -copies 1 -connect 0 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+
+
+
+// define timeslider range
+float $start = `playbackOptions -q -min` ;
+float $end = `playbackOptions -q -max` ;
+
+// define difference (use abs to account for negative frame numbers)
+$range = `abs ($start - $end)` ;
+
+float $currentTime = `currentTime -q` ;
+pasteKey -time $currentTime -float $currentTime -option replace -copies 1 -connect 1 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+
+
+pasteKey -option replace -copies 1 -connect 0 -timeOffset 0 -floatOffset 0 -valueOffset 0;
+*/
+
+
+ 
