@@ -88,8 +88,7 @@ global proc TempPin_PivotFromFollowSelectionSet() {
         // set keys on the child
         select $tempPivotOffsetGroupChildren ;
         FindConstraintTargets ;
-        ng follow locator, made in mr_
-//
+
         SetKeyTranslate ;
         SetKeyRotate ;
         
@@ -143,18 +142,18 @@ global proc TempPin_PivotFromFollowSelectionSet() {
             // group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used     
             delete ($tempPivotOffsetGroup + "_orientConstraint1") ;
                       
-			// create locator for object to pivot
-			string $tempObjLocator[0] = `spaceLocator -n ($objToPivot[0] + "_temp_pivot_loc")` ;
-			// parent under group to offset
-			parent $tempObjLocator $tempPivotOffsetGroup ;
-			
-			// parent constrain $tempObjLocator to $objToPivot
-			parentConstraint -w 1 $objToPivot[0] $tempObjLocator[0] ;
-			delete -cn $tempObjLocator[0] ;
-			
-			// parent constrain $tempObjLocator to $objToPivot
-			parentConstraint -mo -w 1 $tempObjLocator[0] $objToPivot[0] ;
-			
+            // create locator for object to pivot
+            string $tempObjLocator[0] = `spaceLocator -n ($objToPivot[0] + "_temp_pivot_loc")` ;
+            // parent under group to offset
+            parent $tempObjLocator $tempPivotOffsetGroup ;
+            
+            // parent constrain $tempObjLocator to $objToPivot
+            parentConstraint -w 1 $objToPivot[0] $tempObjLocator[0] ;
+            delete -cn $tempObjLocator[0] ;
+            
+            // parent constrain $tempObjLocator to $objToPivot
+            parentConstraint -mo -w 1 $tempObjLocator[0] $objToPivot[0] ;
+            
             select $tempPivotOffsetGroup ;            
 
         }
