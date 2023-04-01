@@ -24,7 +24,7 @@
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------ 
 
-proc ChangeManipMode() {
+global proc ChangeManipMode() {
     
 
     string $manip_Trans = `manipMoveContext -q -mode Move`;
