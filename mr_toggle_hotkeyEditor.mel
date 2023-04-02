@@ -1,0 +1,37 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: toggle_hotkeyEditor
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// CREDIT: Malcolm Andrieshyn / malcolm_341 (Autodesk forums)
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Toggle the visibility of the Hotkey Editor. Much faster than reopening it each time.
+// 
+// Credit to malcolm_341 for introducing the idea of toggling window visibility
+// https://forums.autodesk.com/t5/maya-forum/maya-2022-freezing-when-opening-script-editor/td-p/10292666 
+// Makes it much faster to reopen the Script Editor, since the script just toggles its visibility
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// mr_toggle_hotkeyEditor() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+// A faster way to toggle the script editor. Deletes its History on each reopen, which can help with a Maya 2022 memory bug.
+
+global proc mr_toggle_hotkeyEditor() {
+
+	if (`window -q -ex HotkeyEditor`) {
+		toggleWindowVisibility HotkeyEditor;   
+	}
+
+	else {
+		hotkeyEditorWindow ;
+	}
+
+}
