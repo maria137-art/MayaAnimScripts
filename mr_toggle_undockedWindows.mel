@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: mr_toggleUndockedWindows
+// SCRIPT: mr_toggle_undockedWindows
 // VERSION: 0001
 //
 // CREATORS: Maria Robertson
@@ -13,9 +13,6 @@
 //
 // RUN COMMAND:
 // ToggleUndockedWindows() ;
-//
-// INSTRUCTIONS: 
-// Run the following command: mr_toggleUndockedWindows
 //  
 // ------------------------------------------------------------------------------------------------------------------------------------------------ 
 
