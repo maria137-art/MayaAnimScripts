@@ -1,0 +1,33 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: resetWindows
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Position all undocked windows to the top left corner of the screen.
+// Can help when they've accidentally get off-screen.
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// resetWindows() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc resetWindows() {  
+
+    // create array for all undocked windows
+    string $allMayaWindows[] = `lsUI -windows` ;
+    // create array of windows to ignore
+    string $windowsToIgnore[] = { "CommandWindow","ConsoleWindow","MayaWindow","ColorEditor" } ;
+    // remove any windows in $windowsToIgnore from $allMayaWindows
+    string $extraWindows[] = stringArrayRemove($windowsToIgnore, $allMayaWindows) ;
+
+    /////
+    // reset windows to top left corner
+    for ($window in $extraWindows) {
+        window -e -tlc 0 0 $window ;
+    }
+}
