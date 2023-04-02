@@ -23,7 +23,7 @@
 
 // A faster way to toggle the script editor. Deletes its History on each reopen, which can help with a Maya 2022 memory bug.
 
-global proc mr_toggle_scriptEditor() {}
+global proc mr_toggle_scriptEditor() {
 
 	scriptEditorInfo -ch ;
 
