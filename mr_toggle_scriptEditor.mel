@@ -1,0 +1,34 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: toggle_scriptEditor
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// CREDIT: Malcolm Andrieshyn / malcolm_341 (Autodesk forums)
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// Toggle the visibility of the Script Editor. Much faster than reopening it each time.
+// 
+// Credit to malcolm_341 for the idea on this Autodesk forum, to help counteract the Maya 2022 memory bug.
+// https://forums.autodesk.com/t5/maya-forum/maya-2022-freezing-when-opening-script-editor/td-p/10292666 
+//
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// mr_toggle_scriptEditor() ;
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+// A faster way to toggle the script editor. Deletes its History on each reopen, which can help with a Maya 2022 memory bug.
+
+global proc mr_toggle_scriptEditor() {}
+
+	scriptEditorInfo -ch ;
+
+	if (`window -q -ex scriptEditorPanel1Window`)
+		toggleWindowVisibility scriptEditorPanel1Window ;
+	else
+		tearOffPanel "Script Editor" "scriptEditor" true ;
+}
