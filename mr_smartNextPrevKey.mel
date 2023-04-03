@@ -46,7 +46,7 @@ global proc SmartNextKeyframe() {
     
     // if panel is not the Graph Editor
     if($currentPanel != "graphEditor1") { 
-        print "Current panel is not Graph Editor. \n" ;
+        // print "Current panel is not Graph Editor. \n" ;
         // use Maya's default command to go to Next Key
         currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -timeSlider -which next` : `findKeyframe -which next`) ;
     }
@@ -77,7 +77,7 @@ global proc SmartPrevKeyframe() {
         
     // if panel is not the Graph Editor
     if($currentPanel != "graphEditor1") { 
-        print "Current panel is not Graph Editor. \n" ;
+        // print "Current panel is not Graph Editor. \n" ;
         // use Maya's default command to go to Previous Key
         currentTime -edit (`playbackOptions -q -slp` ? `findKeyframe -timeSlider -which previous` : `findKeyframe -which previous`) ;
     }
