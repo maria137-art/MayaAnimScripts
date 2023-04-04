@@ -1,0 +1,45 @@
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: mr_screenspace_moveByPixelIncrements.mel
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+
+global proc mr_move25px_left() {
+	pixelMove -25 0 ;
+}
+
+global proc mr_move25px_right() {
+	pixelMove 25 0 ;
+}
+
+global proc mr_move25px_up() {
+	pixelMove 0 25 ;
+}
+
+global proc mr_move25px_down() {
+	pixelMove 0 -25 ;
+}
+
+global proc mr_move10px_left() {
+	pixelMove -10 0 ;
+}
+
+global proc mr_move10px_right() {
+	pixelMove 10 0 ;
+}
+
+global proc mr_move10px_up() {
+	pixelMove 0 10 ;
+}
+
+global proc mr_move10px_down() {
+	pixelMove 0 -10 ;
+}
+
+
+
+
+
+
