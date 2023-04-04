@@ -1,6 +1,6 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: toggleLockHighlightedChannelBoxAttributes 
+// SCRIPT: mr_toggle_lockHighlightedChannelBoxAttributes.mel 
 // VERSION: 0001
 //
 // CREATORS: Maria Robertson
@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------- 
 //
 // RUN COMMAND:
-// ToggleLockHighlightedAttributes() ;
+// mr_toggle_lockHighlightedChannelBoxAttributes() ;
 // 
 // ------------------------------------------------------------------- 
 // 
@@ -23,7 +23,7 @@
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc ToggleLockHighlightedAttributes() {
+global proc mr_toggle_lockHighlightedChannelBoxAttributes() {
     
     // initialize variables
     string $sel[] = `ls -sl` ;
@@ -47,6 +47,52 @@ global proc ToggleLockHighlightedAttributes() {
     	    else {  
     		    setAttr -lock true $individualAttr ;
     		}
+        }
+    }
+
+}
+
+global proc mr_lockHighlightedChannelBoxAttributes() {
+    
+    // initialize variables
+    string $sel[] = `ls -sl` ;
+    string $highlightedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
+    
+
+    // for every selected item      
+    for ($item in $sel) {
+        
+        // for each of its highlighted attributes
+        for ($attr in $highlightedChannelBoxAttributes) {
+            
+            string $individualAttr = $item + "." + $attr ;
+            
+            // lock it
+            setAttr -lock true $individualAttr ;
+
+        }
+    }
+
+}
+
+global proc mr_unlockHighlightedChannelBoxAttributes() {
+    
+    // initialize variables
+    string $sel[] = `ls -sl` ;
+    string $highlightedChannelBoxAttributes[] = `selectedChannelBoxAttributes` ;
+    
+
+    // for every selected item      
+    for ($item in $sel) {
+        
+        // for each of its highlighted attributes
+        for ($attr in $highlightedChannelBoxAttributes) {
+            
+            string $individualAttr = $item + "." + $attr ;
+            
+            // lock it
+            setAttr -lock false $individualAttr ;
+            
         }
     }
 
