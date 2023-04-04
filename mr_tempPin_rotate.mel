@@ -1,6 +1,5 @@
-
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: tempPin_rotate
+// SCRIPT: mr_tempPin_rotate.mel
 // VERSION: 0004
 //
 // CREATORS: Maria Robertson
@@ -11,7 +10,7 @@
 // ------------------------------------------------------------------- 
 //
 // RUN COMMAND:
-// TempPinRotate() ;
+// mr_tempPin_rotate() ;
 //
 // REQUIREMENTS:
 // Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
@@ -22,7 +21,7 @@
 //                            
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc TempPinRotate() {
+global proc mr_tempPin_rotate() {
     
     // -------------------------------------------------------------------
     // 01. INITIALIZE VARIABLES
