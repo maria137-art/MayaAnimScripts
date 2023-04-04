@@ -7,16 +7,22 @@ def mr_select_visibleNURBCurves():
 
     # check if the current panel is a modelPanel
     if cmds.getPanel(typeOf=panel) != "modelPanel":
-        # print("The current panel is not a 3D view panel.")
+        print("The current panel is not a 3D view panel.")
     
     else: 
         visible_nurbs_curves = []
 
+        # for every NURBS curve that exists
         for curve in cmds.ls(type="nurbsCurve", visible=True, long=True):
             
-            # check if the curve is visible in the current panel
+            # check if it is visible in the current panel
             if cmds.modelEditor(panel, query=True, nurbsCurves=True):
+
                 visible_nurbs_curves.append(curve)
+
+
+
+
 
         # get the transform nodes of all visible NURBS curves in the scene
         visible_nurbs_transforms = []
