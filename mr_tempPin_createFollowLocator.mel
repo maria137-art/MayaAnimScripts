@@ -1,6 +1,6 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: tempPin_createFollowLocators
+// SCRIPT: mr_tempPin_createFollowLocator.mel
 // VERSION: 0002
 //
 // CREATORS: Maria Robertson
@@ -24,11 +24,11 @@
 // ------------------------------------------------------------------- 
 //
 // RUN COMMAND:
-// TempPin_CreateFollowLocators() ;
+// mr_tempPin_createFollowLocator() ;
 //                       
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc TempPin_CreateFollowLocators() {
+global proc mr_tempPin_createFollowLocator() {
     
     string $followLocName = "Follow_loc" ;
 
