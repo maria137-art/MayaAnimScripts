@@ -1,6 +1,6 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: tempPin_pivotFromFollowSet
+// SCRIPT: mr_tempPin_pivotFromFollowSet
 // VERSION: WIP
 //
 // CREATORS: Maria Robertson
@@ -12,9 +12,8 @@
 // ------------------------------------------------------------------- 
 //
 // RUN COMMAND:
-// TempPin_CreateFollowSelectionSet() ;
-// TempPin_PivotFromFollowSelectionSet() ;
-//
+// mr_tempPin_create_followSelectionSet() ;
+// mr_tempPin_pivotFrom_followSelectionSet() ;
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -26,28 +25,28 @@
 // -------------------------------------------------------------------- //
 //////////////////////////////////////////////////////////////////////////
 
-global proc TempPin_CreateFollowSelectionSet() {
+global proc mr_tempPin_create_followSelectionSet() {
     
     // initialize variables
     string $objToFollowSetName = "objToFollowSet" ;
 
     // if nothing or more than one object is selected
-    if (size(`ls -sl`) != 1) {        
-        // give an error
+    if (size(`ls -sl`) != 1) {     
+        // give an error message
         // NOTE: make sure -title is unique, otherwise dialog won't trigger
         confirmDialog -title "Error A" -message "Select one object to remember to pivot from." ;
     } 
     
-    // if $objToFollowSetName already exists
-    else if(`objExists($objToFollowSetName)`){
-        delete $objToFollowSetName ;
+    else {
+        // if the set already exists, delete it
+        if(`objExists($objToFollowSetName)`){
+            delete $objToFollowSetName ;
+        }          
+
+        // create a selection set from the selected object
+        $objToFollowSet = `sets -n "objToFollowSet"`;  
     }
     
-    
-    // create a selection set from the selected object
-    $objToFollowSet = `sets -n "objToFollowSet"`;
- 
-     
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -58,8 +57,7 @@ global proc TempPin_CreateFollowSelectionSet() {
 // -------------------------------------------------------------------- //
 //////////////////////////////////////////////////////////////////////////
 
-global proc TempPin_PivotFromFollowSelectionSet() {
-
+global proc mr_tempPin_pivotFrom_followSelectionSet() {
 
     // -------------------------------------------------------------------
     // 01. INITIALIZE VARIABLES
@@ -83,30 +81,27 @@ global proc TempPin_PivotFromFollowSelectionSet() {
         // delete its connections
         delete -cn $tempPivotOffsetGroupName ;   
         // create array of its children
-        string $tempPivotOffsetGroupChildren[0] = `listRelatives -c $tempPivotOffsetGroupName` ;
+        string $tempPivotOffsetGroupChild[0] = `listRelatives -c $tempPivotOffsetGroupName` ;
        
-        // set keys on the child
-        select $tempPivotOffsetGroupChildren ;
+        // set keys on its child
+        select $tempPivotOffsetGroupChild ;
         FindConstraintTargets ;
-
         SetKeyTranslate ;
         SetKeyRotate ;
         
-        // delete the group
+        // delete the offset group
         delete $tempPivotOffsetGroupName ;
+
+        // end with Translate manipulator on
+        buildTranslateMM ;
+        destroySTRSMarkingMenu MoveTool ;
     }
-        
+    
+    // -------------------------------------------------------------------
+    // 01. IF AN OFFSET GROUP DOESN'T EXISTS, CREATE ONE AND SET-UP A TEMP PIVOT
+    // -------------------------------------------------------------------
 
-    //////////////////////////////////////////////////////////////////////////
-    // -------------------------------------------------------------------- //
-    //                                                                      //
-    //                          FOR A SOLO TEMP LOCATOR                     //
-    //                                                                      //
-    // -------------------------------------------------------------------- //
-    ////////////////////////////////////////////////////////////////////////// 
-
-            
-    // if a selection set exists
+    // if the selection set exists
     else if (`objExists $objToFollowSetName`) {
               
         // -------------------------------------------------------------------
@@ -115,15 +110,15 @@ global proc TempPin_PivotFromFollowSelectionSet() {
          
         // if nothing or more than one object is selected
         if (size($objToPivot) != 1) {        
-            // give an error
+            // give an error message
             // NOTE: make sure -title is unique, otherwise dialog won't trigger
             confirmDialog -title "Error A" -message "Select one object to pivot from." ;
         }    
         
-        // or if a follow locator is selected as the pivot
+        // if the selection set object is selected as the pivot
         else if ($objToPivot[0] == $followObject[0]) {
-            // give an error
-            confirmDialog -title "Error B" -message "Can't use a Follow Locator as a pivot." ;
+            // give an error message
+            confirmDialog -title "Error B" -message "Can't use an object marked to pivot from as the pivot." ;
         }
         
     
@@ -154,27 +149,25 @@ global proc TempPin_PivotFromFollowSelectionSet() {
             // parent constrain $tempObjLocator to $objToPivot
             parentConstraint -mo -w 1 $tempObjLocator[0] $objToPivot[0] ;
             
-            select $tempPivotOffsetGroup ;            
+            select $tempPivotOffsetGroup ;      
 
+            // end with rotate manipulator active
+            buildRotateMM ;     
+            destroySTRSMarkingMenu RotateTool ;    
         }
     }
 
 
     
-    //////////////////////////////////////////////////////////////////////////
-    // -------------------------------------------------------------------- //
-    //                                                                      //
-    //                        IF NO TEMP PINS EXIST                         //
-    //                                                                      //
-    // -------------------------------------------------------------------- //
-    //////////////////////////////////////////////////////////////////////////   
-       
+    // -------------------------------------------------------------------
+    // 01. IF NO SELECTION SET EXISTS, GIVE A WARNING
+    // -------------------------------------------------------------------
+
     // if both of the conditions don't exist
     else {
 
-        // reminds you to select something //
         // make sure -title is unique, otherwise dialog won't trigger
-        confirmDialog -title "Error C" -message "Create a follow locator first." ;  
+        confirmDialog -title "Error C" -message "Create a follow selection set first." ;  
 
     }
 }
