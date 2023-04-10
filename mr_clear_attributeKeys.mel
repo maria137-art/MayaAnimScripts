@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: clearAttributeKeys
-// VERSION: 0001
+// SCRIPT: mr_clear_attributeKeys.mel
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -13,11 +13,11 @@
 // ------------------------------------------------------------------- 
 // 
 // RUN COMMAND:
-// ClearAttributeKeys() ;
+// mr_clear_attributeKeys() ;
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc ClearAttributeKeys() {
+global proc mr_clear_attributeKeys() {
  
     // create array from selected objects
     string $sel[] = ` ls -sl` ;  
