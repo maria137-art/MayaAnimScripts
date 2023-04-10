@@ -1,0 +1,55 @@
+
+// ------------------------------------------------------------------------------ //
+// SCRIPT: mr_nextPrevFrame_byFPS.mel
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// ---------------------------------------
+//
+// DESCRIPTION: 
+// Scripts to jump frames by the same fraction amount, no matter the scene's fps.
+//
+// EXAMPLE USES:
+// Originally made when blocking animation, and keying at the same frame increments.
+// 
+// Example hotkeys to assign to:
+//   ALT + SHIFT + X
+//   ALT + SHIFT + Z
+//
+// ---------------------------------------
+// RUN COMMANDS:
+// ---------------------------------------
+/*
+
+mr_nextFrame_oneSixth_FPS()
+mr_prevFrame_oneSixth_FPS()
+
+*/
+// ------------------------------------------------------------------------------ //
+
+global float $divide_FPS_by = 6
+
+global proc mr_nextFrame_oneSixth_FPS() {
+
+    float $FPS = `currentTimeUnitToFPS` ;
+    float $divide_FPS_by ;
+    float $frame_jump = ($FPS / $divideBy) -  1 ;
+
+	float $currentTime = `currentTime -q` ;
+	int $newTime = $currentTime + $frame_jump ;
+
+	currentTime $newTime ;
+}
+
+
+global proc mr_prevFrame_oneSixth_FPS() {
+
+    float $FPS = `currentTimeUnitToFPS` ;
+    float $divide_FPS_by ;
+    float $frame_jump = ($FPS / $divideBy) -  1 ;
+
+	float $currentTime = `currentTime -q` ;
+	int $newTime = $currentTime - $frame_jump ;
+
+	currentTime $newTime ;
+}
