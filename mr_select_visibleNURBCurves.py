@@ -1,5 +1,36 @@
 import maya.cmds as cmds
 
+"""
+# ------------------------------------------------------------------------------ #
+# SCRIPT: mr_select_visibleNURBCurves.py
+# VERSION: 0001
+#
+# CREATORS: Maria Robertson
+# ---------------------------------------
+#
+# DESCRIPTION: 
+# Select all visible NURB curves in the current panel.
+#
+# EXAMPLE USES:
+# Useful when extra or unneccessary control are hidden, so you can quickly grab main ones to key.
+# 
+# Example hotkeys to assign to:
+#   ALT + A
+#
+# ---------------------------------------
+# RUN COMMANDS:
+# ---------------------------------------
+
+import importlib
+
+import mr_select_visibleNURBCurves
+importlib.reload(mr_select_visibleNURBCurves)
+
+mr_select_visibleNURBCurves.mr_select_visibleNURBCurves()
+
+# ------------------------------------------------------------------------------ #
+"""
+
 def mr_select_visibleNURBCurves():
 
     # get the current panel
@@ -19,10 +50,6 @@ def mr_select_visibleNURBCurves():
             if cmds.modelEditor(panel, query=True, nurbsCurves=True):
 
                 visible_nurbs_curves.append(curve)
-
-
-
-
 
         # get the transform nodes of all visible NURBS curves in the scene
         visible_nurbs_transforms = []
