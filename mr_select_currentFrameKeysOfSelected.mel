@@ -1,6 +1,6 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: selectCurrentKeysOfSelected 
+// SCRIPT: mr_select_currentFrameKeysOfSelected 
 // VERSION: 0001
 //
 // CREATORS: Maria Robertson
@@ -9,14 +9,18 @@
 // DESCRIPTION: 
 // Select all keys of selected objects that are on the current frame.
 // 
-// ------------------------------------------------------------------- 
-//
-// RUN COMMAND:
-// SelectCurrentKeysOfSelected() ;
+// ---------------------------------------
+// RUN COMMANDS:
+// ---------------------------------------
+/*
+
+mr_select_currentFrameKeysOfSelected() ;
+
+*/
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc SelectCurrentKeysOfSelected() {
+global proc mr_select_currentFrameKeysOfSelected() {
 
     // Create an array from selected
     string $sel[] = `ls -sl` ;
