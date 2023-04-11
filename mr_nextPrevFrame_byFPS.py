@@ -47,12 +47,12 @@ def mr_nextFrame_oneSixth_FPS():
     cmds.currentTime(newTime)
 
 
-def mr_nextFrame_oneSixth_FPS():
+def mr_prevFrame_oneSixth_FPS():
     
     FPS = mel.eval('currentTimeUnitToFPS')
     frame_jump = (FPS / divide_FPS_by) - 1
     
     currentTime = cmds.currentTime(q=True)
-    newTime = currentTime + frame_jump
+    newTime = currentTime - frame_jump
     
     cmds.currentTime(newTime)
