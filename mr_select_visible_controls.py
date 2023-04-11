@@ -9,7 +9,7 @@ import maya.cmds as cmds
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# This script selects one of these object types, based on their visibility in the current 
+# Selects one of the following object types, based on their visibility in the current 
 # panel (whichever model panel the mouse cursor is pointing over at the time).
 #
 # - Option A: NURB curves
@@ -18,8 +18,8 @@ import maya.cmds as cmds
 #
 # EXAMPLE USES:
 # ---------------------------------------
-# Can be useful when extra or unneccessary control are hidden, so you can quickly key controls you're
-# focusing on.
+# Useful when extra or unneccessary control are hidden, so controls you're focusing
+# on can be quickly keyed.
 # 
 # Example hotkeys to assign to:
 #   ALT + A
@@ -43,8 +43,16 @@ import importlib
 import mr_select_visible_controls
 importlib.reload(mr_select_visible_controls)
 
-mr_select_visible_controls("C")
+mr_select_visible_controls.mr_select_visible_controls("C")
 
+# ---------------------------------------
+# RESEARCH THAT HELPED:
+# ---------------------------------------
+# https://stackoverflow.com/a/9168387
+# For learning more how dictionaries can work with functions.
+#
+# https://www.w3schools.com/python/python_dictionaries.asp
+#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
