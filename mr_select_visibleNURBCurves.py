@@ -3,7 +3,7 @@ import maya.cmds as cmds
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_select_visibleNURBCurves.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -28,6 +28,12 @@ importlib.reload(mr_select_visibleNURBCurves)
 
 mr_select_visibleNURBCurves.mr_select_visibleNURBCurves()
 
+# ---------------------------------------
+# CHANGELOG:
+# ---------------------------------------
+# 2023-04-11 - 0002
+# Added option to select locators that have keys on unlocked channels.
+# For when animating with temp locators.
 # ------------------------------------------------------------------------------ #
 """
 
