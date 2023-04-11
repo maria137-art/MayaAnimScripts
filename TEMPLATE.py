@@ -1,6 +1,5 @@
 import maya.cmds as cmds
 
-
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: exampleExample.py
@@ -10,33 +9,40 @@ import maya.cmds as cmds
 # CREDIT: Special thanks to those who helped share ideas or code to get the script working
 # ---------------------------------------
 #
+# ---------------------------------------
 # DESCRIPTION: 
-# 
+# ---------------------------------------
 # 
 # EXAMPLE USES:
-# 
+# ---------------------------------------
+#
+#
+# INSTRUCTIONS:
+# ---------------------------------------
+# Run the following command:
+#
 # ---------------------------------------
 # RUN COMMAND:
 # ---------------------------------------
 
+
 # ---------------------------------------
-# INSTRUCTIONS: 
-# Run the following command:
-# 
 # REQUIREMENTS: 
-# 
 # ---------------------------------------
 # 
-# RESEARCH THAT HELPED: 
+# RESEARCH THAT HELPED:
+# ---------------------------------------
 # General links that helped when writing. Help for specific sections will be linked directly next to # it. 
 # 
 # WISH LIST:
+# ---------------------------------------
 # - 
 # - 
 #
 # ---------------------------------------
 # CHANGELOG:
-#
+# ---------------------------------------
+# ####-##-## - 0000
 #
 # ------------------------------------------------------------------------------ #
 """
