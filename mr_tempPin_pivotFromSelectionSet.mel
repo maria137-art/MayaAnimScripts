@@ -1,21 +1,36 @@
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// SCRIPT: mr_tempPin_pivotFromFollowSet
-// VERSION: WIP
+/* 
+// ------------------------------------------------------------------------------ //
+// SCRIPT: mr_tempPin_pivotFromSelectionSet.mel
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
-// ------------------------------------------------------------------- 
+// ---------------------------------------
 //
 // DESCRIPTION: 
-// Create a temp pivot to pivot from a predetermined object.
+// Create a offset group pivot to pivot with from a predetermined object.
 //
-// ------------------------------------------------------------------- 
+// The temp pivot is intended for use only on the current frame.
+// There are two options buried in the script.
 //
-// RUN COMMAND:
-// mr_tempPin_create_followSelectionSet() ;
-// mr_tempPin_pivotFrom_followSelectionSet() ;
+// option A -   Keep the offset group point constrained to the pivot object.
+// 
+// option B -   Remove constraints on the offset group.
+//              This is better for pivoting a control around another on the same rig.
+//                  e.g. pivoting the root around a head
 //
-// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------
+// RUN COMMANDS:
+// ---------------------------------------
+
+mr_tempPin_create_followSelectionSet() ;
+mr_tempPin_pivotFrom_followSelectionSet() ;
+
+// ---------------------------------------
+// CHANGELOG:
+// 2023-04-11 - 0002
+// Added two possible options to pivot with.
+// ------------------------------------------------------------------------------ //
+*/
 
 //////////////////////////////////////////////////////////////////////////
 // -------------------------------------------------------------------- //
@@ -129,25 +144,35 @@ global proc mr_tempPin_pivotFrom_followSelectionSet() {
         else {
 
             // create an offset group to pivot
-            string $tempPivotOffsetGroup = `group -em -name $tempPivotOffsetGroupName` ;     
+            string $tempPivotOffsetGroup = `group -em -name $tempPivotOffsetGroupName` ;
+            // set its transforms
             pointConstraint -w 1 $followObject[0] $tempPivotOffsetGroup ;
             orientConstraint -w 1 $followObject[0] $tempPivotOffsetGroup ;
             
             // NOTE: have to specifically name the constraint to delete, otherwise the null
             // group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used     
+            
+            /*
+            // option A - keep offset group's position connected
             delete ($tempPivotOffsetGroup + "_orientConstraint1") ;
-                      
-            // create locator for object to pivot
-            string $tempObjLocator[0] = `spaceLocator -n ($objToPivot[0] + "_temp_pivot_loc")` ;
-            // parent under group to offset
-            parent $tempObjLocator $tempPivotOffsetGroup ;
+            */
             
-            // parent constrain $tempObjLocator to $objToPivot
-            parentConstraint -w 1 $objToPivot[0] $tempObjLocator[0] ;
-            delete -cn $tempObjLocator[0] ;
+            // option B - delete all offset group  constraints. Can be better for pivotting around controls on same rig
+            setKeyframe -at translate $tempPivotOffsetGroup  ;
+            delete ($tempPivotOffsetGroup + "_orientConstraint1") ;
+            delete ($tempPivotOffsetGroup + "_pointConstraint1") ;
             
-            // parent constrain $tempObjLocator to $objToPivot
-            parentConstraint -mo -w 1 $tempObjLocator[0] $objToPivot[0] ;
+            // create locator for the target object
+            string $objToPivotLocator[0] = `spaceLocator -n ($objToPivot[0] + "_temp_pivot_loc")` ;
+            // parent under the group to offset
+            parent $objToPivotLocator $tempPivotOffsetGroup ;
+
+            // parent constrain $objToPivotLocator to $objToPivot
+            parentConstraint -w 1 $objToPivot[0] $objToPivotLocator[0] ;
+            delete -cn $objToPivotLocator[0] ;
+            
+            // parent constrain $objToPivotLocator to $objToPivot
+            parentConstraint -mo -w 1 $objToPivotLocator[0] $objToPivot[0] ;
             
             select $tempPivotOffsetGroup ;      
 
