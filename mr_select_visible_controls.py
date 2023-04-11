@@ -48,9 +48,10 @@ mr_select_visible_controls.mr_select_visible_controls("C")
 # ---------------------------------------
 # RESEARCH THAT HELPED:
 # ---------------------------------------
-# https://stackoverflow.com/a/9168387
 # For learning more how dictionaries can work with functions.
+# https://stackoverflow.com/a/9168387
 #
+# Dictionary examples
 # https://www.w3schools.com/python/python_dictionaries.asp
 #
 # ---------------------------------------
@@ -132,7 +133,7 @@ def mr_select_visible_controls(option):
             return keyed_visible_locator_transforms
         
         # ------------------------------------------------------------------------------ #
-        # Call functions.
+        # Call functions. (Naming these with the same as their local variable that it returns inside their function.)
         visible_nurbs_transforms = look_for_visible_NURB_curves()
         visible_locators_transforms = look_for_visible_locators()
         keyed_visible_locator_transforms = look_for_keyed_visible_locators(visible_locators_transforms)      
