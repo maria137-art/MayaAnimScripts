@@ -85,6 +85,14 @@ global proc mr_tempPin_pivotFrom_followSelectionSet() {
     select -r objToFollowSet ;
     string $followObject[0] = `ls -sl` ;
 
+    // If the selected object has any constraints, cancel procedure.
+    string $constraints[] = `listConnections -type "constraint" $objToPivot[0]` ;
+    string $uniqueConstraints[] = `stringArrayRemoveDuplicates $constraints` ;
+    if (size($constraints) > 0) {
+        confirmDialog -title "Error D" -message "Selected object has constraints." ;
+        select $objToPivot[0] ;
+        error "Selected objects have constraints, please remove them first." ;
+    }
  
     // -------------------------------------------------------------------
     // 01. IF AN OFFSET GROUP ALREADY EXISTS, KEY THE TARGETS AND DELETE THE GROUP
