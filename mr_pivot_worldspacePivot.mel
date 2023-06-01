@@ -197,7 +197,7 @@ global proc WorldspacePivot() {
 
 
     // -------------------------------------------------------------------
-    // 01. IF $tempPivot DOES NOT EXISTS
+    // 01. IF $tempPivot DOES NOT EXIST
     // -------------------------------------------------------------------  
             
     // if $tempPivot doesn't exist 
@@ -276,7 +276,7 @@ global proc WorldspacePivot() {
             select $lastInSelected ;
             select -tgl $tempPivot ;
             aimConstraint -aimVector 1 0 0 -upVector 0 1 0 -worldUpType "vector" -worldUpVector $newP[0] $newP[1] $newP[2] ;       
-            DeleteConstraints $tempPivot ;
+            delete -cn $tempPivot ;
             // go back to original frame
             currentTime $currentFrame ; 
                      
