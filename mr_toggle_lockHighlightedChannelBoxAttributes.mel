@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: mr_toggle_lockHighlightedChannelBoxAttributes.mel 
-// VERSION: 0001
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // CREDIT: Brian Horgan / Michiel Duvekot
@@ -20,7 +20,9 @@
 // RESEARCH THAT HELPED: 
 // Code was based on what provided by Horganovski and mduvekoton CGSociety.
 // https://forums.cgsociety.org/t/check-or-ignore-locked-coordinate-attributes/1470963
-//
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 0002: Added option to unlock / lock all visible attributes if none are highlighted. 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
 global proc mr_toggle_lockHighlightedChannelBoxAttributes() {
