@@ -1,7 +1,7 @@
 /* 
 // ------------------------------------------------------------------------------ //
 // SCRIPT: mr_tempPin_pivotFromSelectionSet.mel
-// VERSION: 0002
+// VERSION: 0003
 //
 // CREATORS: Maria Robertson
 // ---------------------------------------
@@ -27,6 +27,9 @@ mr_tempPin_pivotFrom_followSelectionSet() ;
 
 // ---------------------------------------
 // CHANGELOG:
+// 2023-06-05 - 0003
+// Fixing bug that would think objects had constraints when they didn't.
+//
 // 2023-04-11 - 0002
 // Added two possible options to pivot with.
 // ------------------------------------------------------------------------------ //
@@ -86,7 +89,7 @@ global proc mr_tempPin_pivotFrom_followSelectionSet() {
     string $followObject[0] = `ls -sl` ;
 
     // If the selected object has any constraints, cancel procedure.
-    string $constraints[] = `listConnections -type "constraint" $objToPivot[0]` ;
+    string $constraints[] = `listRelatives -type "constraint" $objToPivot[0]` ;
     string $uniqueConstraints[] = `stringArrayRemoveDuplicates $constraints` ;
     if (size($constraints) > 0) {
         confirmDialog -title "Error D" -message "Selected object has constraints." ;
