@@ -1,6 +1,6 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: mr_tempPin_rotate.mel
-// VERSION: 0004
+// VERSION: 0005
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -16,8 +16,9 @@
 // Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
 // ------------------------------------------------------------------- 
 // CHANGELOG:
-// 0003: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
+// 0005: Removing maintainOffset from orientConstraint, to stop it offseting target objects wrongly
 // 0004: Keeping locator point constrained to objects, so that it follows them.
+// 0003: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
 //                            
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -64,7 +65,7 @@ global proc mr_tempPin_rotate() {
         // then orient constrain the selected objects to the locator
         for ($item in $sel) { 
             catch (`pointConstraint $item $tempPinRotLocName`) ;
-            catch (`orientConstraint -mo -weight 1 $tempPinRotLocName $item`) ;      
+            catch (`orientConstraint $tempPinRotLocName $item`) ;      
         }
         
         // lock translate of locator
