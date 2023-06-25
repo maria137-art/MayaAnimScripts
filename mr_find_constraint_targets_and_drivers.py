@@ -33,7 +33,7 @@ mr_find_drivers_of_selected()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-06-25 - 0002
+# 2023-06-25: 0002
 # Converted and combined MEL scripts into Python here.
 # Added print commands for clarity.
 #
@@ -65,7 +65,6 @@ def mr_find_targets_of_selected():
         cmds.select(list(unique_targets))  # Convert the set back to a list and select the targets
     else:
         print("No targets found.")
-
 
 
 def mr_find_drivers_of_selected():
