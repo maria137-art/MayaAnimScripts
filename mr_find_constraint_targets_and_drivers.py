@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: find_constraint_targets_and_drivers.py
+# SCRIPT: mr_find_constraint_targets_and_drivers.py
 # VERSION: 0002
 #
 # CREATORS: Maria Robertson
@@ -10,9 +10,9 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# Use find_constraint_targets_of_selected() to select any constraint targets of the selected objects.
+# Use mr_find_targets_of_selected() to select any constraint targets of the selected objects.
 # 
-# Use find_constraint_drivers() to select any drivers of selected objects that are constrained by them.
+# Use mr_find_drivers_of_selected() to select any drivers of selected objects that are constrained by them.
 #
 # ---------------------------------------
 # RUN COMMAND:
@@ -21,6 +21,8 @@
 mr_find_targets_of_selected()
 
 mr_find_drivers_of_selected()
+
+mr_deselect_selected_if_constrained()
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -33,9 +35,13 @@ mr_find_drivers_of_selected()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 
+# 2023-06-26: 0003
+#   - Added mr_deselect_selected_if_constrained()
+#
 # 2023-06-25: 0002
-# Converted and combined MEL scripts into Python here.
-# Added print commands for clarity.
+#   - Converted and combined MEL scripts into Python here.
+#   - Added print commands for clarity.
 #
 # ------------------------------------------------------------------------------ #
 """
@@ -68,7 +74,6 @@ def mr_find_targets_of_selected():
 
 
 def mr_find_drivers_of_selected():
-
     selected = cmds.ls(selection=True)
     if not selected:
         print("No objects selected.")
@@ -99,3 +104,15 @@ def mr_find_drivers_of_selected():
                             break
             else:
                 print("No constraints found.")
+
+
+def mr_deselect_selected_if_constrained():
+    selected = cmds.ls(selection=True)
+    if not selected:
+        print("No objects selected.")
+    else: 
+        for target_obj in selected:
+            constraints_of_selected = cmds.listRelatives(target_obj, typ="constraint")
+            
+            if constraints_of_selected:
+                cmds.select(target_obj, deselect=True)
