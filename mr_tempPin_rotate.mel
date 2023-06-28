@@ -1,6 +1,6 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: mr_tempPin_rotate.mel
-// VERSION: 0005
+// VERSION: 0006
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -13,9 +13,11 @@
 // mr_tempPin_rotate() ;
 //
 // REQUIREMENTS:
-// Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
+// Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
 // ------------------------------------------------------------------- 
 // CHANGELOG:
+// 2023-06-28 - 0006:
+//  - Updated script to use Python function to find constraint targets.
 // 0005: Removing maintainOffset from orientConstraint, to stop it offseting target objects wrongly
 // 0004: Keeping locator point constrained to objects, so that it follows them.
 // 0003: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
@@ -33,8 +35,11 @@ global proc mr_tempPin_rotate() {
     if (`objExists $tempPinRotLocName`) {
         select $tempPinRotLocName ;
         
-        // use procedure
-        FindConstraintTargets() ;
+        // use function to find constrained objects
+        python("import importlib");
+        python("import mr_find_constraint_targets_and_drivers");
+        python("importlib.reload(mr_find_constraint_targets_and_drivers)");
+        python("mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()");
                      
         SetKeyTranslate ;
         SetKeyRotate ;
