@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_find_constraint_targets_and_drivers.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # CREDIT: Tim van Huseen (for MEL version of Select the Constrainer)
