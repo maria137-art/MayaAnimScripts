@@ -1,0 +1,8 @@
+global proc mr_snapToFloor() {
+
+    string $sel[] = `ls -sl` ;
+    for ($item in $sel) {
+        setAttr ($item + ".translateY") 0 ;    
+    }
+}
+
