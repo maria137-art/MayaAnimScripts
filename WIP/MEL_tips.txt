@@ -1,0 +1,24 @@
+COMMAN MEL USES
+
+// -------------------------------------------------------------------
+
+Specify intended numbers for arrays when defining variables
+
+// -------------------------------------------------------------------
+
+To add line breaks, add \n to the end.
+
+e.g.  
+print "No drivers found.\n";
+
+///
+Snippet to keep adding each new object to an array
+
+string $locatorGroup[];
+// for every item selected
+for ($item in $sel){
+	// create locator
+	spaceLocator -p 0 0 0 -n ($item + "_loc");
+	// add locator to the $locatorGroup string
+	$locatorGroup[size($locatorGroup)] = ($item + "__loc");            
+}
