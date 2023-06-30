@@ -1,0 +1,116 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// SCRIPT: animLayer_createCounterAdditiveLayer
+// VERSION: 0001
+//
+// CREATORS: Maria Robertson
+// -------------------------------------------------------------------
+//
+// DESCRIPTION: 
+// Accidentally made a script that creates an additive layer, that cancels out
+// any anim on the BaseAnimation layer.
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// AnimLayer_CreateCounterAdditiveLayer() ;
+//
+// ------------------------------------------------------------------- 
+//
+// RESEARCH THAT HELPED:
+// A forum post discussing ways to remove duplicates from floats / ints:
+// https://forums.cgsociety.org/t/remove-duplicates-from-int-float-array/1484496/3
+//
+// WISH LIST:
+// - Improve on copy keyframe timing aspect of script
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+
+global proc AnimLayer_CreateCounterAdditiveLayer() {
+    
+    // declare variables
+    string $sel[] = `ls -sl` ;
+
+    // create new anim layer
+    string $newAnimLayer = ` animLayer` ;
+    // set its weight to 0
+    animLayer -edit -weight 0 $newAnimLayer ;
+    
+    // add selected objects to it
+    animLayer -e -addSelectedObjects $newAnimLayer ;
+    
+    for ($item in $sel) {
+        // remove visibility attribute from layer
+        animLayer -edit -removeAttribute ($item + ".v") $newAnimLayer ;        
+    }
+
+    
+    // for every selected item
+    for ($item in $sel) {
+         
+        // -------------------------------------------------------------------
+        // 02. GET EACH FRAME THAT THE SELECTED OBJECT IS KEYED ON
+        // -------------------------------------------------------------------
+        
+        // unhighlight all existing animation layers
+        setSelectedForAllLayers(0) ;
+        // highlight just BaseAnimation
+        animLayerEditorOnSelect "BaseAnimation" 1 ;
+        
+        select $item ; 
+        
+        // query keyframes
+        float $keyframesArray[] = `keyframe -q $item` ;
+        // remove duplicates 
+        $keyframesArray = floatArrayRemoveDuplicates($keyframesArray) ;
+        
+        // -------------------------------------------------------------------
+        // 02. KEY THE NEW ANIMLAYER
+        // -------------------------------------------------------------------#
+        
+        setSelectedForAllLayers(0) ;
+        // ensure new anim layer is active
+        animLayerEditorOnSelect $newAnimLayer 1 ;
+        
+        // for every keyframe found earlier on BaseAnimation  
+        for ($frame in $keyframesArray) {                   
+            // set a key on the frame on the new anim layer
+            setKeyframe -t $frame $item ; 
+        }    
+           
+    }
+    
+    // set the new anim layer weight to 1
+    animLayer -edit -weight 1 $newAnimLayer ;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------- //
+//                                                                      //
+//            PROCEDURE TO REMOVE DUPLICATES IN FLOAT ARRAYS            //          
+//                                                                      //
+// -------------------------------------------------------------------- //
+//////////////////////////////////////////////////////////////////////////
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------ 
+// from https://forums.cgsociety.org/t/remove-duplicates-from-int-float-array/1484496/3
+
+global proc float[] floatArrayRemoveDuplicates( float $floatArr[] ) {
+    float $results[] ;
+ 
+    for( $floatAr in $floatArr ) {
+        int $isFound = false ;
+        
+        for( $item in $results ) {
+            if( $floatAr == $item ) {
+                $isFound = true ;
+                break ;
+            }
+        }       
+        if( $isFound == false )
+            $results[size($results)] = $floatAr ;
+    }
+    return $results ;
+}
+
