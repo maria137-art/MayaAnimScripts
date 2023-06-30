@@ -1,13 +1,13 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: createNullOffsetFromSelected 
-// VERSION: 0001
+// VERSION: 0002
 //
 // CREATORS: Maria Robertson
 // -------------------------------------------------------------------
 //
 // DESCRIPTION: 
-// This script places selected objects in an offset group within their original hierarchy.
+// Place each selected object into its own offset group, under their original parent.
 // The Offset group will match the selected object's translation and rotation, to zero out their values.
 //
 // EXAMPLE USES:
@@ -22,9 +22,6 @@
 // INSTRUCTIONS:
 // It's best to run this on the original bind pose of the rig.
 //
-// REQUIREMENTS:
-// Any requirements / prerequisites needed.
-//
 // -------------------------------------------------------------------
 //
 // RESEARCH THAT HELPED:
@@ -34,11 +31,15 @@
 // The endsWith command: https://help.autodesk.com/cloudhelp/2016/CHS/Maya-LT-Tech-Docs/Commands/endsWith.html
 // Learnt of it because of this post: https://forums.autodesk.com/t5/maya-programming/selecting-all-polygon-objects-in-the-scene-with-a-certain-prefix/td-p/4240087
 //
+// -------------------------------------------------------------------
+// CHANGELIST:
+// 2023-06-29 - 0002
+//  - Work for animated objects
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-global proc CreateNullOffset() {
+global proc mr_create_null_offset() {
 
-    string $sel[] = `ls -sl` ;
+    string $sel[] = `ls -sl`;
     
     // -------------------------------------------------------------------
     // 01. CHECK IF SELECTION IS VALID
@@ -48,18 +49,18 @@ global proc CreateNullOffset() {
     for ($item in $sel) {
         
         // list its parent
-        string $parent[0] = `listRelatives -ap $item` ;
+        string $parent[] = `listRelatives -ap $item`;
             
         // check if item is already in a custom offset group
-        if (endsWith ($parent[0],"_offset_grp")) {
-            print "NOTE: The selected item is already in an offset_grp. \n" ;
-            break ;
+        if (endsWith($parent[0], "_offset_grp")) {
+            print "NOTE: The selected item is already in an offset_grp. \n";
+            continue;
         }    
         
         // check if item itself is an offset group
-        else if  (endsWith ($item,"_offset_grp")) {
-            print "NOTE: The selected item is an offset group. \n" ;
-            break ;
+        else if (endsWith($item, "_offset_grp")) {
+            print "NOTE: The selected item is an offset group. \n";
+            continue;
         }  
         
         else {
@@ -68,48 +69,49 @@ global proc CreateNullOffset() {
             // 02. PREP
             // ------------------------------------------------------------------- 
             
-            //making sure attrutes are unlocked for clean parenting
-            setAttr -lock false ($item + ".tx") ;
-            setAttr -lock false ($item + ".ty") ;
-            setAttr -lock false ($item + ".tz") ;
-            setAttr -lock false ($item + ".rx") ;
-            setAttr -lock false ($item + ".ry") ;
-            setAttr -lock false ($item + ".rz") ;
+            //making sure attributes are unlocked for clean parenting
+            setAttr -lock false ($item + ".tx");
+            setAttr -lock false ($item + ".ty");
+            setAttr -lock false ($item + ".tz");
+            setAttr -lock false ($item + ".rx");
+            setAttr -lock false ($item + ".ry");
+            setAttr -lock false ($item + ".rz");
             
             // create group
-            $null = `group -em -name ($item + "_offset_grp")` ;
+            $null = `group -em -name ($item + "_offset_grp")`;
             
-            // match position
-            parentConstraint -w 1 -n ($null + "_parentConstraint1") $item $null ;
+            // match position and orientation
+            parentConstraint -name ($null + "_parentConstraint1") $item $null;
             
-            // delete constraint and place in hierarchy
-            delete ($null + "_parentConstraint1") ;
+            // delete constraint
+            delete ($null + "_parentConstraint1");
             
             // -------------------------------------------------------------------
             // 02. PARENT NULLS
             // -------------------------------------------------------------------   
                  
             if (size($parent) == 0) {
-                parent $item $null ;    
+                parent $item $null;    
             }
             
             else {
                 // parent them
-                parent $null $parent[0] ;
-                parent $item $null ;
+                parent $null $parent[0];
+                parent $item $null;
             }
-            
+
             // lock attributes of offset group
-            setAttr -lock true ($null + ".tx") ;
-            setAttr -lock true ($null + ".ty") ;
-            setAttr -lock true ($null + ".tz") ;
-            setAttr -lock true ($null + ".rx") ;
-            setAttr -lock true ($null + ".ry") ;
-            setAttr -lock true ($null + ".rz") ;
-            setAttr -lock true ($null + ".sx") ;
-            setAttr -lock true ($null + ".sy") ;
-            setAttr -lock true ($null + ".sz") ;
-            setAttr -lock true ($null + ".v") ;      
+            setAttr -lock true ($null + ".tx");
+            setAttr -lock true ($null + ".ty");
+            setAttr -lock true ($null + ".tz");
+            setAttr -lock true ($null + ".rx");
+            setAttr -lock true ($null + ".ry");
+            setAttr -lock true ($null + ".rz");
+            setAttr -lock true ($null + ".sx");
+            setAttr -lock true ($null + ".sy");
+            setAttr -lock true ($null + ".sz");
+            setAttr -lock true ($null + ".v");      
+            
         }       
     }
 }
