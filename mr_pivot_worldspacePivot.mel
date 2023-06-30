@@ -48,6 +48,7 @@
 // WISH LIST:
 // - Save control keys + tangents, and apply it to the bake
 // - Delete redundant keys
+// - Bake everything into the new pivot at once, rather one at a time
 //
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
