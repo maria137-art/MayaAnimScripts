@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_find_constraint_targets_and_drivers.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # CREDIT: Tim van Huseen (for MEL version of Select the Constrainer)
@@ -35,7 +35,9 @@ mr_deselect_selected_if_constrained()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 
+# 2023-07-03: 0004
+#   - Fixed selection for multiple drivers, with mr_find_drivers_of_selected.
+#
 # 2023-06-26: 0003
 #   - Added mr_deselect_selected_if_constrained()
 #
@@ -75,6 +77,8 @@ def mr_find_targets_of_selected():
 
 def mr_find_drivers_of_selected():
     selected = cmds.ls(selection=True)
+    cmds.select(cl=True)
+    
     if not selected:
         print("No objects selected.")
 
@@ -84,7 +88,7 @@ def mr_find_drivers_of_selected():
             
             if constraints_of_selected:
                 print("Target: {}.".format(target_obj))       
-                cmds.select(cl=True)
+                
                 drivers = []
                 
                 for n in range(len(constraints_of_selected)):
