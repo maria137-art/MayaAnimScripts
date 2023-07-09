@@ -21,7 +21,7 @@ import importlib
 import mr_outliner_snippets
 importlib.reload(mr_outliner_snippets)
 
-mr_outliner_snippets.outliner_collapse_all_items_except_selected
+mr_outliner_snippets.outliner_collapse_all_items_except_selected()
 
 # ---------------------------------------
 # CHANGELOG:
