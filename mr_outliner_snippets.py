@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_outliner_snippets.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -24,6 +24,10 @@ mr_outliner_snippets.outliner_collapse_all_items_except_selected
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-07-09: 0002
+#   - Realised that Maya has default hotkeys for Outliner scripts in MEL.
+#   - Oh well, at least have Python versions now, in case.
+#
 # 2023-07-08: 0001 
 #   - First pass.
 # ------------------------------------------------------------------------------ #
@@ -32,11 +36,31 @@ mr_outliner_snippets.outliner_collapse_all_items_except_selected
 import maya.cmds as cmds
 import maya.mel as mel
 
+# ------------------------------------------------------------------------------ #
+def outliner_expand_all_items():
+    panel = mel.eval("getCurrentOutlinerPanel ;")
+    if panel:
+        cmds.outlinerEditor(panel, edit=True, expandAllItems=True)
+
+# ------------------------------------------------------------------------------ #
 def outliner_collapse_all_items():
     panel = mel.eval("getCurrentOutlinerPanel ;")
     if panel:
         cmds.outlinerEditor(panel, edit=True, expandAllItems=False)
 
+# ------------------------------------------------------------------------------ #
+def outliner_expand_all_selected_items():
+    panel = mel.eval("getCurrentOutlinerPanel ;")
+    if panel:
+        cmds.outlinerEditor(panel, edit=True, expandAllSelectedItems=True)
+
+# ------------------------------------------------------------------------------ #
+def outliner_collapse_all_selected_items():
+    panel = mel.eval("getCurrentOutlinerPanel ;")
+    if panel:
+        cmds.outlinerEditor(panel, edit=True, expandAllSelectedItems=False)
+
+# ------------------------------------------------------------------------------ #
 def outliner_collapse_all_items_except_selected():
     sel = cmds.ls(selection=True)
     
@@ -47,7 +71,3 @@ def outliner_collapse_all_items_except_selected():
     cmds.select(sel)
     mel.eval("FrameSelectedWithoutChildren;")
 
-def outliner_expand_all_items():
-    panel = mel.eval("getCurrentOutlinerPanel ;")
-    if panel:
-        cmds.outlinerEditor(panel, edit=True, expandAllItems=True)
