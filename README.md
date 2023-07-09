@@ -1,4 +1,3 @@
 # MayaAnimScripts
-A repository for mini anim-related scripts!
-
-Most made to assign to hotkeys.
+This is a collection of mini-animation scripts I found wanting while animating.
+They're intended to speed up workflows, so often can be assigned to hotkeys.
