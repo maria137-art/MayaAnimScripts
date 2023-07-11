@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_create_null_offset.py
+# SCRIPT: mr_create_null_offset.py NOT WORKING
 # VERSION: 0004
 #
 # CREATORS: Maria Robertson
