@@ -54,6 +54,7 @@ mr_select_inbetween_nurb_controls.mr_select_inbetween_nurb_controls()
 """
 
 import maya.cmds as cmds
+import maya.mel as mel
 
 def mr_select_inbetween_nurb_controls():
 
@@ -134,3 +135,7 @@ def mr_select_inbetween_nurb_controls():
     else:
         reversed_nurbs_curve_transforms = nurbs_curve_transforms[::-1] 
         cmds.select(reversed_nurbs_curve_transforms, replace=True)
+
+    # End with the Translate manipulator on.
+    mel.eval("buildTranslateMM;")
+    mel.eval("destroySTRSMarkingMenu MoveTool;")
