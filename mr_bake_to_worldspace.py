@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_bake_to_worldspace.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson
 # CREDIT: Richard Lico (for the workflow)
@@ -23,6 +23,9 @@
 # ---------------------------------------
 # RUN COMMAND:
 # ---------------------------------------
+import importlib
+import mr_bake_to_worldspace
+importlib.reload(mr_bake_to_worldspace)
 
 mr_bake_to_worldspace("both")
 mr_bake_to_worldspace("translation")
@@ -41,6 +44,9 @@ mr_bake_to_worldspace("rotation")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-07-10 - 0002:
+#   - Fixing issue with locking constrained attributes.
+#
 # 2023-06-30 - 0001:
 #   - First pass of workflow in Python, to bake all objects at once.
 #   - Provide 3 options.
@@ -102,7 +108,10 @@ def mr_bake_to_worldspace(constraint_mode=None):
         cmds.filterCurve(constraint)
         cmds.delete(constraint)
     cmds.refresh(suspend=False)
-    
+
+    # Attributes to lock.
+    attrs = [".tx", ".ty", ".tz"]
+
     # Do the constraints back to the original items
     for i, item in enumerate(selection):
         locator = locators[i]
@@ -115,12 +124,11 @@ def mr_bake_to_worldspace(constraint_mode=None):
             cmds.pointConstraint(locator, item)
             
         if constraint_mode == "rotation":
-            cmds.pointConstraint(item, locator)
             cmds.orientConstraint(locator, item)
+            cmds.pointConstraint(item, locator)
 
-            # Lock attributes of offset group
-            attrs += [".tx", ".ty", ".tz"]
             for attr in attrs:
-                cmds.setAttr(locator, lock=True)
+                full_attr = locator + attr
+                cmds.setAttr(full_attr, lock=True)
             
     cmds.select(locators)
