@@ -26,6 +26,8 @@ import importlib
 import #
 importlib.reload(#)
 
+#.#()
+
 # ---------------------------------------
 # REQUIREMENTS: 
 # ---------------------------------------
