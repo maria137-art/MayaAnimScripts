@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_create_null_offset.py NOT WORKING
-# VERSION: 0004
+# SCRIPT: mr_create_null_offset.py
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -53,6 +53,11 @@ mr_create_null_offset.mr_create_null_offset_keyed()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-07-19 - 0005:
+#   - Adding comments to script to make rereading easier.
+#   - Made bakeResults bake on both translate and rotate attributes, for mr_create_null_offset_keyed()
+#         Decided to have it, while experimenting with Aim Space scripts.
+#
 # 2023-06-29 - 0004:
 #   - For mr_create_null_offset_keyed, added function to set all transform keys on original selection to default values, keeping the original key timings.
 #   - Added mr_find_drivers_of_selected and baking for mr_create_null_offset_static to remove temp worldspace locators.
@@ -91,7 +96,8 @@ def mr_create_null_offset_keyed():
     # Organise selected objects into variables.
     for item in sel:
         parent = cmds.listRelatives(item, parent=True)
-
+        
+        # If item is an offset group, or is already in an offset group, give an error.
         if parent and parent[0].endswith("_offset_grp"):
             print("NOTE: The selected item is already in an offset_grp.")
             continue
@@ -101,48 +107,53 @@ def mr_create_null_offset_keyed():
 
         else:
             valid_objects.append(item)   
-
-            # Unlock attributes for clean parenting
+            # Unlock attributes for clean parenting.
             attrs = [".tx", ".ty", ".tz", ".rx", ".ry", ".rz"]
             for attr in attrs:
                 cmds.setAttr(item + attr, lock=False)
 
-            # Check if item has keyframes
+            # Check if item has keyframes.
             has_keyframes = cmds.keyframe(item, query=True, keyframeCount=True)
             if has_keyframes:
                 keyed_objects.append(item)
             else:
                 static_objects.append(item)
     
-    # If keyed, bake them to spare locators, to hold their worldspace position.
+    # If keyed, bake them to spare locators, to hold their worldspace position while placing the item in a parent.
     if keyed_objects:
         cmds.select(keyed_objects)
         mr_bake_to_worldspace.mr_bake_to_worldspace("both")
                   
-    # Create null group
+    # Create null group.
+    
+    # For each item,
     for item in valid_objects:
+        # Create a null group.
         parent = cmds.listRelatives(item, parent=True)
         null = cmds.group(empty=True, name=item + "_offset_grp")
+        # Match the position and orientation.
         cmds.parentConstraint(item, null)
-
-         # Match position and orientation
+        
+        # If item is keyed, add it to a variable to be baked later.
         if item in keyed_objects:
             nulls_for_keyed_objects.append(null) 
-    
+        # Otherwise, just delete the constraint.
         elif item in static_objects:
             cmds.delete(null + "_parentConstraint1")
                
-        # Parent nulls
+        # If item has a parent, place the null under it too.
         if parent:
             cmds.parent(null, parent[0])
+        # Parent item under the null.
         cmds.parent(item, null)
-
+    
+    # For every item with keys, bake their constrained nulls.
     if nulls_for_keyed_objects:
         cmds.refresh(suspend=True)
         cmds.bakeResults(
             nulls_for_keyed_objects,
             simulation=True,
-            attribute=['translateX', 'translateY', 'translateZ'],  # Only key translate attributes
+            attribute=['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ' ],  # Only key translate attributes
             time=(start_time, end_time),
             sampleBy=1,
             disableImplicitControl=True,
@@ -155,18 +166,18 @@ def mr_create_null_offset_keyed():
             controlPoints=False
         )
         cmds.filterCurve()
+        # Delete constraints on the nulls after baking.
         cmds.delete(nulls_for_keyed_objects, constraints=True)
         cmds.refresh(suspend=False)
     
-    # Key original selection, before deleting their drivers
+    # Key the original selection, before deleting their drivers
     cmds.setKeyframe(sel, attribute='translateX')
     cmds.setKeyframe(sel, attribute='translateY')
     cmds.setKeyframe(sel, attribute='translateZ')
     cmds.setKeyframe(sel, attribute='rotateX')
     cmds.setKeyframe(sel, attribute='rotateY')
     cmds.setKeyframe(sel, attribute='rotateZ')
-    
-    # Delete drivers
+    # Delete their drivers.
     cmds.select(sel)
     mr_find_constraint_targets_and_drivers.mr_find_drivers_of_selected()
     cmds.delete()
@@ -181,6 +192,7 @@ def mr_create_null_offset_keyed():
     cmds.select(last_item, replace=True)
     """
     cmds.select(sel)
+
 
 def mr_create_null_offset_static():
     sel = cmds.ls(selection=True)
