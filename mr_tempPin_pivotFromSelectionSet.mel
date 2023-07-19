@@ -221,7 +221,7 @@ global proc mr_tempPin_pivotFrom_followSelectionSet() {
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-proc FindConstraintTargets() {
+global proc FindConstraintTargets() {
     
     string $queryTargets[] = `ls -sl`;
     // declare all constraint connections on selected
