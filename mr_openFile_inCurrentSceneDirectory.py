@@ -2,7 +2,6 @@ import maya.cmds as cmds
 import os
 
 def mr_openFile_inCurrentSceneDirectory():
-    # Get the current scene file name
     current_file_path = cmds.file(query=True, sceneName=True)
 
     # Get the directory path of the current scene file
@@ -15,3 +14,29 @@ def mr_openFile_inCurrentSceneDirectory():
     if selected_file_path:
         cmds.file(selected_file_path[0], open=True, force=True)
 
+def mr_openFile_currentFile():
+    current_file_path = cmds.file(query=True, sceneName=True)
+
+    # Check if there are unsaved changes.
+    if cmds.file(query=True, modified=True):
+        # Ask the user if they want to save changes
+        result = cmds.confirmDialog(
+            title='Save Changes',
+            message='Save changes to {}?'.format(current_file_path),
+            button=['Save', 'Don\'t Save', 'Cancel'],
+            defaultButton='Save',
+            cancelButton='Cancel',
+            dismissString='Cancel'
+        )
+
+        # Process user choice.
+        if result == 'Save':
+            cmds.file(save=True, force=True)
+        elif result == 'Don\'t Save':
+            cmds.file(force=True, new=True)
+        else:
+            # User canceled the operation.
+            return
+
+    # Reopen the scene.
+    cmds.file(current_file_path, open=True, force=True)
