@@ -8,7 +8,7 @@ importlib.reload(mr_find_constraint_targets_and_drivers)
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin_pivotFromSelectionSet.py
-# VERSION: 0005
+# VERSION: 0006
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -22,18 +22,25 @@ importlib.reload(mr_find_constraint_targets_and_drivers)
 # RUN COMMANDS:
 # ---------------------------------------
 
+import importlib
+import mr_tempPin_pivotFromSelectionSet
+importlib.reload(mr_tempPin_pivotFromSelectionSet)
+
 # To tag an object to pivot from.
-mr_tempPin_create_followSelectionSet() ;
+mr_tempPin_pivotFromSelectionSet.mr_tempPin_create_followSelectionSet() ;
 
 # To pivot with translation and rotation:
-mr_tempPin_pivotFrom_followSelectionSet(1)
+mr_tempPin_pivotFromSelectionSet.mr_tempPin_pivotFrom_followSelectionSet(1)
 
 # To pivot with just translation:
-mr_tempPin_pivotFrom_followSelectionSet(2)
+mr_tempPin_pivotFromSelectionSet.mr_tempPin_pivotFrom_followSelectionSet(2)
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-11-28 - 0006
+# Fixing typos with quotation marks.
+#
 # 2023-11-28 - 0005
 # Splitting script to two options: 
 # 	1: pivot with translation and rotation
@@ -80,7 +87,7 @@ def mr_tempPin_create_followSelectionSet():
 ########################################################################
 
 def mr_tempPin_pivotFrom_followSelectionSet(mode):
-	if mode not in ["1", "2"]:
+	if mode != 1 and mode != 2:
 		cmds.warning("Please input a valid manipulation mode (1 to tranlsate and rotate, or 2 to only translate).")
 
 	# -------------------------------------------------------------------
@@ -96,7 +103,7 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 
 	# If the selected object has any constraints, cancel procedure.
 	for obj in objs_to_pivot:
-		constraints = cmds.listRelativs(obj, type="constraint") or []
+		constraints = cmds.listRelatives(obj, type="constraint") or []
 		unique_constraints = list(set(constraints))
  
 		if len(constraints) > 0:
@@ -180,12 +187,12 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 				cmds.parentConstraint(obj, loc, weight=1)
 				cmds.delete(loc, constraints=True)
 				
-				if mode == "1":
+				if mode == 1:
 					# Parent constrain loc to objs_to_pivot.
 					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
 					cmds.orientConstraint(loc, obj, maintainOffset=True, weight=1)
 				
-				elif mode == "2":
+				elif mode == 2:
 					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
 					
 				
