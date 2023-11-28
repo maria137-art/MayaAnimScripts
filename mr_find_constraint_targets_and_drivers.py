@@ -18,11 +18,18 @@
 # RUN COMMAND:
 # ---------------------------------------
 
-mr_find_targets_of_selected()
+import importlib
 
-mr_find_drivers_of_selected()
+import mr_find_constraint_targets_and_drivers
+importlib.reload(mr_find_constraint_targets_and_drivers)
 
-mr_deselect_selected_if_constrained()
+# ANY OF THE FOLLOWING
+
+mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()
+
+mr_find_constraint_targets_and_drivers.mr_find_drivers_of_selected()
+
+mr_find_constraint_targets_and_drivers.mr_deselect_selected_if_constrained()
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
