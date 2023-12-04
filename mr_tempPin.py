@@ -133,9 +133,25 @@ def lock_and_hide_corresponding_attributes(source, target, mode):
                 cmds.setAttr(source_attr, keyable=False)
                 cmds.setAttr(source_attr, lock=True)
 
-    for attr in extra_attributes_to_lock_hide:
+
+    def lock_hide_attribute(source, attr):
         source_attr = source + "." + attr
         cmds.setAttr(source_attr, keyable=False)
+        cmds.setAttr(source_attr, lock=True)
+
+
+    for attr in extra_attributes_to_lock_hide:
+        lock_hide_attribute(source, attr)
+
+    if mode == "translate":
+        rotation_attributes = ["rotateX", "rotateY", "rotateZ"]
+        for attr in rotation_attributes:
+            lock_hide_attribute(source, attr)
+
+    elif mode == "rotate":
+        translation_attributes = ["translateX", "translateY", "translateZ"]
+        for attr in translation_attributes:
+            lock_hide_attribute(source, attr)
 
 ##################################################################################################################################################
     
