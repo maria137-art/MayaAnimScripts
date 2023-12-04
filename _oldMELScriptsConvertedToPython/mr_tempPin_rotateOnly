@@ -1,0 +1,75 @@
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// SCRIPT: mr_tempPin_createTransRotPin
+// VERSION: 0003
+//
+// CREATORS: Maria Robertson
+// ------------------------------------------------------------------- 
+//
+// DESCRIPTION: 
+// - Pins selected object/s to a single temp locator, to be moved in worldspace. 
+// - When script is run again, constrained objects are keyed on current frame, and temp pin deleted.
+// 
+// ------------------------------------------------------------------- 
+//
+// RUN COMMAND:
+// mr_tempPin_createRotOnlyPin() ;
+//
+// REQUIREMENTS:
+// Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
+// ------------------------------------------------------------------- 
+// CHANGELOG:
+// 2023-06-28 - 0003:
+//  - Updated script to use Python function to find constraint targets.
+//
+// 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
+//                       
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+global proc mr_tempPin_createRotOnlyPin() {
+
+    string $tempPinLocName = "TEMP_ROT_worldspace_locator" ;
+
+    if (`objExists $tempPinLocName`) {
+        select $tempPinLocName ;
+        
+        // use function to find constrained objects
+        python("import importlib");
+        python("import mr_find_constraint_targets_and_drivers");
+        python("importlib.reload(mr_find_constraint_targets_and_drivers)");
+        python("mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()");
+                     
+        SetKeyTranslate ;
+        SetKeyRotate ;
+        
+        delete $tempPinLocName ;      
+    }
+    
+    else {     
+
+        string $sel[] = `ls -sl` ;  
+        
+        // create the temp locator
+        spaceLocator -p 0 0 0 -n $tempPinLocName ;
+        setAttr ($tempPinLocName + "Shape.localScaleY") 10 ;
+        setAttr ($tempPinLocName + "Shape.localScaleZ") 10 ;
+        setAttr ($tempPinLocName + "Shape.localScaleZ") 10 ;
+
+         
+        // place the locator at the average position and orientation between
+        // the selected objects   
+        for ($item in $sel) { 
+            catch (`pointConstraint $item $tempPinLocName`) ;
+            catch (`orientConstraint $item $tempPinLocName`) ;
+        }
+
+        delete -cn $tempPinLocName ;
+
+        for ($item in $sel) {       
+            catch (`pointConstraint -mo -w 1 $item $tempPinLocName`) ;
+            catch (`orientConstraint -mo -w 1 $tempPinLocName $item`) ;   
+        }  
+                
+        select $tempPinLocName ;         
+    }       
+ }
