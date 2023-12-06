@@ -1,7 +1,7 @@
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // SCRIPT: mr_tempPin_createIndividualPins
-// VERSION: 0002
+// VERSION: 0003
 //
 // CREATORS: Maria Robertson
 // ------------------------------------------------------------------- 
@@ -17,9 +17,12 @@
 // mr_tempPin_createIndividualPins() ;
 //
 // REQUIREMENTS:
-// Must have mr_findConstraintTargets.mel in order to use the procedure FindConstraintTargets
+// Must have mr_find_constraint_targets_and_drivers.py in order to use its function.
 // ------------------------------------------------------------------- 
 // CHANGELOG:
+// 2023-12-06 - 0003:
+//  - Updated script to use Python function to find constraint targets.
+//
 // 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
 //                           
 // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,9 +47,12 @@ global proc mr_tempPin_createIndividualPins() {
               
         // set key on all children of TEMP_worldspace_locator_grp
         select (`listRelatives -c $groupName`) ;
-        
-        // run procedure
-        FindConstraintTargets() ;
+
+        // use function to find constrained objects
+        python("import importlib");
+        python("import mr_find_constraint_targets_and_drivers");
+        python("importlib.reload(mr_find_constraint_targets_and_drivers)");
+        python("mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()");
         
         SetKeyTranslate ;
         SetKeyRotate ;
