@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0004
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -9,8 +9,19 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# - Pin selected object/s to a single temp locator, to be moved in worldspace.
-# - When script runs again, constrained objects are keyed on current frame, and temp pin deleted.
+# This script has two main functions:
+#
+#   single:
+#       - Pin selected objects to a single worldspace locator.
+#       - The locator will be at the objects' average positon and orientation.
+#       - When the script runs again, its constrained objects are keyed on current frame, and temp locators get deleted.
+#
+#   multiple:
+#       - Pin selected objects to a worldspace locator each.
+#       - All new locators get parented under one null. Use it to pivot all objects at once.
+#       - The null will be created at the objects average positon and orientation.
+#       - When the script runs again, constrained objects are keyed on the current frame, and temp locators get deleted.
+#
 #
 # EXAMPLE USES:
 # ---------------------------------------
@@ -23,30 +34,33 @@
 #   - "translate"
 #   - "rotate" 
 # ---------------------------------------
-# RUN COMMAND:
+# RUN COMMANDS:
 # ---------------------------------------
 import importlib
 import mr_tempPin
 importlib.reload(mr_tempPin)
 
-mr_tempPin.mr_tempPin("both")
-mr_tempPin.mr_tempPin("translate")
-mr_tempPin.mr_tempPin("rotate")
+# Use one of the following commands.
+mr_tempPin.single("both")
+mr_tempPin.single("translate")
+mr_tempPin.single("rotate")
 
+mr_tempPin.multiple("both")
+mr_tempPin.multiple("translate")
+mr_tempPin.multiple("rotate")
 
 # ---------------------------------------
 # REQUIREMENTS: 
 # ---------------------------------------
 # Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
 # 
-# WISH LIST:
-# ---------------------------------------
-# - Work with Animation Layers.
-#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-12-04: 0004: 
+# 2023-12-07 - 0005:
+# - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
+#
+# 2023-12-04 - 0004: 
 # - Converted original MEL script to Python.
 #
 # 2023-06-28 - 0003:
@@ -63,50 +77,85 @@ import importlib
 import mr_find_constraint_targets_and_drivers
 importlib.reload(mr_find_constraint_targets_and_drivers)
 
+##################################################################################################################################################
 
-def mr_tempPin(mode=None):
-    temp_pin_loc = "TEMP_worldspace_locator"
+def single(mode=None):
+    temp_pin_name = "TEMP_worldspace_locator"
 
-    if cmds.objExists(temp_pin_loc):
-        cmds.select(temp_pin_loc)
+    # -------------------------------------------------------------------
+    # 00. CHECK IF TEMP PIN ALREADY EXISTS.
+    # -------------------------------------------------------------------
+    if cmds.objExists(temp_pin_name):
+        key_targets(temp_pin_name)
 
-        mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()
-
-        mel.eval("SetKeyTranslate;")
-        mel.eval("SetKeyRotate;")
-
-        cmds.delete(temp_pin_loc)
-
+    # -------------------------------------------------------------------
+    # 00. CREATE TEMP PIN FOR EACH SELECTED OBJECT.
+    # -------------------------------------------------------------------
     else:
         sel = cmds.ls(selection=True)
 
         # Create a locator.
-        loc = cmds.spaceLocator(name=temp_pin_loc)[0]
+        loc = cmds.spaceLocator(name=temp_pin_name)[0]
         cmds.setAttr(loc + "Shape.localScaleX", 10)
         cmds.setAttr(loc + "Shape.localScaleY", 10)
         cmds.setAttr(loc + "Shape.localScaleZ", 10)
 
-        # Place the locator at the average position and orientation between selected objects.
-        for item in sel:
-            cmds.pointConstraint(item, loc)
-            cmds.orientConstraint(item, loc)
-        cmds.delete(loc, constraints=True)
-
-        for item in sel:
-            if mode == "both":
-                constrain_unlocked_translates(loc, item)
-                constrain_unlocked_rotates(loc, item)
-
-            elif mode == "translate":
-                constrain_unlocked_translates(loc, item)
-
-            elif mode == "rotate":
-                constrain_unlocked_rotates(loc, item)
-
-        # Lock and hide attributes on the locator if corresponding ones on the target are locked
-        lock_and_hide_corresponding_attributes(loc, sel, mode)
+        match_average_position_of_objects(sel, loc)
+        constrain_unlocked_attributes(loc, sel, mode)
+        lock_and_hide_same_attributes(loc, sel, mode)
 
         cmds.select(loc)
+
+##################################################################################################################################################
+
+def multiple(mode=None):
+    temp_pin_group = "TEMP_worldspace_locator_grp"
+
+    # -------------------------------------------------------------------
+    # 00. CHECK IF TEMP GROUP ALREADY EXISTS.
+    # -------------------------------------------------------------------
+    if cmds.objExists(temp_pin_group):
+        children = cmds.listRelatives(temp_pin_group, children=True)
+        key_targets(children)
+
+        cmds.delete(temp_pin_group)
+
+    # -------------------------------------------------------------------
+    # 00. CREATE TEMP PIN FOR EACH SELECTED OBJECT.
+    # -------------------------------------------------------------------
+    else:
+        sel = cmds.ls(selection=True)
+
+        # If nothing is selected,
+        if not sel:
+            # reminds user to select something.
+            # Make sure title is unique, otherwise dialog won't trigger.
+            cmds.warning("Select objects to pin.")
+
+        else:
+            # Create a group.
+            cmds.group(empty=True, name=temp_pin_group)
+            match_average_position_of_objects(sel, temp_pin_group)
+
+            for item in sel:
+                # Create a locator.
+                loc = cmds.spaceLocator(name=("TEMP_worldspace_" + item + "_loc"))[0]
+                cmds.setAttr(loc + "Shape.localScaleX", 10)
+                cmds.setAttr(loc + "Shape.localScaleY", 10)
+                cmds.setAttr(loc + "Shape.localScaleZ", 10)
+
+                # Position and orient it at its target.
+                cmds.pointConstraint(item, loc)
+                cmds.orientConstraint(item, loc)
+                cmds.delete(loc, constraints=True)
+
+                # Parent into temp_pin_group.
+                cmds.parent(loc, temp_pin_group)
+
+                constrain_unlocked_attributes(loc, sel, mode)
+                lock_and_hide_same_attributes(loc, sel, mode)
+
+            cmds.select(temp_pin_group)
 
 ##################################################################################################################################################
 
@@ -116,7 +165,40 @@ def mr_tempPin(mode=None):
 #                                                                      #
 ########################################################################
 
-def lock_and_hide_corresponding_attributes(source, target, mode):
+# Place the target at the average position and orientation of source objects.
+def match_average_position_of_objects(sources, target):
+    for item in sources:
+        point_constraint = cmds.pointConstraint(item, target)
+        orient_constraint = cmds.orientConstraint(item, target)
+        # Delete with variables instead of cmds.delete(constraints=True), because if the target it a null, it gets deleted when constraints are removed.
+        cmds.delete(point_constraint, orient_constraint)
+
+##################################################################################################################################################
+
+def constrain_unlocked_attributes(driver, targets, mode):
+    for item in targets:
+        if mode == "both":
+            constrain_unlocked_translates(driver, item)
+            constrain_unlocked_rotates(driver, item)
+
+        elif mode == "translate":
+            constrain_unlocked_translates(driver, item)
+
+        elif mode == "rotate":
+            constrain_unlocked_rotates(driver, item)
+
+##################################################################################################################################################
+
+def key_targets(drivers):
+    cmds.select(drivers)
+    mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()
+    mel.eval("SetKeyTranslate;")
+    mel.eval("SetKeyRotate;")
+
+##################################################################################################################################################
+
+# Lock and hide attributes on the locator if corresponding ones on the target are locked.
+def lock_and_hide_same_attributes(source, target, mode):
     main_attributes_to_lock_hide = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
     extra_attributes_to_lock_hide = ["scaleX", "scaleY", "scaleZ", "visibility"]
 
