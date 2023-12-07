@@ -80,13 +80,14 @@ importlib.reload(mr_find_constraint_targets_and_drivers)
 ##################################################################################################################################################
 
 def single(mode=None):
-    temp_pin_name = "TEMP_worldspace_locator"
+    temp_pin = "TEMP_worldspace_locator"
 
     # -------------------------------------------------------------------
     # 00. CHECK IF TEMP PIN ALREADY EXISTS.
     # -------------------------------------------------------------------
-    if cmds.objExists(temp_pin_name):
-        key_targets(temp_pin_name)
+    if cmds.objExists(temp_pin):
+        key_targets(temp_pin)
+        cmds.delete(temp_pin)
 
     # -------------------------------------------------------------------
     # 00. CREATE TEMP PIN FOR EACH SELECTED OBJECT.
@@ -95,7 +96,7 @@ def single(mode=None):
         sel = cmds.ls(selection=True)
 
         # Create a locator.
-        loc = cmds.spaceLocator(name=temp_pin_name)[0]
+        loc = cmds.spaceLocator(name=temp_pin)[0]
         cmds.setAttr(loc + "Shape.localScaleX", 10)
         cmds.setAttr(loc + "Shape.localScaleY", 10)
         cmds.setAttr(loc + "Shape.localScaleZ", 10)
