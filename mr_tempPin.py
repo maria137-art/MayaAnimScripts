@@ -203,9 +203,13 @@ def lock_and_hide_same_attributes(source, target, mode):
     main_attributes_to_lock_hide = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
     extra_attributes_to_lock_hide = ["scaleX", "scaleY", "scaleZ", "visibility"]
 
+    def lock_hide_attribute(source, attr):
+        source_attr = source + "." + attr
+        cmds.setAttr(source_attr, keyable=False)
+        cmds.setAttr(source_attr, lock=True)
+
     # Hide attributes on target that are locked and / or unkeyable on source. 
     for attr in main_attributes_to_lock_hide:
-        source_attr = source + "." + attr
         for target_obj in target:
             target_attr = target_obj + "." + attr
 
@@ -213,15 +217,7 @@ def lock_and_hide_same_attributes(source, target, mode):
             target_keyable = cmds.getAttr(target_attr, keyable=True)
 
             if target_lock or not target_keyable:
-                cmds.setAttr(source_attr, keyable=False)
-                cmds.setAttr(source_attr, lock=True)
-
-
-    def lock_hide_attribute(source, attr):
-        source_attr = source + "." + attr
-        cmds.setAttr(source_attr, keyable=False)
-        cmds.setAttr(source_attr, lock=True)
-
+                lock_hide_attribute(source, attr)
 
     for attr in extra_attributes_to_lock_hide:
         lock_hide_attribute(source, attr)
