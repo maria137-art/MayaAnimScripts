@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_bake_to_worldspace.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # CREDIT: Richard Lico (for the workflow)
@@ -44,6 +44,9 @@ mr_bake_to_worldspace("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-06 - 0004:
+#   - Fixed lock_and_hide_corresponding_attributes to lock and hide attributes on multiple objects.
+#
 # 2023-12-06 - 0003:
 #   - Adding functions to hide and ignore locked and unkeyable attributes on targests, avoiding errors.
 #
@@ -61,7 +64,7 @@ import maya.cmds as cmds
 
 def mr_bake_to_worldspace(mode=None):
     # -------------------------------------------------------------------
-    # 01. DEFINE TIMESLIDER RANGE
+    # 01. DEFINE TIMESLIDER RANGE.
     # -------------------------------------------------------------------
     start_time = cmds.playbackOptions(q=True, min=True)
     end_time = cmds.playbackOptions(q=True, max=True)
@@ -75,7 +78,7 @@ def mr_bake_to_worldspace(mode=None):
     constraints = []
 
     # -------------------------------------------------------------------
-    # 01. CREATE LOCATOR PER OBJECT
+    # 01. CREATE A LOCATOR PER OBJECT.
     # -------------------------------------------------------------------
     for item in selection:
         locator_name = item + "_temp_worldspace_locator"
@@ -91,7 +94,7 @@ def mr_bake_to_worldspace(mode=None):
         constraints.append(orient_constraint)
  
     # -------------------------------------------------------------------
-    # 01. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES
+    # 01. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES.
     # -------------------------------------------------------------------
     cmds.refresh(suspend=True)
 
@@ -124,10 +127,8 @@ def mr_bake_to_worldspace(mode=None):
     # -------------------------------------------------------------------
     # 01. REVERSE CONSTRAINTS
     # -------------------------------------------------------------------
-    # Reverse constraints.
     for i, item in enumerate(selection):
         locator = locators[i]
-        
         if mode == "both":
             constrain_unlocked_translates(locator, item)
             constrain_unlocked_rotates(locator, item)
@@ -140,8 +141,8 @@ def mr_bake_to_worldspace(mode=None):
             cmds.pointConstraint(item, locator)
 
 
-    # Lock and hide attributes on the locator if corresponding ones on the target are locked.
-    lock_and_hide_corresponding_attributes(locator, selection, mode)
+        # Lock and hide attributes on the locator if corresponding ones on the target are locked.
+        lock_and_hide_corresponding_attributes(locator, item, mode)
 
     # End with the locators selected.
     cmds.select(locators)
@@ -158,25 +159,20 @@ def lock_and_hide_corresponding_attributes(source, target, mode):
     main_attributes_to_lock_hide = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
     extra_attributes_to_lock_hide = ["scaleX", "scaleY", "scaleZ", "visibility"]
 
-    # Hide attributes on target that are locked and / or unkeyable on source. 
     for attr in main_attributes_to_lock_hide:
         source_attr = source + "." + attr
-        for obj in target:
-            target_attr = obj + "." + attr
 
-            target_lock = cmds.getAttr(target_attr, lock=True)
-            target_keyable = cmds.getAttr(target_attr, keyable=True)
+        target_attr = target + "." + attr
+        target_lock = cmds.getAttr(target_attr, lock=True)
+        target_keyable = cmds.getAttr(target_attr, keyable=True)
 
-            if target_lock or not target_keyable:
-                cmds.setAttr(source_attr, keyable=False)
-                cmds.setAttr(source_attr, lock=True)
-
+        if target_lock or not target_keyable:
+            cmds.setAttr(source_attr, keyable=False)
 
     def lock_hide_attribute(source, attr):
         source_attr = source + "." + attr
         cmds.setAttr(source_attr, keyable=False)
         cmds.setAttr(source_attr, lock=True)
-
 
     for attr in extra_attributes_to_lock_hide:
         lock_hide_attribute(source, attr)
