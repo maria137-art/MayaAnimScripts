@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0005
+# VERSION: 0006
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -57,6 +57,9 @@ mr_tempPin.multiple("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-09 - 0006:
+# - Fixing the multiple() function to respect locked attributes better.
+#
 # 2023-12-07 - 0005:
 # - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
 #
@@ -153,8 +156,8 @@ def multiple(mode=None):
                 # Parent into temp_pin_group.
                 cmds.parent(loc, temp_pin_group)
 
-                constrain_unlocked_attributes(loc, sel, mode)
-                lock_and_hide_same_attributes(loc, sel, mode)
+                constrain_unlocked_attributes(loc, item, mode)
+                lock_and_hide_same_attributes(loc, item, mode)
 
             cmds.select(temp_pin_group)
 
@@ -168,25 +171,15 @@ def multiple(mode=None):
 
 # Place the target at the average position and orientation of source objects.
 def match_average_position_of_objects(sources, target):
+    constraints = []
     for item in sources:
         point_constraint = cmds.pointConstraint(item, target)
         orient_constraint = cmds.orientConstraint(item, target)
-        # Delete with variables instead of cmds.delete(constraints=True), because if the target it a null, it gets deleted when constraints are removed.
-        cmds.delete(point_constraint, orient_constraint)
 
-##################################################################################################################################################
-
-def constrain_unlocked_attributes(driver, targets, mode):
-    for item in targets:
-        if mode == "both":
-            constrain_unlocked_translates(driver, item)
-            constrain_unlocked_rotates(driver, item)
-
-        elif mode == "translate":
-            constrain_unlocked_translates(driver, item)
-
-        elif mode == "rotate":
-            constrain_unlocked_rotates(driver, item)
+        constraints.extend(point_constraint)
+        constraints.extend(orient_constraint)
+    # Delete with variables instead of cmds.delete(constraints=True), because if the target it a null, it gets deleted when constraints are removed.
+    cmds.delete(constraints)
 
 ##################################################################################################################################################
 
@@ -210,14 +203,13 @@ def lock_and_hide_same_attributes(source, target, mode):
 
     # Hide attributes on target that are locked and / or unkeyable on source. 
     for attr in main_attributes_to_lock_hide:
-        for target_obj in target:
-            target_attr = target_obj + "." + attr
+        target_attr = target + "." + attr
 
-            target_lock = cmds.getAttr(target_attr, lock=True)
-            target_keyable = cmds.getAttr(target_attr, keyable=True)
+        target_lock = cmds.getAttr(target_attr, lock=True)
+        target_keyable = cmds.getAttr(target_attr, keyable=True)
 
-            if target_lock or not target_keyable:
-                lock_hide_attribute(source, attr)
+        if target_lock or not target_keyable:
+            lock_hide_attribute(source, attr)
 
     for attr in extra_attributes_to_lock_hide:
         lock_hide_attribute(source, attr)
@@ -231,6 +223,19 @@ def lock_and_hide_same_attributes(source, target, mode):
         translation_attributes = ["translateX", "translateY", "translateZ"]
         for attr in translation_attributes:
             lock_hide_attribute(source, attr)
+
+##################################################################################################################################################
+
+def constrain_unlocked_attributes(driver, target, mode):
+    if mode == "both":
+        constrain_unlocked_translates(driver, target)
+        constrain_unlocked_rotates(driver, target)
+
+    elif mode == "translate":
+        constrain_unlocked_translates(driver, target)
+
+    elif mode == "rotate":
+        constrain_unlocked_rotates(driver, targets)
 
 ##################################################################################################################################################
     
