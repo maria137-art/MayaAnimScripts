@@ -21,10 +21,10 @@
 # ---------------------------------------
 
 import importlib
-import mr_bake_to_override_animation_layer
-importlib.reload(mr_bake_to_override_animation_layer)
+import mr_animLayer_bake_to_override
+importlib.reload(mr_animLayer_bake_to_override)
 
-mr_bake_to_override_animation_layer.bake_to_override_animation_layer()
+mr_animLayer_bake_to_override.main()
 
 # ---------------------------------------
 # WISH LIST:
