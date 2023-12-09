@@ -30,6 +30,7 @@ mr_animLayer_bake_to_override.main()
 # WISH LIST:
 # ---------------------------------------
 # - Bake to additive layers, without causing crazy offsets.
+# - When baking, ignore attributes that aren't connected to any animation layers.
 #
 # ---------------------------------------
 # CHANGELOG:
