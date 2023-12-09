@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_pivot_worldspace.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson 
 # CREDIT: Daniel Fotheringham
@@ -46,7 +46,9 @@ import importlib
 import mr_pivot_worldspace
 importlib.reload(mr_pivot_worldspace)
 
-mr_pivot_worldspace.main()
+mr_pivot_worldspace.main("all")
+# OR
+mr_pivot_worldspace.main("current_frame")
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -62,6 +64,9 @@ mr_pivot_worldspace.main()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-09 - 0002:
+# - 
+#
 # 2023-12-09 - 0001:
 # - Converting mr_pivot_worldspacePivot.mel to Python
 # ------------------------------------------------------------------------------ #
@@ -69,13 +74,20 @@ mr_pivot_worldspace.main()
 
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
+import maya.mel as mel
 
 import importlib
 import mr_find_constraint_targets_and_drivers
 importlib.reload(mr_find_constraint_targets_and_drivers)
 
 
-def main():
+def main(bake_range=None):
+    # -------------------------------------------------------------------
+    # 01. CHECK IF bake_range IS CORRECT.
+    # -------------------------------------------------------------------
+    if bake_range != "current_frame" and bake_range != "all":
+        cmds.warning("Fix the mode used.")
+
     # -------------------------------------------------------------------
     # 01. INITIALIZE VARIABLES.
     # -------------------------------------------------------------------
@@ -99,7 +111,10 @@ def main():
             cmds.select(pivot_children)
             mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()
 
-            bake_and_delete_constraints(pivot_children, startTime, endTime)
+            if bake_range == "current_frame":
+                bake_current_frame(pivot_children)
+            elif bake_range == "all":
+                bake_and_delete_constraints(startTime, endTime)
 
             cmds.delete(temp_pivot)
 
@@ -149,7 +164,12 @@ def main():
             # -------------------------------------------------------------------
             # 03. BAKE OFFSET LOCATORS
             # -------------------------------------------------------------------
-            bake_and_delete_constraints(pivot_locators, startTime, endTime)
+            cmds.select(pivot_locators)
+            if bake_range == "current_frame":
+                bake_current_frame(pivot_locators)
+            elif bake_range == "all":
+                bake_and_delete_constraints(startTime, endTime)
+
 
             # Constrain controls to baked offset locators.
             for i in range(len(pivot_locators)):
@@ -176,6 +196,7 @@ def main():
             cmds.setAttr(f"{temp_pivot}.localScaleZ", 100)
             cmds.setAttr(f"{temp_pivot}.localScaleX", 100)
             cmds.setAttr(f"{temp_pivot}.localScaleY", 100)
+            lock_hide_attribute(temp_pivot, "visibility")
 
             # Average position and rotation of temp_pivot between selected.
             for item in sel:
@@ -258,23 +279,40 @@ def main():
 #                                                                      #
 ########################################################################
 
-def bake_and_delete_constraints(objects_to_bake, startTime, endTime):
+def bake_and_delete_constraints(startTime, endTime):
     cmds.refresh(suspend=True)
 
     cmds.bakeResults(
-        objects_to_bake,
         simulation=True,
         time=(startTime, endTime),
         sampleBy=1,
         disableImplicitControl=True,
         preserveOutsideKeys=True,
         sparseAnimCurveBake=False,
-        removeBakedAttributeFromLayer=False,
+        removeBakedAttributeFromLayer=False,s
         removeBakedAnimFromLayer=False,
         bakeOnOverrideLayer=False
     )
 
     cmds.delete(staticChannels=True)
     cmds.filterCurve()
-    cmds.delete(objects_to_bake, constraints=True)
+    cmds.delete(constraints=True)
     cmds.refresh(suspend=False)
+
+##################################################################################################################################################
+
+def bake_current_frame(objects_to_bake):
+    # Set key on just current range.
+    mel.eval("SetKeyTranslate")
+    mel.eval("SetKeyRotate")
+
+    cmds.delete(staticChannels=True)
+    cmds.filterCurve()
+    cmds.delete(objects_to_bake, constraints=True)
+
+##################################################################################################################################################
+
+def lock_hide_attribute(source, attr):
+    source_attr = source + "." + attr
+    cmds.setAttr(source_attr, keyable=False)
+    cmds.setAttr(source_attr, lock=True)
