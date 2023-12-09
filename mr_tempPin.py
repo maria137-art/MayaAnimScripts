@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0006
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -57,6 +57,9 @@ mr_tempPin.multiple("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-09 - 0007:
+# - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
+#
 # 2023-12-09 - 0006:
 # - Fixing the multiple() function to respect locked attributes better.
 #
@@ -105,10 +108,13 @@ def single(mode=None):
         cmds.setAttr(loc + "Shape.localScaleZ", 10)
 
         match_average_position_of_objects(sel, loc)
-        constrain_unlocked_attributes(loc, sel, mode)
-        lock_and_hide_same_attributes(loc, sel, mode)
+
+        for item in sel:
+            constrain_unlocked_attributes(loc, item, mode)
+            lock_and_hide_same_attributes(loc, item, mode)
 
         cmds.select(loc)
+
 
 ##################################################################################################################################################
 
