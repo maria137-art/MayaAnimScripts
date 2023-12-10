@@ -289,7 +289,7 @@ def bake_and_delete_constraints(startTime, endTime):
         disableImplicitControl=True,
         preserveOutsideKeys=True,
         sparseAnimCurveBake=False,
-        removeBakedAttributeFromLayer=False,s
+        removeBakedAttributeFromLayer=False,
         removeBakedAnimFromLayer=False,
         bakeOnOverrideLayer=False
     )
