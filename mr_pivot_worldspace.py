@@ -148,7 +148,7 @@ def main(bake_range=None):
                 # Match the position and orientation of the locator to temp_pivot.
                 cmds.pointConstraint(temp_pivot, loc)
                 cmds.orientConstraint(temp_pivot, loc)
-                cmds.delete(constraints=True)
+                cmds.delete(loc, constraints=True)
 
                 cmds.setAttr(loc + ".localScaleX", 18)
                 cmds.setAttr(loc + ".localScaleY", 18)
@@ -174,7 +174,7 @@ def main(bake_range=None):
             # Constrain controls to baked offset locators.
             for i in range(len(pivot_locators)):
                 cmds.pointConstraint(pivot_locators[i], sel[i])
-                cmds.orientConstraint(sel[i], pivot_locators[i], mo=True)
+                cmds.orientConstraint(pivot_locators[i], sel[i], mo=True)
 
             cmds.select(temp_pivot)
 
