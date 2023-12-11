@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_pivot_worldspace.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson 
 # CREDIT: Daniel Fotheringham
@@ -64,8 +64,12 @@ mr_pivot_worldspace.main("current_frame")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-09 - 0003:
+# - Adding new functions to skip constraining locked attributes.
+# - Locators have irrelevant attributes hidden.
+#
 # 2023-12-09 - 0002:
-# - 
+# - Added option to bake temp_pivots for just the current frame or the whole playback range.
 #
 # 2023-12-09 - 0001:
 # - Converting mr_pivot_worldspacePivot.mel to Python
@@ -143,16 +147,21 @@ def main(bake_range=None):
             for item in sel:
                 # Create a locator.
                 loc = cmds.spaceLocator(name=f"{item}_pivot_loc")[0]
+                cmds.setAttr(loc + ".localScaleX", 18)
+                cmds.setAttr(loc + ".localScaleY", 18)
+                cmds.setAttr(loc + ".localScaleZ", 18)
+
                 pivot_locators.append(loc)
+
+                # Hide irrelevant attributes.
+                attributes_to_lock_hide = ["scaleX", "scaleY", "scaleZ", "visibility"]
+                for attr in attributes_to_lock_hide:
+                    lock_hide_attribute(loc, attr)
 
                 # Match the position and orientation of the locator to temp_pivot.
                 cmds.pointConstraint(temp_pivot, loc)
                 cmds.orientConstraint(temp_pivot, loc)
                 cmds.delete(loc, constraints=True)
-
-                cmds.setAttr(loc + ".localScaleX", 18)
-                cmds.setAttr(loc + ".localScaleY", 18)
-                cmds.setAttr(loc + ".localScaleZ", 18)
 
                 # Constrain controls to the offset locators.
                 cmds.pointConstraint(item, loc)
@@ -170,11 +179,16 @@ def main(bake_range=None):
             elif bake_range == "all":
                 bake_and_delete_constraints(startTime, endTime)
 
-
+            """
             # Constrain controls to baked offset locators.
             for i in range(len(pivot_locators)):
                 cmds.pointConstraint(pivot_locators[i], sel[i])
                 cmds.orientConstraint(pivot_locators[i], sel[i], mo=True)
+            """
+            # Constrain controls to baked offset locators.
+            for i in range(len(pivot_locators)):
+                constrain_unlocked_translates(pivot_locators[i], sel[i])
+                constrain_unlocked_rotates(pivot_locators[i], sel[i])   
 
             cmds.select(temp_pivot)
 
@@ -316,3 +330,39 @@ def lock_hide_attribute(source, attr):
     source_attr = source + "." + attr
     cmds.setAttr(source_attr, keyable=False)
     cmds.setAttr(source_attr, lock=True)
+
+##################################################################################################################################################
+    
+def constrain_unlocked_translates(driver, item):
+    # Check if translate X, Y, Z are locked
+    skip_trans_axes = []
+    if cmds.getAttr(item + ".translateX", lock=True):
+        skip_trans_axes.append("x")
+    if cmds.getAttr(item + ".translateY", lock=True):
+        skip_trans_axes.append("y")
+    if cmds.getAttr(item + ".translateZ", lock=True):
+        skip_trans_axes.append("z")
+
+    # Apply point constraint with skipping specified axes
+    if skip_trans_axes:
+        cmds.pointConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_trans_axes)
+    else:
+        cmds.pointConstraint(driver, item, maintainOffset=True, weight=1)
+
+##################################################################################################################################################
+
+def constrain_unlocked_rotates(driver, item):
+    # Check if rotate X, Y, Z are locked
+    skip_rot_axes = []
+    if cmds.getAttr(item + ".rotateX", lock=True):
+        skip_rot_axes.append("x")
+    if cmds.getAttr(item + ".rotateY", lock=True):
+        skip_rot_axes.append("y")
+    if cmds.getAttr(item + ".rotateZ", lock=True):
+        skip_rot_axes.append("z")
+
+    # Apply orient constraint with skipping specified axes
+    if skip_rot_axes:
+        cmds.orientConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_rot_axes)
+    else:
+        cmds.orientConstraint(driver, item, maintainOffset=True, weight=1)
