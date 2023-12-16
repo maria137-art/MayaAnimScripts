@@ -241,7 +241,7 @@ def constrain_unlocked_attributes(driver, target, mode):
         constrain_unlocked_translates(driver, target)
 
     elif mode == "rotate":
-        constrain_unlocked_rotates(driver, targets)
+        constrain_unlocked_rotates(driver, target)
 
 ##################################################################################################################################################
     
