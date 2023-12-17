@@ -1,10 +1,10 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_bake_to_worldspace.py
-# VERSION: 0004
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
-# CREDIT: Richard Lico (for the workflow)
+# CREDIT: Richard Lico (for workflow)
 # ---------------------------------------
 #
 # ---------------------------------------
@@ -44,6 +44,9 @@ mr_bake_to_worldspace("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-17 - 0005:
+#   - End script with relevant manipulators active.
+#
 # 2023-12-06 - 0004:
 #   - Fixed lock_and_hide_corresponding_attributes to lock and hide attributes on multiple objects.
 #
@@ -56,11 +59,11 @@ mr_bake_to_worldspace("rotate")
 # 2023-06-30 - 0001:
 #   - First pass of workflow in Python, to bake all objects at once.
 #   - Provide 3 options.
-#
 # ------------------------------------------------------------------------------ #
 """
 
 import maya.cmds as cmds
+import maya.mel as mel
 
 def mr_bake_to_worldspace(mode=None):
     # -------------------------------------------------------------------
@@ -135,11 +138,18 @@ def mr_bake_to_worldspace(mode=None):
 
         if mode == "translate":  
             constrain_unlocked_translates(locator, item)
-            
+
+            # End with the Translate manipulator on.
+            mel.eval("buildTranslateMM ;")
+            mel.eval("destroySTRSMarkingMenu MoveTool ;")
+
         if mode == "rotate":
             constrain_unlocked_rotates(locator, item)
             cmds.pointConstraint(item, locator)
 
+            # End with Rotate manipulator active.
+            mel.eval("buildRotateMM ;")
+            mel.eval("destroySTRSMarkingMenu RotateTool ;")
 
         # Lock and hide attributes on the locator if corresponding ones on the target are locked.
         lock_and_hide_corresponding_attributes(locator, item, mode)
