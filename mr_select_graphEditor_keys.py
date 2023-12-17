@@ -61,26 +61,29 @@ def main(mode=None):
 	sel = cmds.ls(sl=True)
 	visible_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 
-	# -------------------------------------------------------------------
-	# 03. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES.
-	# -------------------------------------------------------------------
-	cmds.select(cl=True)
-	for obj in sel:
-		keyframe_count = cmds.keyframe(obj, query=True, keyframeCount=True)
-		if keyframe_count != 0:
-			cmds.select(obj, add=True)
+	if visible_curves:
+		# -------------------------------------------------------------------
+		# 03. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES.
+		# -------------------------------------------------------------------
+		cmds.select(cl=True)
+		for obj in sel:
+			keyframe_count = cmds.keyframe(obj, query=True, keyframeCount=True)
+			if keyframe_count != 0:
+				cmds.select(obj, add=True)
 
-	# -------------------------------------------------------------------
-	# 04. SELECT KEYFRAMES.
-	# -------------------------------------------------------------------
-	cmds.selectKey(clear=True)
+		# -------------------------------------------------------------------
+		# 04. SELECT KEYFRAMES.
+		# -------------------------------------------------------------------
+		cmds.selectKey(clear=True)
 
-	# Select keys within playback range.
-	if mode == "range":
-		for curve in visible_curves:
-			cmds.selectKey(curve, tgl=True, time=(start_time, end_time), add=True)
+		# Select keys within playback range.
+		if mode == "range":
+			for curve in visible_curves:
+				cmds.selectKey(curve, tgl=True, time=(start_time, end_time), add=True)
 
-	# Select all keys.
-	if mode == "all":
-		for curve in visible_curves:
-			cmds.selectKey(curve, tgl=True)
+		# Select all keys.
+		if mode == "all":
+			for curve in visible_curves:
+				cmds.selectKey(curve, tgl=True)
+	else:
+		 print("No visible animation curves found.")
