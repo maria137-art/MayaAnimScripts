@@ -210,7 +210,6 @@ def main(bake_range=None):
             cmds.setAttr(f"{temp_pivot}.localScaleZ", 100)
             cmds.setAttr(f"{temp_pivot}.localScaleX", 100)
             cmds.setAttr(f"{temp_pivot}.localScaleY", 100)
-            lock_hide_attribute(temp_pivot, "visibility")
 
             # Average position and rotation of temp_pivot between selected.
             for item in sel:
