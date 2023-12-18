@@ -1,22 +1,43 @@
-import maya.cmds as cmds
-import maya.mel as mel
-
-import importlib
-import mr_find_constraint_targets_and_drivers
-importlib.reload(mr_find_constraint_targets_and_drivers)
-
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin_pivotFromSelectionSet.py
-# VERSION: 0006
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
 #
+# ---------------------------------------
 # DESCRIPTION: 
-# Create a offset group to pivot with from a predetermined object.
+# ---------------------------------------
+# A script to create an temp offset group to pivot with, from a predetermined object.
+# Originally created when wanting to quickly rotate IK controls in an FK manner. (e.g. rotating an IK foot around a pelvis)
 #
-# The temp pivot is intended for use only on the current frame.
+# INSTRUCTIONS:
+# ---------------------------------------
+# PHASE 1: 
+# Tag an object to pivot from with this command:
+# mr_tempPin_pivotFromSelectionSet.create_follow_selection_set()
+#
+# PHASE 2:
+# Select the objects you'd like to pivot, and then run the pivot_from_follow_selection_set(mode, time) function, with the desired settings:
+#	mode:
+#   	- "both" - constrain translate and rotate attributes
+#   	- "translate" - constrain just translate attributes, leaving rotations unaffected.
+#
+#	time:
+#		- "frame" - bake the temp pivot only on the curernt frame. For small on-frame adjustments.
+#		- "range" - bake the temp pivot for the whole playback range.
+#
+# PHASE 3:
+# When ready, run the same function used in PHASE 2, to set keys on the current frame for all of the temp pivot's targets, then delete temp pivot.
+#
+# EXAMPLE USES:
+# ---------------------------------------
+# I personally use two hotkeys for this script. 
+# 	- CTRL + SHIFT + ALT + D to tag an object to pivot from.
+# 	- CTRL + ALT + D to cycle between creating and deleting the temp pivot.
+#
+# If I want to often pivot around specific points of a mesh, I sometimes create rivet locators on it, so I can quickly tag them as pivots.
 #
 # ---------------------------------------
 # RUN COMMANDS:
@@ -27,35 +48,51 @@ import mr_tempPin_pivotFromSelectionSet
 importlib.reload(mr_tempPin_pivotFromSelectionSet)
 
 # To tag an object to pivot from.
-mr_tempPin_pivotFromSelectionSet.mr_tempPin_create_followSelectionSet() ;
+mr_tempPin_pivotFromSelectionSet.create_follow_selection_set()
 
-# To pivot with translation and rotation:
-mr_tempPin_pivotFromSelectionSet.mr_tempPin_pivotFrom_followSelectionSet(1)
+# Use one of the following commads to pivot with:
+mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("both", "frame")
+mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("both", "range")
+mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("translate", "frame")
+mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("translate", "range")
 
-# To pivot with just translation:
-mr_tempPin_pivotFromSelectionSet.mr_tempPin_pivotFrom_followSelectionSet(2)
-
+# ---------------------------------------
+# REQUIREMENTS: 
+# ---------------------------------------
+# Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
+#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-11-28 - 0006
-# Fixing typos with quotation marks.
+# 2023-12-18 - 0007:
+# 	- Added option to create temp pivot on either the current frame or whole playback range.
+#	- Adding to script description.
 #
-# 2023-11-28 - 0005
-# Splitting script to two options: 
-# 	1: pivot with translation and rotation
-# 	2: pivot with just translation
+# 2023-11-28 - 0006:
+# 	- Fixing typos with quotation marks.
 #
-# 2023-11-20 - 0004
-# Converted original MEL script to Python.
+# 2023-11-28 - 0005:
+# 	- Splitting script to two options: 
+# 		1: pivot with translation and rotation
+# 		2: pivot with just translation
 #
-# 2023-06-05 - 0003
-# Fixing bug that would think objects had constraints when they didn't.
+# 2023-11-20 - 0004:
+# 	- Converted original MEL script to Python.
 #
-# 2023-04-11 - 0002
-# Added two possible options to pivot with.
+# 2023-06-05 - 0003:
+# 	- Fixing bug that would think objects had constraints when they didn't.
+#
+# 2023-04-11 - 0002:
+# 	- Added two possible options to pivot with.
 # ------------------------------------------------------------------------------ //
 """
+
+import maya.cmds as cmds
+import maya.mel as mel
+
+import importlib
+import mr_find_constraint_targets_and_drivers
+importlib.reload(mr_find_constraint_targets_and_drivers)
 
 ########################################################################
 #                                                                      #
@@ -63,21 +100,20 @@ mr_tempPin_pivotFromSelectionSet.mr_tempPin_pivotFrom_followSelectionSet(2)
 #                                                                      #
 ########################################################################
 
-def mr_tempPin_create_followSelectionSet():
-	obj_to_follow_set_name = "objToFollowSet"
+def create_follow_selection_set():
+	follow_set_name = "objToFollowSet"
 
 	# If nothing or more than one object is selected,
 	if len(cmds.ls(selection=True)) != 1:
-		# give an error.
 		# NOTE: make sure -title is unique, otherwise dialog won't trigger
-		cmds.confirmDialog(title="Error A", message="Select one object to remember to pivot from.")
+		cmds.confirmDialog(title="Error A", message="Select one object to tag as a pivot.")
 	else:
 		# If the set already exists, delete it.
-		if cmds.objExists(obj_to_follow_set_name):
-			cmds.delete(obj_to_follow_set_name)
+		if cmds.objExists(follow_set_name):
+			cmds.delete(follow_set_name)
 
-		# Create a selection set from the selected object.
-		obj_to_follow_set = cmds.sets(name=obj_to_follow_set_name)
+		# Create a selection set for the selected object.
+		obj_to_follow_set = cmds.sets(name=follow_set_name)
 
 
 ########################################################################
@@ -86,9 +122,13 @@ def mr_tempPin_create_followSelectionSet():
 #                                                                      #
 ########################################################################
 
-def mr_tempPin_pivotFrom_followSelectionSet(mode):
-	if mode != 1 and mode != 2:
-		cmds.warning("Please input a valid manipulation mode (1 to tranlsate and rotate, or 2 to only translate).")
+def pivot_from_follow_selection_set(mode=None, time=None):
+	if mode != "both" and mode != "translate":
+		cmds.warning("Please input a valid manipulation mode.")
+		return
+	if time != "range" and time != "frame":
+		cmds.warning("Please choose the length of frames the pivot should be baked on.")
+		return
 
 	# -------------------------------------------------------------------
 	# 01. INITIALIZE VARIABLES
@@ -101,7 +141,7 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 	cmds.select(follow_set_name)
 	follow_object = cmds.ls(selection=True)
 
-	# If the selected object has any constraints, cancel procedure.
+	# If the selected object has any constraints, cancel script.
 	for obj in objs_to_pivot:
 		constraints = cmds.listRelatives(obj, type="constraint") or []
 		unique_constraints = list(set(constraints))
@@ -112,7 +152,6 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 			raise RuntimeError("Selected objects have constraints, please remove them first.")
 			return
 
-
 	# -------------------------------------------------------------------
 	# 01. IF AN OFFSET GROUP ALREADY EXISTS, KEY THE TARGETS AND DELETE THE GROUP
 	# -------------------------------------------------------------------
@@ -121,14 +160,12 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 	if cmds.objExists(temp_pivot_offset_group_name):
 		# delete its connections.
 		cmds.delete(temp_pivot_offset_group_name, constraints=True)
-		
-		# Create array of its children.
-		temp_pivot_offset_group_child = cmds.listRelatives(temp_pivot_offset_group_name, children=True) or []
 
-		# Set keys on its child.
-		cmds.select(temp_pivot_offset_group_child)
+		temp_pivot_offset_group_children = cmds.listRelatives(temp_pivot_offset_group_name, children=True) or []
+
+		# Set keys on children.
+		cmds.select(temp_pivot_offset_group_children)
 		mr_find_constraint_targets_and_drivers.mr_find_targets_of_selected()
-		driven_objs = cmds.ls(selection=True)
 
 		mel.eval("SetKeyTranslate ;")
 		mel.eval("SetKeyRotate ;")
@@ -165,19 +202,35 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 		# -------------------------------------------------------------------
 
 		else:
-			# Create an offset group to pivot with, at the same location as follow_object.
+			# Create an offset group to pivot with.
 			temp_pivot_offset_group = cmds.group(em=True, name=temp_pivot_offset_group_name)
-			# Set its transforms.
-			cmds.pointConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
-			cmds.orientConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
+			# Match its translate and rotate to the follow object.
+			point_constraint = cmds.pointConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
+			orient_constraint = cmds.orientConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
+			
 
 			# NOTE: Have to specifically name the constraint to delete, otherwise the null
 			# group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used  
-			
-			# Option B - Delete all offset group constraints. Can be better for pivoting around controls on the same rig.
-			cmds.setKeyframe(temp_pivot_offset_group, attribute="translate")
-			cmds.delete(temp_pivot_offset_group + "_orientConstraint1")
-			cmds.delete(temp_pivot_offset_group + "_pointConstraint1")
+			if time == "frame":
+				cmds.setKeyframe(temp_pivot_offset_group, attribute="translate")
+
+			elif time == "range":
+				start_time = cmds.playbackOptions(query=True, min=True)
+				end_time = cmds.playbackOptions(query=True, max=True)
+				attributes = ["translateX", "translateY", "translateZ","rotateX", "rotateY", "rotateZ"]
+
+				cmds.refresh(suspend=True)
+				cmds.bakeResults(
+					temp_pivot_offset_group,
+					attribute=attributes,
+					simulation=False,
+					time=(start_time, end_time)
+				)
+				cmds.delete(temp_pivot_offset_group, staticChannels=True)
+				cmds.refresh(suspend=False)
+
+			cmds.delete(point_constraint)
+			cmds.delete(orient_constraint)
 
 			for obj in objs_to_pivot:
 				loc = cmds.spaceLocator(name=obj + "_temp_pivot_loc")
@@ -187,15 +240,14 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 				cmds.parentConstraint(obj, loc, weight=1)
 				cmds.delete(loc, constraints=True)
 				
-				if mode == 1:
+				if mode == "both":
 					# Parent constrain loc to objs_to_pivot.
 					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
 					cmds.orientConstraint(loc, obj, maintainOffset=True, weight=1)
 				
-				elif mode == 2:
+				elif mode == "translate":
 					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
 					
-				
 			cmds.select(temp_pivot_offset_group)
 
 			# End with rotate manipulator active.
@@ -205,8 +257,6 @@ def mr_tempPin_pivotFrom_followSelectionSet(mode):
 	# -------------------------------------------------------------------
 	# 01. IF NO SELECTION SET EXISTS, GIVE A WARNING
 	# -------------------------------------------------------------------
-
-	# If both of the conditions don't exist, give prompt.
 	else:
 		# (make sure -title is unique; otherwise, dialog won't trigger
 		cmds.confirmDialog(title="Error C", message="Create a follow selection set first.")
