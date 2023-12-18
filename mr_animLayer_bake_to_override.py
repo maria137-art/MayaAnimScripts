@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayer_bake_to_override.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -35,6 +35,9 @@ mr_animLayer_bake_to_override.main()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-18 - 0002:
+# 	- Ensuring no keys are selected before baking, to prevent Maya error.
+#
 # 2023-11-19 - 0001:
 #   - 1st pass of script. Created after working on multiple cycles in one file, each on an Override Layer.
 # ------------------------------------------------------------------------------ #
@@ -78,17 +81,14 @@ def main():
 		else:   
 			minTime = cmds.playbackOptions(query=True, minTime=True)
 			maxTime = cmds.playbackOptions(query=True, maxTime=True)
-			
+
+			# Ensure no keys are selected, to avoid script erroring.
+			cmds.selectKey(clear=True)
+
 			cmds.bakeResults(
 				destinationLayer=highlighted_layers[0],
 				simulation=True,
-				time=(minTime, maxTime),
-				sampleBy=1,
-				oversamplingRate=1,
-				disableImplicitControl=True,
-				preserveOutsideKeys=True,
-				sparseAnimCurveBake=False,
-				removeBakedAttributeFromLayer=False,
+				time=(minTime, maxTime)
 			)
 			
 			# Clear any old warning messages.
