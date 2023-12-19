@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin_pivotFromSelectionSet.py
-# VERSION: 0007
+# VERSION: 0008
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -64,6 +64,9 @@ mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("translate", "r
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-18 - 0008:
+# 	- Add warning if follow_set_name does not exist.
+#
 # 2023-12-18 - 0007:
 # 	- Added option to create temp pivot on either the current frame or whole playback range.
 #	- Adding to script description.
@@ -137,6 +140,10 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 	follow_set_name = "objToFollowSet"
 	
 	objs_to_pivot = cmds.ls(selection=True)
+
+	if not cmds.objExists(follow_set_name):
+		cmds.warning(f"The selection set \"{follow_set_name}\" hasn't been created yet.")
+		return	
 
 	cmds.select(follow_set_name)
 	follow_object = cmds.ls(selection=True)
