@@ -34,7 +34,7 @@ mr_tempPin_create_follow_locator.main()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-12-10 - 0003:
+# 2023-12-18 - 0003:
 #   - Converting original MEL script to Python.
 #
 # 2023-04-10 - 0002:
