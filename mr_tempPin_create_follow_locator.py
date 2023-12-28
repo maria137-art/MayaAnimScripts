@@ -48,7 +48,6 @@ mr_tempPin_create_follow_locator.main()
 import maya.cmds as cmds
 
 def main():
-
     # ------------------------------------------------------------------- 
     # 01.INITIALISE VARIABLES.
     # ------------------------------------------------------------------- 
@@ -72,12 +71,10 @@ def main():
 
     # ------------------------------------------------------------------- 
     # 01. CREATE A FOLLOW LOCATOR.
-    # ------------------------------------------------------------------- 
-    
+    # -------------------------------------------------------------------   
     follow_locators = []
 
     for obj in sel:
-
         # Check if a follow locator already exists.
         loc = obj + "_follow_loc"
         if cmds.objExists(loc):
@@ -96,7 +93,6 @@ def main():
 
         loc_vis = loc + ".visibility"
         cmds.setAttr(loc_vis, lock=True, keyable=False)
-
 
         # ------------------------------------------------------------------- 
         # 02. CREATE AN OFFSET GROUP.
