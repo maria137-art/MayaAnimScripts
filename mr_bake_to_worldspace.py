@@ -27,14 +27,29 @@ import importlib
 import mr_bake_to_worldspace
 importlib.reload(mr_bake_to_worldspace)
 
+# USE ONE OF THE FOLLOWING COMMANDS:
+
+# Use these for the default settings.
 mr_bake_to_worldspace.main("both")
 mr_bake_to_worldspace.main("translate")
 mr_bake_to_worldspace.main("rotate")
 
-# If you like to create a locator that matches the controls anim, but doesn't control is, use there:
-mr_bake_to_worldspace.main("both", False)
-mr_bake_to_worldspace.main("translate", False)
-mr_bake_to_worldspace.main("rotate", False)
+# Slower version for baking dynamic objects:
+mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
+mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
+mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
+
+# To create locators without constraining anything to them:
+# Faster version:
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
+
+# Slower version for baking dynamic objects:
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
+mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
+
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -51,7 +66,7 @@ mr_bake_to_worldspace.main("rotate", False)
 # ---------------------------------------
 # 2023-12-28 - 0006:
 # - Adding option to just bake a worldspace locator, without reversing constraints.
-# - Updating Run Commands.
+# - Adding option to bake with or without simulation, depending on needing to bake fast vs baking physics.
 #
 # 2023-12-17 - 0005:
 #   - End script with relevant manipulators active.
@@ -74,12 +89,12 @@ mr_bake_to_worldspace.main("rotate", False)
 import maya.cmds as cmds
 import maya.mel as mel
 
-def main(mode=None, constrain=True):
+def main(mode=None, constrain=True, simulate_bake=False):
     # -------------------------------------------------------------------
     # 01. DEFINE TIMESLIDER RANGE.
     # -------------------------------------------------------------------
-    start_time = cmds.playbackOptions(q=True, min=True)
-    end_time = cmds.playbackOptions(q=True, max=True)
+    start_time = cmds.playbackOptions(query=True, min=True)
+    end_time = cmds.playbackOptions(query=True, max=True)
     
     selection = cmds.ls(selection=True)
     if not selection:
@@ -115,17 +130,12 @@ def main(mode=None, constrain=True):
     cmds.bakeResults(
         locators,
         attribute = attributes,
-        simulation=True,
+        simulation=simulate_bake,
         time=(start_time, end_time),
         sampleBy=1,
         disableImplicitControl=True,
         preserveOutsideKeys=True,
-        sparseAnimCurveBake=False,
-        removeBakedAttributeFromLayer=False,
-        removeBakedAnimFromLayer=False,
-        bakeOnOverrideLayer=False,
-        minimizeRotation=True,
-        controlPoints=False
+        minimizeRotation=True
     )
     # Delete static channels.
     cmds.delete(locators, sc=True)
