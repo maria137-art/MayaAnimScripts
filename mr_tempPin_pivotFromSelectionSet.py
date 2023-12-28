@@ -162,7 +162,6 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 	# -------------------------------------------------------------------
 	# 01. IF AN OFFSET GROUP ALREADY EXISTS, KEY THE TARGETS AND DELETE THE GROUP
 	# -------------------------------------------------------------------
-
 	# If an offset group already exists,
 	if cmds.objExists(temp_pivot_offset_group_name):
 		# delete its connections.
@@ -187,14 +186,12 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 	# -------------------------------------------------------------------
 	# 01. IF AN OFFSET GROUP DOESN'T EXISTS, CREATE ONE AND SET-UP A TEMP PIVOT
 	# -------------------------------------------------------------------
-
 	# If the selection set exists,
 	elif cmds.objExists(follow_set_name):
 
 		# -------------------------------------------------------------------
 		# 02. CHECK SELECTION
 		# -------------------------------------------------------------------
-
 		# If nothing or more than one object is selected,
 		if len(objs_to_pivot) == 0:
 			# NOTE: make sure -title is unique, otherwise dialog won't trigger
@@ -207,7 +204,6 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 		# -------------------------------------------------------------------
 		# 02. CREATE AN OFFSET GROUP TO PIVOT
 		# -------------------------------------------------------------------
-
 		else:
 			# Create an offset group to pivot with.
 			temp_pivot_offset_group = cmds.group(em=True, name=temp_pivot_offset_group_name)
