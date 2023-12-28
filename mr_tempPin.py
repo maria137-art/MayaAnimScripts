@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0007
+# VERSION: 0008
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -57,6 +57,9 @@ mr_tempPin.multiple("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-28 - 0008:
+# - Updating script to not point/orient constraint at all if those attributes are all locked.
+#
 # 2023-12-09 - 0007:
 # - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
 #
@@ -255,9 +258,12 @@ def constrain_unlocked_translates(driver, item):
     if cmds.getAttr(item + ".translateZ", lock=True):
         skip_trans_axes.append("z")
 
-    # Apply point constraint with skipping specified axes
     if skip_trans_axes:
-        cmds.pointConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_trans_axes)
+        if skip_trans_axes == ['x', 'y', 'z']:
+            return
+        else:
+            # Apply point constraint with skipping specified axes
+            cmds.pointConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_trans_axes)
     else:
         cmds.pointConstraint(driver, item, maintainOffset=True, weight=1)
 
@@ -273,8 +279,11 @@ def constrain_unlocked_rotates(driver, item):
     if cmds.getAttr(item + ".rotateZ", lock=True):
         skip_rot_axes.append("z")
 
-    # Apply orient constraint with skipping specified axes
     if skip_rot_axes:
-        cmds.orientConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_rot_axes)
+        if skip_rot_axes == ['x', 'y', 'z']:
+            return
+        else:
+            # Apply orient constraint with skipping specified axes
+            cmds.orientConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_rot_axes)
     else:
         cmds.orientConstraint(driver, item, maintainOffset=True, weight=1)
