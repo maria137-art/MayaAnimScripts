@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_pivot_worldspace.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson 
 # CREDIT: Daniel Fotheringham
@@ -46,8 +46,8 @@ import importlib
 import mr_pivot_worldspace
 importlib.reload(mr_pivot_worldspace)
 
+# USE ONE OF THE FOLLOWING COMMANDS:
 mr_pivot_worldspace.main("all")
-# OR
 mr_pivot_worldspace.main("current_frame")
 
 # ---------------------------------------
@@ -64,6 +64,9 @@ mr_pivot_worldspace.main("current_frame")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-28 - 0004:
+# - Adjusting check for valid run command inputs.
+#
 # 2023-12-09 - 0003:
 # - Adding new functions to skip constraining locked attributes.
 # - Locators have irrelevant attributes hidden.
@@ -89,8 +92,9 @@ def main(bake_range=None):
     # -------------------------------------------------------------------
     # 01. CHECK IF bake_range IS CORRECT.
     # -------------------------------------------------------------------
-    if bake_range != "current_frame" and bake_range != "all":
-        cmds.warning("Fix the mode used.")
+    if bake_range not in ["current_frame", "all"]:
+        cmds.warning("Please specify in the run command if the script should run on only the \"current_frame\" or \"all\" of the playback range.")
+        return
 
     # -------------------------------------------------------------------
     # 01. INITIALIZE VARIABLES.
@@ -196,14 +200,13 @@ def main(bake_range=None):
     # 01. IF temp_pivot DOES NOT EXIST.
     # -------------------------------------------------------------------
     else:
-
         # -------------------------------------------------------------------
         # 02. IF ONE OR MORE OBJECTS ARE SELECTED.
         # -------------------------------------------------------------------
         if sel:
             # Create a variable from the last item selected.
             cmds.select(sel)
-            last_in_selected = cmds.ls(sl=True, tail=1)[0]
+            last_in_selected = cmds.ls(selection=True, tail=1)[0]
 
             # Create locator.
             temp_pivot = cmds.spaceLocator(name=temp_pivot)[0]
