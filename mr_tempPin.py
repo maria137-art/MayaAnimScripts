@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0008
+# VERSION: 0009
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -22,6 +22,7 @@
 #       - The null will be created at the objects average positon and orientation.
 #       - When the script runs again, constrained objects are keyed on the current frame, and temp locators get deleted.
 #
+# The script has options to chose what type of constraints and pivot position is wanted.
 #
 # EXAMPLE USES:
 # ---------------------------------------
@@ -29,10 +30,15 @@
 #
 # INSTRUCTIONS:
 # ---------------------------------------
-# Run the following command with one of the three modes:
+# To choose the type of constraints used, pick one of the three modes:
 #   - "both" - constrain translate and rotate attributes
 #   - "translate"
 #   - "rotate" 
+#
+# To choose where the pivot positon should be made when using the "multiple" function, use either:
+#   - "average"
+#   - "last_selected"
+#
 # ---------------------------------------
 # RUN COMMANDS:
 # ---------------------------------------
@@ -40,14 +46,18 @@ import importlib
 import mr_tempPin
 importlib.reload(mr_tempPin)
 
-# Use one of the following commands.
+# USE ONE OF THE FOLLOWING COMMANDS.
 mr_tempPin.single("both")
 mr_tempPin.single("translate")
 mr_tempPin.single("rotate")
 
-mr_tempPin.multiple("both")
-mr_tempPin.multiple("translate")
-mr_tempPin.multiple("rotate")
+mr_tempPin.multiple("both", "average")
+mr_tempPin.multiple("translate", "average")
+mr_tempPin.multiple("rotate", "average")
+
+mr_tempPin.multiple("both", "last_selected")
+mr_tempPin.multiple("translate", "last_selected")
+mr_tempPin.multiple("rotate", "last_selected")
 
 # ---------------------------------------
 # REQUIREMENTS: 
@@ -57,6 +67,9 @@ mr_tempPin.multiple("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-28 - 0009:
+# - Adding check for valid command inputs + option to choose where pivot position is for the "multiple" function.
+#
 # 2023-12-28 - 0008:
 # - Updating script to not point/orient constraint at all if those attributes are all locked.
 #
@@ -92,6 +105,13 @@ def single(mode=None):
     temp_pin = "TEMP_worldspace_locator"
 
     # -------------------------------------------------------------------
+    # 00. CHECK IF THE USER'S COMMAND INPUTS ARE VALID.
+    # -------------------------------------------------------------------
+    if mode not in ["both", "translate", "rotate"]:
+        cmds.warning("Please specify in the run command if the script should constrain only \"translate\" or \"rotate\", or \"both\".")
+        return
+
+    # -------------------------------------------------------------------
     # 00. CHECK IF TEMP PIN ALREADY EXISTS.
     # -------------------------------------------------------------------
     if cmds.objExists(temp_pin):
@@ -116,13 +136,24 @@ def single(mode=None):
             constrain_unlocked_attributes(loc, item, mode)
             lock_and_hide_same_attributes(loc, item, mode)
 
+        # Set a blank keyframe, to remember the frame the loc was created on.
+        cmds.setKeyframe(loc)
         cmds.select(loc)
-
 
 ##################################################################################################################################################
 
-def multiple(mode=None):
+def multiple(mode=None, position=None):
     temp_pin_group = "TEMP_worldspace_locator_grp"
+
+    # -------------------------------------------------------------------
+    # 00. CHECK IF THE USER'S COMMAND INPUTS ARE VALID.
+    # -------------------------------------------------------------------
+    if mode not in ["both", "translate", "rotate"]:
+        cmds.warning("Please specify in the run command if the script should constrain only \"translate\" or \"rotate\", or \"both\".")
+        return
+    if position not in ["average", "last_selected"]:
+        cmds.warning("Please specify in the run command if the pivot position should be at \"average\" or \"last_selected\".")
+        return
 
     # -------------------------------------------------------------------
     # 00. CHECK IF TEMP GROUP ALREADY EXISTS.
@@ -130,7 +161,6 @@ def multiple(mode=None):
     if cmds.objExists(temp_pin_group):
         children = cmds.listRelatives(temp_pin_group, children=True)
         key_targets(children)
-
         cmds.delete(temp_pin_group)
 
     # -------------------------------------------------------------------
@@ -148,7 +178,11 @@ def multiple(mode=None):
         else:
             # Create a group.
             cmds.group(empty=True, name=temp_pin_group)
-            match_average_position_of_objects(sel, temp_pin_group)
+
+            if position == "average":
+                match_average_position_of_objects(sel, temp_pin_group)
+            if position == "last_selected":
+                match_position_of_object(sel[-1], temp_pin_group)
 
             for item in sel:
                 # Create a locator.
@@ -168,6 +202,8 @@ def multiple(mode=None):
                 constrain_unlocked_attributes(loc, item, mode)
                 lock_and_hide_same_attributes(loc, item, mode)
 
+            # Set a blank keyframe, to remember the frame the temp_pin_group was created on.
+            cmds.setKeyframe(temp_pin_group)
             cmds.select(temp_pin_group)
 
 ##################################################################################################################################################
@@ -189,6 +225,21 @@ def match_average_position_of_objects(sources, target):
         constraints.extend(orient_constraint)
     # Delete with variables instead of cmds.delete(constraints=True), because if the target it a null, it gets deleted when constraints are removed.
     cmds.delete(constraints)
+
+##################################################################################################################################################
+
+# Place the target at the average position and orientation of source objects.
+def match_position_of_object(source, target):
+    constraints = []
+
+    point_constraint = cmds.pointConstraint(source, target)
+    orient_constraint = cmds.orientConstraint(source, target)
+
+    constraints.extend(point_constraint)
+    constraints.extend(orient_constraint)
+    # Delete with variables instead of cmds.delete(constraints=True), because if the target it a null, it gets deleted when constraints are removed.
+    cmds.delete(constraints)
+
 
 ##################################################################################################################################################
 
