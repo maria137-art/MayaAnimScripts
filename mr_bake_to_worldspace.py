@@ -27,9 +27,14 @@ import importlib
 import mr_bake_to_worldspace
 importlib.reload(mr_bake_to_worldspace)
 
-mr_bake_to_worldspace("both")
-mr_bake_to_worldspace("translate")
-mr_bake_to_worldspace("rotate")
+mr_bake_to_worldspace.main("both")
+mr_bake_to_worldspace.main("translate")
+mr_bake_to_worldspace.main("rotate")
+
+# If you like to create a locator that matches the controls anim, but doesn't control is, use there:
+mr_bake_to_worldspace.main("both", False)
+mr_bake_to_worldspace.main("translate", False)
+mr_bake_to_worldspace.main("rotate", False)
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -44,6 +49,10 @@ mr_bake_to_worldspace("rotate")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-28 - 0006:
+# - Adding option to just bake a worldspace locator, without reversing constraints.
+# - Updating Run Commands.
+#
 # 2023-12-17 - 0005:
 #   - End script with relevant manipulators active.
 #
@@ -65,7 +74,7 @@ mr_bake_to_worldspace("rotate")
 import maya.cmds as cmds
 import maya.mel as mel
 
-def mr_bake_to_worldspace(mode=None):
+def main(mode=None, constrain=True):
     # -------------------------------------------------------------------
     # 01. DEFINE TIMESLIDER RANGE.
     # -------------------------------------------------------------------
@@ -87,7 +96,7 @@ def mr_bake_to_worldspace(mode=None):
         locator_name = item + "_temp_worldspace_locator"
         locators.append(locator_name)
         
-        locator = cmds.spaceLocator(n=locator_name)[0]
+        locator = cmds.spaceLocator(name=locator_name)[0]
         cmds.setAttr(locator + ".localScale", 18, 18, 18)
         
         point_constraint = cmds.pointConstraint(item, locator)
@@ -127,32 +136,33 @@ def mr_bake_to_worldspace(mode=None):
         cmds.delete(constraint)
     cmds.refresh(suspend=False)
 
-    # -------------------------------------------------------------------
-    # 01. REVERSE CONSTRAINTS
-    # -------------------------------------------------------------------
-    for i, item in enumerate(selection):
-        locator = locators[i]
-        if mode == "both":
-            constrain_unlocked_translates(locator, item)
-            constrain_unlocked_rotates(locator, item)
+    if constrain == True:   
+        # -------------------------------------------------------------------
+        # 01. REVERSE CONSTRAINTS
+        # -------------------------------------------------------------------
+        for i, item in enumerate(selection):
+            locator = locators[i]
+            if mode == "both":
+                constrain_unlocked_translates(locator, item)
+                constrain_unlocked_rotates(locator, item)
 
-        if mode == "translate":  
-            constrain_unlocked_translates(locator, item)
+            if mode == "translate":  
+                constrain_unlocked_translates(locator, item)
 
-            # End with the Translate manipulator on.
-            mel.eval("buildTranslateMM ;")
-            mel.eval("destroySTRSMarkingMenu MoveTool ;")
+                # End with the Translate manipulator on.
+                mel.eval("buildTranslateMM ;")
+                mel.eval("destroySTRSMarkingMenu MoveTool ;")
 
-        if mode == "rotate":
-            constrain_unlocked_rotates(locator, item)
-            cmds.pointConstraint(item, locator)
+            if mode == "rotate":
+                constrain_unlocked_rotates(locator, item)
+                cmds.pointConstraint(item, locator)
 
-            # End with Rotate manipulator active.
-            mel.eval("buildRotateMM ;")
-            mel.eval("destroySTRSMarkingMenu RotateTool ;")
+                # End with Rotate manipulator active.
+                mel.eval("buildRotateMM ;")
+                mel.eval("destroySTRSMarkingMenu RotateTool ;")
 
-        # Lock and hide attributes on the locator if corresponding ones on the target are locked.
-        lock_and_hide_corresponding_attributes(locator, item, mode)
+            # Lock and hide attributes on the locator if corresponding ones on the target are locked.
+            lock_and_hide_corresponding_attributes(locator, item, mode)
 
     # End with the locators selected.
     cmds.select(locators)
