@@ -34,27 +34,33 @@ mr_find_constraint_targets_and_drivers.mr_deselect_selected_if_constrained()
 # ---------------------------------------
 # RESEARCH THAT HELPED:
 # ---------------------------------------
-# How to find driver of selected object - https://forums.cgsociety.org/t/how-to-query-a-connectionsOfSelected-target-list-without-knowing-the-constraint-type/1309588/2
+# How to find driver of selected object: https://forums.cgsociety.org/t/how-to-query-a-connectionsOfSelected-target-list-without-knowing-the-constraint-type/1309588/2
 #
-# Tim van Huseen's Select The Constrainer's script':
+# Tim van Huseen's Select The Constrainer(s) script':
 # https://forums.autodesk.com/t5/maya-ideas/constraint-objects-view-or-select-the-object-it-s-constraint-to/idi-p/7960702
 #
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-07-03: 0004
+# 2023-12-28 - 0005:
+# - Updating mr_find_targets_of_selected, so it prints in the original order.
+# - Did this, as the reversed order inteferred with mr_tempPin_pivotFromSelectionSet 0008.
+#
+#
+# 2023-07-03 - 0004:
 #   - Fixed selection for multiple drivers, with mr_find_drivers_of_selected.
 #
-# 2023-06-26: 0003
-#   - Added mr_deselect_selected_if_constrained()
+# 2023-06-26 - 0003:
+#   - Added mr_deselect_selected_if_constrained().
 #
-# 2023-06-25: 0002
+# 2023-06-25 - 0002:
 #   - Converted and combined MEL scripts into Python here.
 #   - Added print commands for clarity.
 #
 # ------------------------------------------------------------------------------ #
 """
 
+from collections import OrderedDict
 import maya.cmds as cmds
 
 
@@ -64,20 +70,27 @@ def mr_find_targets_of_selected():
     if not selected:
         print("No objects selected.")
         return
-    
-    unique_targets = set()  # Set to store the unique targets
+
+    unique_targets = OrderedDict()
     
     for obj in selected:
-        conns = cmds.listConnections(obj, type="constraint") or []        
-        targets = cmds.listRelatives(conns, parent=True) or [] # Find parents of any constraint connections
-        unique_targets.update(targets)
-    
-    if unique_targets:
-        unique_targets.difference_update(selected)  # Remove original selection from unique_targets
-    
-        for target in unique_targets:
-            print("Target found: {}".format(target))       
-        cmds.select(list(unique_targets))  # Convert the set back to a list and select the targets
+        conns = cmds.listConnections(obj, type="constraint") or []
+         # Find parents of any of the constraint connections.
+        targets = cmds.listRelatives(conns, parent=True) or []
+        
+        # If a target is not yet in unique_targets, add it there.
+        for target in targets:
+            if target not in unique_targets:
+                unique_targets[target] = None
+
+    # Maintain the oroginal order list.
+    targets_in_order = list(unique_targets.keys())
+
+    if targets_in_order:
+        print("Targets found:")
+        for target in targets_in_order:
+            print(target)
+        cmds.select(targets_in_order)
     else:
         print("No targets found.")
 
