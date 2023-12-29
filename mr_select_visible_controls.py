@@ -1,9 +1,7 @@
-import maya.cmds as cmds
-
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_select_visible_controls.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -23,27 +21,23 @@ import maya.cmds as cmds
 # 
 # Example hotkeys to assign to:
 #   ALT + A
-#
-# INSTRUCTIONS: 
-# ---------------------------------------
-# Copy and paste the Run Commands into a hotkey, using a letter corresponding to
-# the Option you'd like to use.
-#
-# e.g. 
-# mr_select_visible_controls("A")
-# mr_select_visible_controls("B")
-# mr_select_visible_controls("C")
 # 
 # ---------------------------------------
 # RUN COMMANDS:
 # ---------------------------------------
 
 import importlib
-
 import mr_select_visible_controls
 importlib.reload(mr_select_visible_controls)
 
-mr_select_visible_controls.mr_select_visible_controls("C")
+# USE ONE OF THE FOLLOWING
+mr_select_visible_controls.select_visible_curves_in_panel()
+
+mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=False)
+
+mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=True)
+
+mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -57,129 +51,114 @@ mr_select_visible_controls.mr_select_visible_controls("C")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-04-11 - 0003
-# Worked to make script more flexible, separating logic into more functions while learning Python.
+# 2023-12-29 - 004:
+# - Simplifying script, and adding more checks to avoid NoneType errors.
 #
-# 2023-04-11 - 0002
-# Added option to select locators that have keys on unlocked channels.
-# For when animating with temp locators.
+# 2023-04-11 - 0003:
+# - Worked to make script more flexible, separating logic into more functions while learning Python.
+#
+# 2023-04-11 - 0002:
+# - Added option to select locators that have keys on unlocked channels.
+# - For when animating with temp locators.
 # ------------------------------------------------------------------------------ #
 """
 
-def mr_select_visible_controls(option):
+import maya.cmds as cmds
 
-    # get the current panel
-    panel = cmds.getPanel(withFocus=True)
+# ------------------------------------------------------------------------------ #
 
-    # check if the current panel is a modelPanel
-    if cmds.getPanel(typeOf=panel) != "modelPanel":
-        print("The current panel is not a 3D view panel.")
+def select_visible_curves_in_panel():
+    # -------------------------------------------------------------------
+    # 01. CHECK IF CURRENT PANEL IS VALID.
+    # -------------------------------------------------------------------
+    modelPanel = check_current_panel_is_valid()
+    if not modelPanel:
+        return
+
+    # -------------------------------------------------------------------
+    # 01. SELECT ONLY TRANSFORMS OF VISIBLE NURBS CURVES IN THE CURRENT PANEL.
+    # -------------------------------------------------------------------
+    visible_nurbs_curves = cmds.ls(type="nurbsCurve", visible=True, long=True)
+    visible_nurbs_curves_in_panel = []
+    visible_nurbs_curves_transforms_in_panel = [] 
+
+    if visible_nurbs_curves:
+
+        for curve in visible_nurbs_curves:
+            # Check if visible in the current panel.
+            if cmds.modelEditor(modelPanel, query=True, nurbsCurves=True):
+                visible_nurbs_curves_in_panel.append(curve)
     
-    else: 
-        # ------------------------------------------------------------------------------ #
-        # Functions to define objects to search for.
-        def look_for_visible_NURB_curves():
+        if visible_nurbs_curves_in_panel:
+            for curve in visible_nurbs_curves_in_panel:
+                visible_nurbs_curves_transforms_in_panel.append(cmds.listRelatives(curve, parent=True)[0])
 
-            visible_nurbs_curves = []
-            visible_nurbs_transforms = []
+            cmds.select(visible_nurbs_curves_transforms_in_panel)
+            return visible_nurbs_curves_transforms_in_panel
 
-            # For every NURB curve that exists, check if its visible in the current panel.
-            for curve in cmds.ls(type="nurbsCurve", visible=True, long=True):
-                if cmds.modelEditor(panel, query=True, nurbsCurves=True):
-                    visible_nurbs_curves.append(curve)
+# ------------------------------------------------------------------------------ #
 
-            # Create a list of their transform nodes.
-            for curve in visible_nurbs_curves:
-                visible_nurbs_transforms.append(cmds.listRelatives(curve, parent=True)[0])
+def select_visible_locators_in_panel(select_keyed_only=False):
+    # -------------------------------------------------------------------
+    # 01. CHECK IF CURRENT PANEL IS VALID.
+    # -------------------------------------------------------------------
+    modelPanel = check_current_panel_is_valid()
+    if not modelPanel:
+        return
 
-            # If there are any in the list, select them
-            if visible_nurbs_transforms:
-                cmds.select(visible_nurbs_transforms)
+    # -------------------------------------------------------------------
+    # 01. SELECT ONLY TRANSFORMS OF VISIBLE LOCATORS IN THE CURRENT PANEL.
+    # -------------------------------------------------------------------
+    visible_locators = cmds.ls(type="locator", visible=True, long=True)
+    visible_locators_in_panel = []
+    visible_locators_transforms_in_panel = []
 
-            return visible_nurbs_transforms
+    if visible_locators:
+        for loc in visible_locators:
+            if cmds.modelEditor(modelPanel, query=True, locators=True):
+                visible_locators_in_panel.append(loc)  
 
-        def look_for_visible_locators():
+        # Create a list of their transform nodes.
+        for loc in visible_locators_in_panel:
+            visible_locators_transforms_in_panel.append(cmds.listRelatives(loc, parent=True)[0])
 
-            visible_locators = []
-            visible_locators_transforms = []
+        if not select_keyed_only:
+            cmds.select(visible_locators_transforms_in_panel)
+            return visible_locators_transforms_in_panel
 
-            # For every locator, check if it's visible in the current panel
-            for locator in cmds.ls(type="locator", visible=True, long=True):
-                if cmds.modelEditor(panel, query=True, locators=True):
-                    visible_locators.append(locator)  
+        else:
+            keyed_visible_locator_transforms_in_panel = []
 
-            # Create a list of their transform nodes.
-            for loc in visible_locators:
-                visible_locators_transforms.append(cmds.listRelatives(loc, parent=True)[0])
-
-            return visible_locators_transforms
-
-        def look_for_keyed_visible_locators(visible_locators_transforms):
-
-            keyed_visible_locator_transforms = []
-
-            # Iterate through each locator
-            for loc in visible_locators_transforms:
-
-                # Get a list of all the keyable and visible attributes in the transform node
-                attributes = cmds.listAttr(loc, keyable=True, visible=True, unlocked=True)
+            for loc in visible_locators_transforms_in_panel:
+                # Get all of its keyable and visible attributes.
+                attributes = cmds.listAttr(loc, keyable=True, unlocked=True)
             
-                # Check if any of the attributes have set keys
-                for attr in attributes:
-                    if cmds.keyframe(loc, q=True, at=attr):
-                        keyed_visible_locator_transforms.append(loc)  
-                        break
+                if attributes:
+                    for attr in attributes:
+                        if cmds.keyframe(loc, query=True, attribute=attr):
+                            keyed_visible_locator_transforms_in_panel.append(loc)
 
-            return keyed_visible_locator_transforms
-        
-        # ------------------------------------------------------------------------------ #
-        # Call functions. (Naming these with the same as their local variable that it returns inside their function.)
-        visible_nurbs_transforms = look_for_visible_NURB_curves()
-        visible_locators_transforms = look_for_visible_locators()
-        keyed_visible_locator_transforms = look_for_keyed_visible_locators(visible_locators_transforms)      
+            if keyed_visible_locator_transforms_in_panel:
+                cmds.select(keyed_visible_locator_transforms_in_panel)
+                return keyed_visible_locator_transforms_in_panel
 
-        # ------------------------------------------------------------------------------ #
-        # Functions for selection.
+# ------------------------------------------------------------------------------ #
 
-        def option_A_select_visible_NURB_curves(visible_nurbs_transforms):
+def select_visible_curves_and_keyed_locators_in_panel():
+    curves = select_visible_curves_in_panel()
+    keyed_locators = select_visible_locators_in_panel(select_keyed_only=True)
 
-            # Select transform nodes of all visible NURBS curves in the current panel.
-            if visible_nurbs_transforms:
-                cmds.select(visible_nurbs_transforms)
-            # debug
-            print("Option A")
-            
-        def option_B_select_visible_NURB_curves_and_locators(visible_nurbs_transforms, visible_locators_transforms):
-            # Select transform nodes of all visible NURBS curves in the current panel.
-            if visible_nurbs_transforms:
-                cmds.select(visible_nurbs_transforms)
-            
-            # Select transform nodes of all visible locators in the current panel
-            if visible_locators_transforms:
-                cmds.select(visible_locators_transforms, add=True)
-            # debug
-            print("Option B")
+    cmds.select(curves, replace=True)
+    cmds.select(keyed_locators, add=True)
 
-        def option_C_select_visible_NURB_curves_and_keyed_locators(visible_nurbs_transforms, keyed_visible_locator_transforms):
+# ------------------------------------------------------------------------------ #
 
-            # Select transform nodes of all visible NURBS curves in the current panel.
-            if visible_nurbs_transforms:
-                cmds.select(visible_nurbs_transforms)
-            
-            # Select transform nodes of all visible locators in the current panel that have keys on unlocked channels.
-            if keyed_visible_locator_transforms:
-                cmds.select(keyed_visible_locator_transforms, add=True)
-            # debug
-            print("Option C")
+def check_current_panel_is_valid():
+    # Check the panel where the mouse cursor is over.
+    modelPanel = cmds.getPanel(withFocus=True)
 
-        # ------------------------------------------------------------------------------ #
-        # Add selection functions to a dictionary
-
-        options = {
-            "A": lambda: option_A_select_visible_NURB_curves(visible_nurbs_transforms), 
-            "B": lambda: option_B_select_visible_NURB_curves_and_locators(visible_nurbs_transforms, visible_locators_transforms),
-            "C": lambda: option_C_select_visible_NURB_curves_and_keyed_locators(visible_nurbs_transforms, keyed_visible_locator_transforms)
-        }
-
-        # Run one of the option functions
-        options[option]()
+    # Check if the current panel is a modelPanel.
+    if cmds.getPanel(typeOf=modelPanel) != "modelPanel":
+        cmds.warning("The current panel is not a 3D view panel.")
+    else:
+        return modelPanel
