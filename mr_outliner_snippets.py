@@ -10,7 +10,6 @@
 # DESCRIPTION: 
 # ---------------------------------------
 # A collection of scripts to work in the Outliner panel faster.
-# They currently only work when the mouse cursor is above the Outliner.
 #
 # ---------------------------------------
 # RUN COMMANDS:
