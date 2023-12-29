@@ -14,11 +14,11 @@
 # ---------------------------------------
 # RUN COMMANDS:
 # ---------------------------------------
-e.g.
 import importlib
 import mr_outliner_snippets
 importlib.reload(mr_outliner_snippets)
 
+# e.g.
 mr_outliner_snippets.outliner_collapse_all_except_selected()
 
 # ---------------------------------------
