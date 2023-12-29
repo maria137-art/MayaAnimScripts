@@ -14,6 +14,7 @@
 # 
 #   - If mouse pointer is NOT above Graph Editor:
 #       - delete keys of selected objects on the current frame.
+#       - If "Sync Timeline Display" is on in the Channel Box, only keys of highlighted attributes will be deleted.
 #
 #   - If mouse pointer IS above Graph Editor:
 #       - If keys on animation curves are selected:
@@ -21,6 +22,8 @@
 #       - If NO keys are selected:
 #           - delete keys on visible anim curves on the current frame.
 # 
+#
+#
 # ---------------------------------------
 # RUN COMMAND:
 # ---------------------------------------
