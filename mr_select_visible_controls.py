@@ -7,17 +7,21 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# Selects one of the following object types, based on their visibility in the current 
+# Select one of several object types, based on their visibility in the current 
 # panel (whichever model panel the mouse cursor is pointing over at the time).
 #
-# - Option A: NURB curves
-# - Option B: NURB curves and locators 
-# - Option C: NURB curves, and locators with keys on unlocked channels
+# Current function options are:
+# - NURB curves
+# - Locators
+# - Key Locators
+# - NURBs curves + keyed locators
 #
 # EXAMPLE USES:
 # ---------------------------------------
 # Useful when extra or unneccessary control are hidden, so controls you're focusing
 # on can be quickly keyed.
+#
+# When working with temp locators often, NURBs curves + keyed locators might be helpful.
 # 
 # Example hotkeys to assign to:
 #   ALT + A
@@ -31,12 +35,9 @@ import mr_select_visible_controls
 importlib.reload(mr_select_visible_controls)
 
 # USE ONE OF THE FOLLOWING
-mr_select_visible_controls.select_visible_curves_in_panel()
-
+mr_select_visible_controls.select_visible_curves_in_panel(select_keyed_only=False)
 mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=False)
-
 mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=True)
-
 mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
 
 # ---------------------------------------
@@ -51,7 +52,10 @@ mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
-# 2023-12-29 - 004:
+# 2023-12-29 - 0005:
+# - Adding function for selecting only keyed objects.
+#
+# 2023-12-29 - 0004:
 # - Simplifying script, and adding more checks to avoid NoneType errors.
 #
 # 2023-04-11 - 0003:
@@ -67,7 +71,7 @@ import maya.cmds as cmds
 
 # ------------------------------------------------------------------------------ #
 
-def select_visible_curves_in_panel():
+def select_visible_curves_in_panel(select_keyed_only=False):
     # -------------------------------------------------------------------
     # 01. CHECK IF CURRENT PANEL IS VALID.
     # -------------------------------------------------------------------
@@ -78,23 +82,30 @@ def select_visible_curves_in_panel():
     # -------------------------------------------------------------------
     # 01. SELECT ONLY TRANSFORMS OF VISIBLE NURBS CURVES IN THE CURRENT PANEL.
     # -------------------------------------------------------------------
-    visible_nurbs_curves = cmds.ls(type="nurbsCurve", visible=True, long=True)
-    visible_nurbs_curves_in_panel = []
-    visible_nurbs_curves_transforms_in_panel = [] 
+    visible_curves = cmds.ls(type="nurbsCurve", visible=True, long=True)
+    visible_curves_in_panel = []
+    visible_curves_transforms_in_panel = [] 
 
-    if visible_nurbs_curves:
+    if visible_curves:
 
-        for curve in visible_nurbs_curves:
+        for curve in visible_curves:
             # Check if visible in the current panel.
             if cmds.modelEditor(modelPanel, query=True, nurbsCurves=True):
-                visible_nurbs_curves_in_panel.append(curve)
+                visible_curves_in_panel.append(curve)
     
-        if visible_nurbs_curves_in_panel:
-            for curve in visible_nurbs_curves_in_panel:
-                visible_nurbs_curves_transforms_in_panel.append(cmds.listRelatives(curve, parent=True)[0])
+        if visible_curves_in_panel:
+            for curve in visible_curves_in_panel:
+                visible_curves_transforms_in_panel.append(cmds.listRelatives(curve, parent=True)[0])
 
-            cmds.select(visible_nurbs_curves_transforms_in_panel)
-            return visible_nurbs_curves_transforms_in_panel
+            # -------------------------------------------------------------------
+            # 01. CHECK WHETHER TO SELECT ONLY KEYED OBJECTS.
+            # -------------------------------------------------------------------
+            if select_keyed_only:
+                keyed_visible_curves_transforms_in_panel = select_keyed_objects_from_selection(visible_curves_transforms_in_panel)
+                return keyed_visible_curves_transforms_in_panel
+            else:
+                cmds.select(visible_curves_transforms_in_panel)
+                return visible_curves_transforms_in_panel
 
 # ------------------------------------------------------------------------------ #
 
@@ -122,30 +133,21 @@ def select_visible_locators_in_panel(select_keyed_only=False):
         for loc in visible_locators_in_panel:
             visible_locators_transforms_in_panel.append(cmds.listRelatives(loc, parent=True)[0])
 
-        if not select_keyed_only:
+        # -------------------------------------------------------------------
+        # 01. CHECK WHETHER TO SELECT ONLY KEYED OBJECTS.
+        # -------------------------------------------------------------------
+        if select_keyed_only:
+            keyed_visible_locator_transforms_in_panel = select_keyed_objects_from_selection(visible_locators_transforms_in_panel)
+            return keyed_visible_locator_transforms_in_panel
+        else:
             cmds.select(visible_locators_transforms_in_panel)
             return visible_locators_transforms_in_panel
 
-        else:
-            keyed_visible_locator_transforms_in_panel = []
-
-            for loc in visible_locators_transforms_in_panel:
-                # Get all of its keyable and visible attributes.
-                attributes = cmds.listAttr(loc, keyable=True, unlocked=True)
-            
-                if attributes:
-                    for attr in attributes:
-                        if cmds.keyframe(loc, query=True, attribute=attr):
-                            keyed_visible_locator_transforms_in_panel.append(loc)
-
-            if keyed_visible_locator_transforms_in_panel:
-                cmds.select(keyed_visible_locator_transforms_in_panel)
-                return keyed_visible_locator_transforms_in_panel
 
 # ------------------------------------------------------------------------------ #
 
 def select_visible_curves_and_keyed_locators_in_panel():
-    curves = select_visible_curves_in_panel()
+    curves = select_visible_curves_in_panel(select_keyed_only=False)
     keyed_locators = select_visible_locators_in_panel(select_keyed_only=True)
 
     cmds.select(curves, replace=True)
@@ -162,3 +164,19 @@ def check_current_panel_is_valid():
         cmds.warning("The current panel is not a 3D view panel.")
     else:
         return modelPanel
+
+# ------------------------------------------------------------------------------ #
+
+def select_keyed_objects_from_selection(selection):
+    keyed_objects = []
+
+    for obj in selection:
+        attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
+
+        if attributes:
+            for attr in attributes:
+                if cmds.keyframe(obj, query=True, attribute=attr):
+                    keyed_objects.append(obj)
+
+    if keyed_objects:
+        return keyed_objects
