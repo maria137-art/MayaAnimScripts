@@ -54,24 +54,24 @@ def get_visible_outliner_panels():
 # ------------------------------------------------------------------- 
 # 00. FOR ALL ITEMS.
 # ------------------------------------------------------------------- 
-def outliner_expand_all_items():
+def outliner_expand_all():
     visible_outliner_panels = get_visible_outliner_panels()
     [cmds.outlinerEditor(outliner, edit=True, expandAllItems=True) for outliner in visible_outliner_panels]     
 
 # ------------------------------------------------------------------- 
-def outliner_collapse_all_items():    
+def outliner_collapse_all():    
     visible_outliner_panels = get_visible_outliner_panels()
     [cmds.outlinerEditor(outliner, edit=True, expandAllItems=False) for outliner in visible_outliner_panels]     
 
 # ------------------------------------------------------------------- 
 # 00. FOR SELECTED ITEMS.
 # ------------------------------------------------------------------- 
-def outliner_expand_selected_items():
+def outliner_expand_selected():
     visible_outliner_panels = get_visible_outliner_panels()
     [cmds.outlinerEditor(outliner, edit=True, expandAllSelectedItems=True) for outliner in visible_outliner_panels]         
 
 # ------------------------------------------------------------------- 
-def outliner_collapse_selected_items():
+def outliner_collapse_selected():
     visible_outliner_panels = get_visible_outliner_panels()
     [cmds.outlinerEditor(outliner, edit=True, expandAllSelectedItems=False) for outliner in visible_outliner_panels]         
 
