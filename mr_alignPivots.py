@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_align_pivots.py
+# SCRIPT: mr_alignPivots.py
 # VERSION: 0001
 #
 # CREATORS: Maria Robertson
@@ -15,14 +15,17 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_align_pivots
-importlib.reload(mr_align_pivots)
+import mr_alignPivots
+importlib.reload(mr_alignPivots)
 
-mr_align_pivots.main()
+mr_alignPivots.main()
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0002:
+#   - Rename from mr_align_pivots.py.
+#
 # 2023-12-17 - 0001:
 # 	- First pass.
 # ------------------------------------------------------------------------------ #
