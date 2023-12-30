@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------------------------------------------------------------------------
-# SCRIPT: mr_select_graphEditor_keys.py
+# SCRIPT: mr_selectKeys.py
 # VERSION: 0003
 #
 # CREATORS: Maria Robertson
@@ -10,10 +10,11 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# Select keys of selected in the Graph Editor, with one of the selection modes.
-#		- "playback_range" 	- Select keys only within the Playback Range.
-#		- "all" 			- Select all keys in the Graph Editor.
-#		- "currentTime" 	- Select keys that are only on the current frame.
+# Select keys of selected objects in the Graph Editor.
+# Use one of the selection modes.
+# 		- "playback_range" 	- Select keys only within the Playback Range.
+# 		- "all" 			- Select all keys in the Graph Editor.
+# 		- "currentTime" 	- Select keys that are only on the current frame.
 #
 # EXAMPLE USES:
 # ---------------------------------------
@@ -23,13 +24,13 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_select_graphEditor_keys
-importlib.reload(mr_select_graphEditor_keys)
+import mr_selectKeys
+importlib.reload(mr_selectKeys)
 
 # USE ONE OF THE FOLLOWING:
-mr_select_graphEditor_keys.main("playback_range")
-mr_select_graphEditor_keys.main("currentTime")
-mr_select_graphEditor_keys.main("all")
+mr_selectKeys.main("playback_range")
+mr_selectKeys.main("currentTime")
+mr_selectKeys.main("all")
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
@@ -42,6 +43,9 @@ mr_select_graphEditor_keys.main("all")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0004:
+# 	- Rename from mr_select_graphEditor_keys.py.
+#
 # 2023-12-29 - 0003:
 #   - Combining with old MEL scripts, mr_select_currentFrameKeysOnVisibleCurvesOfSelected.mel and mr_select_currentFrameKeysOfSelected.mel.
 #
@@ -53,7 +57,6 @@ mr_select_graphEditor_keys.main("all")
 # 	- First original MEL script.
 # ------------------------------------------------------------------------------------------------------------------------------------------------
 """
-
 
 import maya.cmds as cmds
 
@@ -75,7 +78,6 @@ def main(selection_mode=None):
 		# -------------------------------------------------------------------
 		# 01. PICK A SELECTION TYPE.
 		# -------------------------------------------------------------------
-
 		# Select keys only within the playback range.
 		if selection_mode == "playback_range":
 			for curve in visible_curves:
