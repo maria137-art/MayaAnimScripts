@@ -50,7 +50,6 @@ import maya.cmds as cmds
 import maya.mel as mel
 
 def main():
-    selected_keys = cmds.keyframe(query=True, selected=True)
     current_frame = cmds.currentTime(query=True)
     
     # -------------------------------------------------------------------
