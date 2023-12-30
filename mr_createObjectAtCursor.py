@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_create_object_at_cursor.py
-# VERSION: 0002
+# SCRIPT: mr_createObjectAtCursor.py
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -15,14 +15,17 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_create_object_at_cursor
-importlib.reload(mr_create_object_at_cursor)
+import mr_createObjectAtCursor
+importlib.reload(mr_createObjectAtCursor)
 
-mr_create_object_at_cursor.main("sphere")
+mr_createObjectAtCursor.main("sphere")
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0003:
+#   Rename from mr_createObjectAtCursor.py.
+#
 # 2023-12-29 - 0002:
 #   - Converting MEL script to Python.
 #   - Making more modular.
