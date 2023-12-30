@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------------------------------------------------------------------------
 # SCRIPT: mr_select_graphEditor_keys.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # CREDIT: Brian Horgan / Jørn-Harald Paulsen
@@ -10,15 +10,14 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# Select keys of selected objects within the timeslider range.
-#
-# A modification of a script by Brian Horgan kindly provided on CGSociety,
-# with snippets from Jørn-Harald Paulsen's jh_getKeyObjs:
-# https://forums.cgsociety.org/t/selecting-all-keys-on-a-certain-frame/1563705/2
+# Select keys of selected in the Graph Editor, with one of the selection modes.
+#		- "playback_range" 	- Select keys only within the Playback Range.
+#		- "all" 			- Select all keys in the Graph Editor.
+#		- "currentTime" 	- Select keys that are only on the current frame.
 #
 # EXAMPLE USES:
 # ---------------------------------------
-# Found this helpful when animating scenes with multiple shots inside.
+# Found using "playback_range" helpful when animating scenes with multiple shots inside.
 #
 # ---------------------------------------
 # RUN COMMAND:
@@ -27,18 +26,25 @@ import importlib
 import mr_select_graphEditor_keys
 importlib.reload(mr_select_graphEditor_keys)
 
-# Use one of the following:
+# USE ONE OF THE FOLLOWING:
+mr_select_graphEditor_keys.main("playback_range")
+mr_select_graphEditor_keys.main("currentTime")
 mr_select_graphEditor_keys.main("all")
-mr_select_graphEditor_keys.main("range")
 
 # ---------------------------------------
 # RESEARCH THAT HELPED:
 # ---------------------------------------
 # https://help.autodesk.com/cloudhelp/2017/CHS/Maya-Tech-Docs/Commands/selectKey.html
+# 
+# This script started as a modification of a script Brian Horgan kindly provided on CGSociety, with snippets from Jørn-Harald Paulsen's jh_getKeyObjs:
+# https://forums.cgsociety.org/t/selecting-all-keys-on-a-certain-frame/1563705/2
 #
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-29 - 0003:
+#   - Combining with old MEL scripts, mr_select_currentFrameKeysOnVisibleCurvesOfSelected.mel and mr_select_currentFrameKeysOfSelected.mel.
+#
 # 2023-12-17 - 0002: 
 # 	- Converted original MEL script.
 #	- Made option to select all visible keys, or just those within the playback range.
@@ -51,39 +57,55 @@ mr_select_graphEditor_keys.main("range")
 
 import maya.cmds as cmds
 
-def main(mode=None):
+def main(selection_mode=None):
 	# -------------------------------------------------------------------
 	# 01. INITIALISE VARIABLES
 	# -------------------------------------------------------------------
 	start_time = cmds.playbackOptions(query=True, min=True)
 	end_time = cmds.playbackOptions(query=True, max=True)
+	current_time = cmds.currentTime(query=True)
 
-	sel = cmds.ls(sl=True)
+	sel = cmds.ls(selection=True)
+	deselect_unkeyed_objects(sel)
 	visible_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 
 	if visible_curves:
-		# -------------------------------------------------------------------
-		# 03. SELECT OBJECTS THAT ONLY HAVE KEYFRAMES.
-		# -------------------------------------------------------------------
-		cmds.select(cl=True)
-		for obj in sel:
-			keyframe_count = cmds.keyframe(obj, query=True, keyframeCount=True)
-			if keyframe_count != 0:
-				cmds.select(obj, add=True)
-
-		# -------------------------------------------------------------------
-		# 04. SELECT KEYFRAMES.
-		# -------------------------------------------------------------------
 		cmds.selectKey(clear=True)
 
-		# Select keys within playback range.
-		if mode == "range":
+		# -------------------------------------------------------------------
+		# 01. PICK A SELECTION TYPE.
+		# -------------------------------------------------------------------
+
+		# Select keys only within the playback range.
+		if selection_mode == "playback_range":
 			for curve in visible_curves:
-				cmds.selectKey(curve, tgl=True, time=(start_time, end_time), add=True)
+				cmds.selectKey(curve, toggle=True, time=(start_time, end_time), add=True)
 
 		# Select all keys.
-		if mode == "all":
+		if selection_mode == "all":
 			for curve in visible_curves:
-				cmds.selectKey(curve, tgl=True)
+				cmds.selectKey(curve, toggle=True)
+
+		# Select keys only at the current time.
+		if selection_mode == "currentTime":
+			for obj in sel:
+				cmds.selectKey(visible_anim_curves, add=True, time=(current_time,))
+
 	else:
-		 print("No visible animation curves found.")
+		 cmds.warning("No visible animation curves found.")
+
+
+##################################################################################################################################################
+
+########################################################################
+#                                                                      #
+#                         SUPPORTING FUNCTIONS                         #
+#                                                                      #
+########################################################################
+
+def deselect_unkeyed_objects(selection):
+	new_selection = [obj for obj in selection if cmds.keyframe(obj, query=True, keyframeCount=True) != 0]
+	
+	if new_selection:
+		cmds.select(new_selection, replace=True)
+		return new_selection
