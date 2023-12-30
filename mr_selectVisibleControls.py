@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_select_visible_controls.py
-# VERSION: 0004
+# SCRIPT: mr_selectVisibleControls.py
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -52,24 +52,25 @@ mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0006:
+#   - Rename.
+#
 # 2023-12-29 - 0005:
-# - Adding function for selecting only keyed objects.
+#   - Adding function for selecting only keyed objects.
 #
 # 2023-12-29 - 0004:
-# - Simplifying script, and adding more checks to avoid NoneType errors.
+#   - Simplifying script, and adding more checks to avoid NoneType errors.
 #
 # 2023-04-11 - 0003:
-# - Worked to make script more flexible, separating logic into more functions while learning Python.
+#   - Worked to make script more flexible, separating logic into more functions while learning Python.
 #
 # 2023-04-11 - 0002:
-# - Added option to select locators that have keys on unlocked channels.
-# - For when animating with temp locators.
+#   - Added option to select locators that have keys on unlocked channels.
+# -  For when animating with temp locators.
 # ------------------------------------------------------------------------------ #
 """
 
 import maya.cmds as cmds
-
-# ------------------------------------------------------------------------------ #
 
 def select_visible_curves_in_panel(select_keyed_only=False):
     # -------------------------------------------------------------------
