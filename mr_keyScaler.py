@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_keyframe_scaler.py
-# VERSION: 0002
+# SCRIPT: mr_keyScaler.py
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # CREDIT: David Peers (for the original keyScaler.mel script) - https://web.archive.org/web/20040816235635/http://andrewsilke.com/mel_info.html
@@ -28,18 +28,21 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_keyframe_scaler
-importlib.reload(mr_keyframe_scaler)
+import mr_keyscaler
+importlib.reload(mr_keyscaler)
 
 # SET DESIRED SCALE AMOUNT.
 # e.g.
-mr_keyframe_scaler.main(-1)
-mr_keyframe_scaler.main(1.2)
-mr_keyframe_scaler.main(0.8)
+mr_keyscaler.main(-1)
+mr_keyscaler.main(1.2)
+mr_keyscaler.main(0.8)
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-28 - 0002:
+#   - Updating name.
+#
 # 2023-12-28 - 0002:
 #   - Stopped script from scaling multiple curves altogether rather than individually.
 #
