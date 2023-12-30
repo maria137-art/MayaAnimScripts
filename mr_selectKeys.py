@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------------------------------------------------------------------------
 # SCRIPT: mr_selectKeys.py
-# VERSION: 0003
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
 # CREDIT: Brian Horgan / Jørn-Harald Paulsen
@@ -43,6 +43,9 @@ mr_selectKeys.main("all")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0005:
+#	- Typo fix.
+#
 # 2023-12-30 - 0004:
 # 	- Rename from mr_select_graphEditor_keys.py.
 #
@@ -91,7 +94,7 @@ def main(selection_mode=None):
 		# Select keys only at the current time.
 		if selection_mode == "currentTime":
 			for obj in sel:
-				cmds.selectKey(visible_anim_curves, add=True, time=(current_time,))
+				cmds.selectKey(visible_curves, add=True, time=(current_time,))
 
 	else:
 		 cmds.warning("No visible animation curves found.")
