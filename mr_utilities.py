@@ -414,9 +414,6 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
 		nullify_animation_layers=True, 
 		nullify_only_selected_animation_layers=filter_selected_animation_layers)
 
-	# Print empty message, to get rid of any previous error messages.
-	print("")
-
 # ------------------------------------------------------------------------------ #
 def untemplate_anim_curve_nodes(anim_curve_nodes):
 	"""
