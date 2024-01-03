@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0002
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis
@@ -29,6 +29,9 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-03- 0004:
+#   - Adding functions.
+#
 # 2024-01-03 - 0003:
 #   - Updated clear_keys() to check if selected attributes exist on each selected object.
 #
@@ -54,6 +57,7 @@ import maya.mel as mel
 #                                                                      #
 ########################################################################
 
+# ------------------------------------------------------------------------------ #
 def clear_keys():
     """
     Highlighted attributes in the Channel Box will be cleared.
@@ -238,27 +242,6 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
                     attrFullName = f"{obj}.{attr}"
                     defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)[0]
                     cmds.setAttr(attrFullName, defaultValue)
-
-# ------------------------------------------------------------------------------ #
-def is_numeric_attribute(obj, attr):
-    """
-    Check if an object's specified attribute is a numeric type.
-
-    Args:
-        obj (str): The name of the object.
-        attr (str): The name of the attribute to check.
-
-    Returns:
-        bool: True if the attribute is a numeric type (float, bool, doubleLinear, doubleAngle, double), 
-              False otherwise.
-
-    Example:
-        >>> is_numeric_attribute("pSphere1", "translate")
-        True
-    """
-    attrFullName = f"{obj}.{attr}"
-    attrType = cmds.getAttr(attrFullName, type=True)
-    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
 
 ########################################################################
 #                                                                      #
@@ -451,3 +434,50 @@ def print_warning_from_caller(message):
     """
     caller_function_name = inspect.currentframe().f_back.f_code.co_name
     cmds.warning(f"{message}\n    from {caller_function_name}()")
+
+########################################################################
+#                                                                      #
+#                             IS FUNCTIONS                             #
+#                                                                      #
+########################################################################
+
+# ------------------------------------------------------------------------------ #
+def is_group_null(obj):
+    # Check if the object is a group null
+    return cmds.objectType(obj) == 'transform' and not cmds.listRelatives(obj, shapes=True) and cmds.listRelatives(obj, children=True, type='transform')
+
+# ------------------------------------------------------------------------------ #
+def is_numeric_attribute(obj, attr):
+    """
+    Check if an object's specified attribute is a numeric type.
+
+    Args:
+        obj (str): The name of the object.
+        attr (str): The name of the attribute to check.
+
+    Returns:
+        bool: True if the attribute is a numeric type (float, bool, doubleLinear, doubleAngle, double), 
+              False otherwise.
+
+    Example:
+        >>> is_numeric_attribute("pSphere1", "translate")
+        True
+    """
+    attrFullName = f"{obj}.{attr}"
+    attrType = cmds.getAttr(attrFullName, type=True)
+    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
+
+
+
+########################################################################
+#                                                                      #
+#                          SELECT FUNCTIONS                            #
+#                                                                      #
+########################################################################
+
+# ------------------------------------------------------------------------------ #
+def select_all_group_nulls():
+    all_objects = cmds.ls(dag=True, long=True)
+
+    group_nulls = [obj for obj in all_objects if is_group_null(obj)]
+    cmds.select(group_nulls, replace=True)
