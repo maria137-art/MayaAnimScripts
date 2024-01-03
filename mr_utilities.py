@@ -402,6 +402,7 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
 				return
 	else:
 		print_warning_from_caller("No connection found to queried animation layers.")
+		return
 
 	# ---------------------------------------
 	# 01. RESET.
