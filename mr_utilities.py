@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0004
+# VERSION: 0005
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis
@@ -29,8 +29,11 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-03- 0005:
+#   - Added select_joints_under_selected_objects().
+#
 # 2024-01-03- 0004:
-#   - Adding functions.
+#   - Added functions.
 #
 # 2024-01-03 - 0003:
 #   - Updated clear_keys() to check if selected attributes exist on each selected object.
@@ -476,8 +479,27 @@ def is_numeric_attribute(obj, attr):
 ########################################################################
 
 # ------------------------------------------------------------------------------ #
-def select_all_group_nulls():
+def select_group_nulls_in_scene():
     all_objects = cmds.ls(dag=True, long=True)
 
     group_nulls = [obj for obj in all_objects if is_group_null(obj)]
     cmds.select(group_nulls, replace=True)
+
+# ------------------------------------------------------------------------------ #
+def select_joints_under_selected_objects():
+    """
+    Find all joints under selected objects in the Outliner.
+    """
+    selection = cmds.ls(selection=True)
+    hierarchy_joints = []
+    
+    for item in selection:
+        cmds.select(item, hierarchy=True)
+        joints = cmds.ls(selection=True, type="joint")
+        hierarchy_joints.extend(joints)
+
+    cmds.select(deselect=True)
+    if hierarchy_joints:
+        cmds.select(hierarchy_joints, replace=True)
+    else:
+        cmds.warning("No joints found under", item)
