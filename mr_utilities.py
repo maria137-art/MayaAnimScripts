@@ -137,12 +137,12 @@ def get_selected_channels():
 
 # ------------------------------------------------------------------------------ #
 def reset_to_default(selection=None, attrsToReset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_animation_layers=True, nullify_only_selected_animation_layers=False):
-	 """
-	This function resets specified attributes to their default values. 
+	"""
+	This function resets specified attributes to their default values.
 	It supports nullifying animation layers and has options for selective resets.
 
 	Args:
-		selection (str or list, optional): Ojects for which attributes are to be reset. 
+		selection (str or list, optional): Objects for which attributes are to be reset.
 			If not provided, the current selection will be used.
 		attrsToReset (list, optional): Specific attributes to reset.
 		reset_selected_attributes (bool, optional): If True, reset attributes only on selected channels.
@@ -180,9 +180,9 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
 		# ---------------------------------------
 		# 02. GET ATTRIBUTES TO RESET.
 		# ---------------------------------------
-		if not attrsToReset:	
+		if not attrsToReset:
 			if reset_selected_attributes:
-				# Reset selected channels, if nothing is selected them reset all keyable.
+				# Reset selected channels, if nothing is selected then reset all keyable.
 				attrsToReset = get_selected_channels() or cmds.listAttr(obj, keyable=True)
 			else:
 				attrsToReset = cmds.listAttr(obj, keyable=True)
@@ -196,7 +196,7 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
 			# 03. OPTION A - NULLIFY ANIMATION LAYERS.
 			# ---------------------------------------
 			if nullify_animation_layers:
-				if nullify_only_selected_animation_layers: 
+				if nullify_only_selected_animation_layers:
 					layered_attributes = find_layered_attributes(obj, filter_selected_animation_layers=True)
 				else:
 					layered_attributes = find_layered_attributes(obj, filter_selected_animation_layers=False)
@@ -206,14 +206,13 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
 						for attr in attributes:
 							if attr not in attrsToReset:
 								attributes.remove(attr)
-								
+
 					if not reset_non_numeric_attributes:
 						for attr in attributes:
 							if not is_numeric_attribute(obj, attr):
 								attributes.remove(attr)
 
 					cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
-
 
 				# Set to current time again, to force the viewport to update with the change.
 				current_time = cmds.currentTime(query=True)
@@ -234,24 +233,24 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
 
 # ------------------------------------------------------------------------------ #
 def is_numeric_attribute(obj, attr):
-    """
-    Check if an object's specified attribute is a numeric type.
+	"""
+	Check if an object's specified attribute is a numeric type.
 
-    Args:
-        obj (str): The name of the object.
-        attr (str): The name of the attribute to check.
+	Args:
+		obj (str): The name of the object.
+		attr (str): The name of the attribute to check.
 
-    Returns:
-        bool: True if the attribute is a numeric type (float, bool, doubleLinear, doubleAngle, double), 
-              False otherwise.
+	Returns:
+		bool: True if the attribute is a numeric type (float, bool, doubleLinear, doubleAngle, double), 
+			  False otherwise.
 
-    Example:
-        >>> is_numeric_attribute("pSphere1", "translate")
-        True
-    """
-    attrFullName = f"{obj}.{attr}"
-    attrType = cmds.getAttr(attrFullName, type=True)
-    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
+	Example:
+		>>> is_numeric_attribute("pSphere1", "translate")
+		True
+	"""
+	attrFullName = f"{obj}.{attr}"
+	attrType = cmds.getAttr(attrFullName, type=True)
+	return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
 
 ########################################################################
 #                                                                      #
@@ -286,21 +285,21 @@ def filter_for_selected_animation_layers(animation_layers):
 
 # ------------------------------------------------------------------------------ #
 def find_layered_attributes(obj, filter_selected_animation_layers=False):
-    """
-    Get a dictionary of an object's attributes grouped by animation layers.
+	"""
+	Get a dictionary of an object's attributes grouped by animation layers.
 
-    Args:
-        obj (str): A single object to process.
-        filter_selected_animation_layers (bool): Choose whether to process only selected animation layers.
+	Args:
+		obj (str): A single object to process.
+		filter_selected_animation_layers (bool): Choose whether to process only selected animation layers.
 
-    Returns:
-        dict or None: A dictionary representing object attributes grouped by animation layers, or None if no valid result.
+	Returns:
+		dict or None: A dictionary representing object attributes grouped by animation layers, or None if no valid result.
 
-    Example:
-        >>> result = find_layered_attributes(obj, filter_selected_animation_layers=False)
-        >>> print(result)
-        {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
-    """
+	Example:
+		>>> result = find_layered_attributes(obj, filter_selected_animation_layers=False)
+		>>> print(result)
+		{'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
+	"""
 
 	# ---------------------------------------
 	# 01. GET CONNECTED ANIMATION LAYERS.
@@ -354,8 +353,8 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
 		reset_non_numeric_attributes (bool): 
 		reset_selected_attributes (bool): 
 
-    Returns:
-    	None
+	Returns:
+		None
 	"""
 
 	sel = cmds.ls(selection=True) or []
