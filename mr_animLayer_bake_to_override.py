@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayer_bake_to_override.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -35,6 +35,9 @@ mr_animLayer_bake_to_override.main()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-03 - 0003:
+# 	- Avoid major bug when "BaseAnimation" is selected, by not using -destinationLayer with it during bakeResults.
+#
 # 2023-12-18 - 0002:
 # 	- Ensuring no keys are selected before baking, to prevent Maya error.
 #
@@ -48,48 +51,44 @@ import maya.cmds as cmds
 def main():
 	tool_name = "AnimLayerTab"
 	
-	# -------------------------------------------------------------------
-	# 01. CHECK IF OBJECTS ARE SELECTED.
-	# -------------------------------------------------------------------
 	selected_objects = cmds.ls(selection=True)
 	if not selected_objects:
 		cmds.warning("No objects selected.")
 		return
 	
-	# -------------------------------------------------------------------
-	# 01. CHECK HOW MANY ANIMLAYERS ARE HIGHLIGHTED.
-	# -------------------------------------------------------------------
-	highlighted_layers = cmds.treeView(tool_name + "animLayerEditor", query=True, selectItem=True)
-	if not highlighted_layers:
+	selected_layers = cmds.treeView(tool_name + "animLayerEditor", query=True, selectItem=True)
+	if not selected_layers:
 		cmds.warning("No animation layer highlighted.")
-	elif len(highlighted_layers) > 1:
+	elif len(selected_layers) > 1:
 		cmds.warning("Please highlight only ONE animation layer to bake to.")
-	
 	else:
-		# -------------------------------------------------------------------
-		# 01. CHECK IF HIGHLIGHTED ANIM LAYER IS AN OVERRIDE.
-		# -------------------------------------------------------------------
-		highlighted_layer = highlighted_layers[0]
-		is_override = cmds.animLayer(highlighted_layer, query=True, override=True)
+		selected_layer = selected_layers[0]
+		is_override = cmds.animLayer(selected_layer, query=True, override=True)
 	
-		if not is_override:
-			cmds.warning(f"{highlighted_layer} is NOT of an 'Override' mode animation layer.")
+		if is_override:
+			min_time = cmds.playbackOptions(query=True, minTime=True)
+			max_time = cmds.playbackOptions(query=True, maxTime=True)
 
-		# -------------------------------------------------------------------
-		# 01. BAKE TO THE OVERRIDE LAYER.
-		# -------------------------------------------------------------------            
-		else:   
-			minTime = cmds.playbackOptions(query=True, minTime=True)
-			maxTime = cmds.playbackOptions(query=True, maxTime=True)
-
-			# Ensure no keys are selected, to avoid script erroring.
+			# Deselect all keys, to avoid script erroring.
 			cmds.selectKey(clear=True)
 
-			cmds.bakeResults(
-				destinationLayer=highlighted_layers[0],
-				simulation=True,
-				time=(minTime, maxTime)
-			)
+
+			if selected_layer == "BaseAnimation":
+				# Don't use -destinationLayer flag with "BaseAnimation".
+				# Otherwise for some reason, it stops user from setting keys on connected objects, until all other animation layers are deleted.
+				cmds.bakeResults(
+					simulation=True,
+					time=(min_time, max_time)
+				)
+			else:
+				cmds.bakeResults(
+					destinationLayer=selected_layers[0],
+					simulation=True,
+					time=(min_time, max_time)
+				)
 			
 			# Clear any old warning messages.
 			print("")
+
+		else:
+			cmds.warning(f"{selected_layer} is NOT of an 'Override' mode animation layer.")
