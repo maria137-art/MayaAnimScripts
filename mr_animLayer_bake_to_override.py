@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayer_bake_to_override.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -35,6 +35,10 @@ mr_animLayer_bake_to_override.main()
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-03 - 0004:
+#	- Suspend viewport during bake.
+#	- Add option to simulate bake or not.
+#
 # 2024-01-03 - 0003:
 # 	- Avoid major bug when "BaseAnimation" is selected, by not using -destinationLayer with it during bakeResults.
 #
@@ -48,7 +52,7 @@ mr_animLayer_bake_to_override.main()
 
 import maya.cmds as cmds
 
-def main():
+def main(simulation=True):
 	tool_name = "AnimLayerTab"
 	
 	selected_objects = cmds.ls(selection=True)
@@ -72,21 +76,21 @@ def main():
 			# Deselect all keys, to avoid script erroring.
 			cmds.selectKey(clear=True)
 
-
+			cmds.refresh(suspend=1)
 			if selected_layer == "BaseAnimation":
 				# Don't use -destinationLayer flag with "BaseAnimation".
-				# Otherwise for some reason, it stops user from setting keys on connected objects, until all other animation layers are deleted.
+				# Otherwise, for some reason it stops user from setting keys on the object, until all animation layers are deleted.
 				cmds.bakeResults(
-					simulation=True,
+					simulation=simulation,
 					time=(min_time, max_time)
 				)
 			else:
 				cmds.bakeResults(
 					destinationLayer=selected_layers[0],
-					simulation=True,
+					simulation=simulation,
 					time=(min_time, max_time)
 				)
-			
+			cmds.refresh(suspend=0)
 			# Clear any old warning messages.
 			print("")
 
