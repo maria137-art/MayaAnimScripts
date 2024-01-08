@@ -4,7 +4,7 @@
 # VERSION: 0006
 #
 # CREATORS: Maria Robertson
-# CREDIT: Morgan Loomis
+# CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
 #
 # ---------------------------------------
@@ -13,8 +13,11 @@
 # A collection of short and/or support functions.
 # Individual tools will mention if this script is required.
 #
-# Inspired by Morgan Loomis' ml_tools library:
-# http://morganloomis.com/tool/ml_utilities/
+# Major thanks to:
+#   - Morgan Loomis' ml_tools library: http://morganloomis.com/tool/ml_utilities/
+#   - Tom Bailey's tbAnimTools library: https://github.com/tb-animator/tbAnimTools
+# 
+# They've been a great resource for script and animation workflows.
 #
 # ---------------------------------------
 # RUN COMMAND:
