@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0006
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -32,6 +32,10 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-08- 0007:
+#   - reset_to_default()
+#       - Don't set keys if attribute wasn't keyed. Use setAttr instead then. 
+#
 # 2024-01-08- 0006:
 #   - Trying to use reStructuredText docString style.
 #       - https://stackabuse.com/common-docstring-formats-in-python/
@@ -466,8 +470,14 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
                     attr = obj_attr.split('.')[-1]
                     obj = obj_attr.split('.')[0]
                     defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)[0]
-                    cmds.setAttr(obj_attr, defaultValue)
-                    cmds.setKeyframe(obj_attr)
+
+                    # Only set keys if the attribute already is keyed.
+                    has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
+                    if has_keyframes:
+                        cmds.setAttr(obj_attr, defaultValue)
+                        cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+                    else:
+                        cmds.setAttr(obj_attr, defaultValue)
 
         else:
             print_warning_from_caller('Nothing to reset')
