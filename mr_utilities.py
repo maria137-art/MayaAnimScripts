@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0008
+# VERSION: 0009
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -32,6 +32,11 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-08- 0009:
+#   - reset_to_default()
+#       - Disabling script until freezes solved.
+#       - Added checks for it defaultValue is None.
+#
 # 2024-01-08- 0008:
 #   - reset_to_default()
 #       Add variable checks.
@@ -101,22 +106,19 @@ def set_animation_curves_lock_state(anim_curve_nodes, lock_state=False):
     """
     if anim_curve_nodes:
         for node in anim_curve_nodes:
-            if cmds.objExists(node):
-                for attr in ['.ktv', '.kix', '.kiy', '.kox', '.koy']:
-                    attr_name = node + attr
-                    # Removing the . in attr for attributeQuery.
-                    if cmds.attributeQuery(attr[1:], node=node, exists=True):
-                        # Lock curve.
-                        if lock_state:
-                            cmds.setAttr(attr_name, lock=lock_state)
-                        # Unlock curve.
-                        else:
-                            # Set the lock_state as the True, to try avoiding weird Maya 2023 bug.
-                            # Sometimes an animation curve won't unlock unless you lock it again (even if it's already locked).
-                            cmds.setAttr(attr_name, lock=True)
-                            cmds.setAttr(attr_name, lock=lock_state)
-    else:
-        print_warning_from_caller("No anim_curves_nodes specified.")
+            attrs_to_lock = [node + attr for attr in ['.ktv', '.kix', '.kiy', '.kox', '.koy']]
+            
+            current_lock_states = [cmds.getAttr(attr_name, lock=True) for attr_name in attrs_to_lock]
+
+            # Check if any attributes need to be updated
+            if any(lock_state != state for state in current_lock_states):
+                # Batch set the lock state for all attributes
+                for attr_name in attrs_to_lock:
+                    cmds.setAttr(attr_name, lock=lock_state)
+            else:
+                # print_warning_from_caller("No anim_curves_nodes specified.")
+                continue
+
 
 ########################################################################
 #                                                                      #
@@ -362,8 +364,11 @@ def clear_keys():
     cmds.select(selection, replace=True)
 
 # ------------------------------------------------------------------------------ #
+"""
 def reset_to_default(selection=None, attrsToReset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_animation_layers=True, nullify_only_selected_animation_layers=False):
     """
+    TODO: This function runs way too slow.
+
     This function has two main uses:
         - Reset specified attributes to their default values.
         - Or nullify animation layers for selected objects.
@@ -397,18 +402,10 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
     ... )
 
     """
-    #############################################################################
-    # STEP 1: Get selection.
-
     selection = get_selection()
-
-    #############################################################################
-    # STEP 2: Reset every selection object.
+    object_attribute_names_to_reset = []
 
     for obj in selection:
-        # ---------------------------------------
-        # 02. GET ATTRIBUTES TO RESET.
-        # ---------------------------------------
         if not attrsToReset:
             if reset_selected_attributes:
                 # Reset selected channels, if nothing is selected then reset all keyable.
@@ -448,9 +445,7 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
             # 03. OPTION B - RESET ATTRIBUTES.
             # ---------------------------------------
             else:
-                object_attribute_names_to_reset = []
                 valid_attributes = []
-
                 for attr in attrsToReset:
                     if cmds.attributeQuery(attr, node=obj, exists=True):
                         if not reset_non_numeric_attributes:
@@ -465,30 +460,40 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
                 for obj_attr in valid_object_attribute_names:
                     object_attribute_names_to_reset.append(obj_attr)          
 
-                # Ensure the attributes' animation curves are unlocked.
-                if object_attribute_names_to_reset:
-                    animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
-                if animation_curves:
-                    set_animation_curves_lock_state(animation_curves, lock_state=False)
-
-                # Need to tidy this whole object_attribute_names_to_reset to be less convoluted. Maybe use a dict instead for what valid_oject_attribute_names returns?
-                for obj_attr in object_attribute_names_to_reset:
-                    attr = obj_attr.split('.')[-1]
-                    obj = obj_attr.split('.')[0]
-                    defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)[0]
-
-                    # Only set keys if the attribute already is keyed.
-                    has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
-                    if has_keyframes:
-                        cmds.setAttr(obj_attr, defaultValue)
-                        cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
-                    else:
-                        cmds.setAttr(obj_attr, defaultValue)
-
         else:
             print_warning_from_caller('Nothing to reset')
             return
+    """
+    # CURRENTLY TOO SLOW.
+    # Ensure the attributes' animation curves are unlocked.
+    if object_attribute_names_to_reset:
+        animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
+    if animation_curves:
+        set_animation_curves_lock_state(animation_curves, lock_state=False)
+    """
 
+    for obj_attr in object_attribute_names_to_reset:
+        attr = obj_attr.split('.')[-1]
+        obj = obj_attr.split('.')[0]
+
+        # Get the default value and check if the attribute is keyed.
+        defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
+        
+        # Check if defaultValue is not None.
+        if defaultValue:
+            defaultValue = defaultValue[0]
+            has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
+
+            # Set the attribute to its default value.
+            cmds.setAttr(obj_attr, defaultValue)
+
+            # Only set keys if the attribute already is keyed.
+            if has_keyframes:
+                cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+        else:
+            # print(f"Attribute {attr} has no default value on object {obj}.")
+            continue
+"""
 ########################################################################
 #                                                                      #
 #                             IS FUNCTIONS                             #
@@ -634,7 +639,6 @@ def filter_attributes(selection=None, attributes=None, filter_locked=True, filte
         selection = get_selection()
         
     if not attributes:
-        # attributes = cmds.channelBox('mainChannelBox', query=True, selectedMainAttributes=True)
         attributes = cmds.listAttr(selection, keyable=True)
 
     valid_attributes = []
