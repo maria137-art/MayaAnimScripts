@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0007
+# VERSION: 0008
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -32,6 +32,10 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-08- 0008:
+#   - reset_to_default()
+#       Add variable checks.
+#
 # 2024-01-08- 0007:
 #   - reset_to_default()
 #       - Don't set keys if attribute wasn't keyed. Use setAttr instead then. 
@@ -462,8 +466,10 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
                     object_attribute_names_to_reset.append(obj_attr)          
 
                 # Ensure the attributes' animation curves are unlocked.
-                animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
-                set_animation_curves_lock_state(animation_curves, lock_state=False)
+                if object_attribute_names_to_reset:
+                    animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
+                if animation_curves:
+                    set_animation_curves_lock_state(animation_curves, lock_state=False)
 
                 # Need to tidy this whole object_attribute_names_to_reset to be less convoluted. Maybe use a dict instead for what valid_oject_attribute_names returns?
                 for obj_attr in object_attribute_names_to_reset:
