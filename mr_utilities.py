@@ -127,8 +127,6 @@ def filter_for_selected_animation_layers(animation_layers):
     :rtype: list
 
     """
-
-
     tool_name = "AnimLayerTab"
     selected_layers = cmds.treeView(tool_name + "animLayerEditor", query=True, selectItem=True)
     if not selected_layers:
@@ -173,7 +171,6 @@ def find_layered_attributes(obj, filter_selected_animation_layers=False):
     {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
 
     """
-
     # ---------------------------------------
     # 01. GET CONNECTED ANIMATION LAYERS.
     # ---------------------------------------
@@ -237,7 +234,6 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
     ... )
 
     """
-
     sel = get_selection()
     if not sel:
         print_warning_from_caller("Nothing is selected.")
