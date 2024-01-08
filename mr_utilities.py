@@ -366,42 +366,9 @@ def clear_keys():
 # ------------------------------------------------------------------------------ #
 """
 def reset_to_default(selection=None, attrsToReset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_animation_layers=True, nullify_only_selected_animation_layers=False):
-    """
-    TODO: This function runs way too slow.
+    
 
-    This function has two main uses:
-        - Reset specified attributes to their default values.
-        - Or nullify animation layers for selected objects.
-
-    Credit
-    -------
-    Fernando Ortega: This function was originally adapted from Ortega's reset_to_default.py script: https://animtd.gumroad.com/l/reset_to_default
-
-    :param selection: List of objects to reset attributes for.
-    :type selection: list
-    :param attrsToReset: List of attributes to reset. If None, resets all keyable attributes.
-    :type attrsToReset: list, optional
-    :param reset_selected_attributes: If True, resets only selected attributes in the Channel Box.
-    :type reset_selected_attributes: bool
-    :param reset_non_numeric_attributes: If True, skips resetting non-numeric attributes.
-    :type reset_non_numeric_attributes: bool
-    :param nullify_animation_layers: If True, nullify animation layer keys on the current frame.
-    :type nullify_animation_layers: bool
-    :param nullify_only_selected_animation_layers: If True, nullify only selected animation layers.
-    :type nullify_only_selected_animation_layers: bool
-
-    :Example:
-
-    >>> reset_to_default(
-    ...     selection=["pSphere1", "pSphere2"],
-    ...     attrsToReset=["translateX", "rotateY"],
-    ...     reset_selected_attributes=True,
-    ...     reset_non_numeric_attributes=False,
-    ...     nullify_animation_layers=True,
-    ...     nullify_only_selected_animation_layers=False
-    ... )
-
-    """
+    
     selection = get_selection()
     object_attribute_names_to_reset = []
 
@@ -463,14 +430,14 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
         else:
             print_warning_from_caller('Nothing to reset')
             return
-    """
+
     # CURRENTLY TOO SLOW.
     # Ensure the attributes' animation curves are unlocked.
     if object_attribute_names_to_reset:
         animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
     if animation_curves:
         set_animation_curves_lock_state(animation_curves, lock_state=False)
-    """
+
 
     for obj_attr in object_attribute_names_to_reset:
         attr = obj_attr.split('.')[-1]
@@ -494,6 +461,7 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
             # print(f"Attribute {attr} has no default value on object {obj}.")
             continue
 """
+
 ########################################################################
 #                                                                      #
 #                             IS FUNCTIONS                             #
