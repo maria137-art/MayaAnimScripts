@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0011
+# VERSION: 0012
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -39,6 +39,12 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0012:
+#   - Readding missing descriptions.
+#   - clear_keys()
+#       - Untemplate animation curves before clearing.
+#       - Added option to disable clearing only selected keys.
+#
 # 2024-01-14- 0011:
 #   - Adding more accepted_constraint_types to is_constrained().
 #   - Minor formatting.
@@ -237,45 +243,50 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
 ########################################################################
 
 # ------------------------------------------------------------------------------ #
-def clear_keys():
+def clear_keys(reset_selected_attributes=True):
     """
     Clear animation keys for selected attributes or all keyable attributes of selected objects.
     This function ensures that the animation curves of attributes to clear will be unlocked.
 
     """
-    selection = get_selection()
-    selected_attributes = cmds.channelBox('mainChannelBox', query=True, selectedMainAttributes=True)
+    selection = get_selection_generator()
+    if not selection:
+        return
 
-    object_attribute_names_to_clear = []
+    # ---------------------------------------
+    # 01. GET VALID OBJECT ATTRIBUTES.
+    # ---------------------------------------
+    object_attributes_to_clear = []
     for item in selection:
-        valid_attributes = []
 
-        if selected_attributes:
-            for attr in selected_attributes:
+        if reset_selected_attributes:
+            attributes = get_selected_channels() or cmds.listAttr(item, keyable=True, unlocked=True)
+        else:
+            attributes = cmds.listAttr(item, keyable=True, unlocked=True)
+
+        if attributes:
+            valid_attributes = []
+            for attr in attributes:
+                # Check if it exists.
                 if cmds.attributeQuery(attr, node=item, exists=True):
                     valid_attributes.append(attr)
         else:
             valid_attributes = cmds.listAttr(item, keyable=True)
 
-        valid_object_attribute_names = filter_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False) 
-        object_attribute_names_to_clear.extend(valid_object_attribute_names)
+        # Get the relevant object attribute names.
+        valid_object_attribute_names = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False) 
+        object_attributes_to_clear.extend(valid_object_attribute_names)
 
-    """
-    TODO: STOP THIS FROM SLOWING OR FREEZING MAYA.
-    # Ensure the attributes' animation curves are unlocked.
-    animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_clear)
-    set_animation_curve_template_state(animation_curves, lock_state=False)
-    """
+        # ---------------------------------------
+        # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
+        # ---------------------------------------
+        all_keyable_object_attributes = cmds.listAttr(item, keyable=True, unlocked=True, nodeName=True)
+        animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
+        for curve in animation_curves:
+            set_animation_curve_template_state(curve, lock_state=False)
 
-    cmds.cutKey(object_attribute_names_to_clear) 
+    cmds.cutKey(object_attributes_to_clear) 
       
-    """
-    TODO: REENABLE WHEN SLOW TEMPLATE CODE IS FIXED.
-    # Reselect selection, to refresh Graph Editor.
-    # Otherwise it might not show that animation curves have been untemplated, until reinteracting with it.
-    cmds.select(selection, replace=True)
-    """
-     
 # ------------------------------------------------------------------------------ #
 def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
     selection = get_selection()
@@ -316,6 +327,12 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
     """
     Reset attributes of selected objects to their default values.
 
+    Credit
+    -------
+    Fernando Ortega: This function was originally adapted from Ortega's reset_to_default.py script
+        https://animtd.gumroad.com/l/reset_to_default
+        Using version last downloaded on 2023-12-31: 
+
     :param selection: List of objects to reset attributes for. If None, uses the current selection.
     :type selection: List[str], optional
     :param attributes: List of attributes to reset. If None, reset all keyable and unlocked attributes.
@@ -333,11 +350,10 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
     ...     reset_selected_attributes=True,
     ...     reset_non_numeric_attributes=False
     ... )
-
+    
     """
     if not selection:
         selection = get_selection_generator()
-
     if not selection:
         return
 
@@ -399,6 +415,7 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 if cmds.objExists(full_name):
                     # Unlock entire curve.
                     cmds.setAttr(full_name, lock=False)
+
     # ---------------------------------------
     # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
     # ---------------------------------------
@@ -1060,7 +1077,7 @@ def select_joints_under_selected_objects():
     if hierarchy_joints:
         cmds.select(hierarchy_joints, replace=True)
     else:
-        cmds.warning("No joints found under", item)
+        display_viewport_warning("No joints found under", item)
 
 
 
@@ -1073,7 +1090,7 @@ def select_joints_under_selected_objects():
 ########################################################################
 
 # ------------------------------------------------------------------------------ #
-def set_animation_curve_template_state(anim_curve, lock_state=False):
+def set_animation_curve_template_state(animation_curves, lock_state=False):
     """
     Set the lock state of specified animation curve nodes.
     
@@ -1089,21 +1106,15 @@ def set_animation_curve_template_state(anim_curve, lock_state=False):
     """
     attributes_to_unlock = ['.ktv', '.kix', '.kiy', '.kox', '.koy']
 
-    for attribute in attributes_to_unlock:
-        # Unlock entire channel.
-        cmds.setAttr(anim_curve + attribute, lock=lock_state)
+    if not animation_curves:
+        display_viewport_warning("No animation_curves were given.")
 
-    """
-    if anim_curve_nodes:
-        for node in anim_curve_nodes:
-            attrs_to_lock = [node + attr for attr in ['.ktv', '.kix', '.kiy', '.kox', '.koy']]
-            
-            current_lock_states = [cmds.getAttr(attr_name, lock=True) for attr_name in attrs_to_lock]
+    # If animation_curves is just an instance of a string, convert it to a list.
+    if isinstance(animation_curves, str):
+        animation_curves = [animation_curves]
 
-            # Check if any attributes need to be updated.
-            if any(lock_state != state for state in current_lock_states):
-                cmds.setAttr(attrs_to_lock, lock=lock_state)
-            else:
-                # print_warning_from_caller("No anim_curves_nodes specified.")
-                continue
-    """
+    for curve in animation_curves:
+        for k_attr in attributes_to_unlock:
+            full_name = f"{curve}{k_attr}"
+            if cmds.objExists(full_name):
+                cmds.setAttr(full_name, lock=lock_state)
