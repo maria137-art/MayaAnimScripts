@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0015
+# VERSION: 0016
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
@@ -37,6 +37,10 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0016:
+#   - constrain_unlocked_attributes()
+#       - Fixing bug where it wouldn't trigger constraints.
+#
 # 2024-01-14- 0015:
 #   - reset_attributes_to_default_value()
 #       - Now uses set_animation_curve_template_state().
@@ -488,7 +492,8 @@ def constrain_unlocked_attributes(driver, target, mode):
     }
 
     if mode in mode_functions:
-        mode_functions[mode]
+        for func in mode_functions[mode]:
+            func(driver, target)
     else:
         display_viewport_warning("Invalid mode. Supported modes are 'both', 'translate', and 'rotate'.")
 

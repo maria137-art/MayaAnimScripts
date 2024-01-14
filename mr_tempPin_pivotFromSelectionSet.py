@@ -191,7 +191,7 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 		mel.eval("destroySTRSMarkingMenu MoveTool ;")
 
 	# -------------------------------------------------------------------
-	# 01. IF AN OFFSET GROUP DOESN'T EXISTS, CREATE ONE AND SET-UP A TEMP PIVOT
+	# 01. IF AN OFFSET GROUP DOESN'T EXIST, CREATE ONE AND SET-UP A TEMP PIVOT.
 	# -------------------------------------------------------------------
 	# If the selection set exists,
 	elif cmds.objExists(follow_set_name):
@@ -203,72 +203,79 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 		if len(objs_to_pivot) == 0:
 			# NOTE: make sure -title is unique, otherwise dialog won't trigger
 			cmds.confirmDialog(title="Error A", message="Select objects to pivot.")
+			return
 
 		# If the selection set object is selected as the pivot,
 		elif objs_to_pivot[0] == follow_object[0]:
 			cmds.confirmDialog(title="Error B", message="Can't use an object marked to pivot from as the pivot.")
-
+			return
 		# -------------------------------------------------------------------
 		# 02. CREATE AN OFFSET GROUP TO PIVOT
 		# -------------------------------------------------------------------
-		else:
-			# Create an offset group to pivot with.
-			temp_pivot_offset_group = cmds.group(em=True, name=temp_pivot_offset_group_name)
-			# Match its translate and rotate to the follow object.
-			point_constraint = cmds.pointConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
-			orient_constraint = cmds.orientConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
-			
+		temp_pivot_offset_group = cmds.group(em=True, name=temp_pivot_offset_group_name)
+		# Match its translate and rotate to the follow object.
+		point_constraint = cmds.pointConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
+		orient_constraint = cmds.orientConstraint(follow_object[0], temp_pivot_offset_group, weight=1)
+		
 
-			# NOTE: Have to specifically name the constraint to delete, otherwise the null
-			# group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used  
-			if time == "frame":
-				cmds.setKeyframe(temp_pivot_offset_group, attribute="translate")
+		# NOTE: Have to specifically name the constraint to delete, otherwise the null
+		# group itself gets deleted too if "delete -cn" or "DeleteConstraints" is used  
+		if time == "frame":
+			cmds.setKeyframe(temp_pivot_offset_group, attribute="translate")
 
-			elif time == "range":
-				start_time = cmds.playbackOptions(query=True, min=True)
-				end_time = cmds.playbackOptions(query=True, max=True)
-				attributes = ["translateX", "translateY", "translateZ","rotateX", "rotateY", "rotateZ"]
+		elif time == "range":
+			start_time = cmds.playbackOptions(query=True, min=True)
+			end_time = cmds.playbackOptions(query=True, max=True)
+			attributes = ["translateX", "translateY", "translateZ","rotateX", "rotateY", "rotateZ"]
 
-				cmds.refresh(suspend=True)
-				cmds.bakeResults(
-					temp_pivot_offset_group,
-					attribute=attributes,
-					simulation=False,
-					time=(start_time, end_time)
-				)
-				cmds.delete(temp_pivot_offset_group, staticChannels=True)
-				cmds.refresh(suspend=False)
+			cmds.refresh(suspend=True)
+			cmds.bakeResults(
+				temp_pivot_offset_group,
+				attribute=attributes,
+				simulation=False,
+				time=(start_time, end_time)
+			)
+			cmds.delete(temp_pivot_offset_group, staticChannels=True)
+			cmds.refresh(suspend=False)
 
-			cmds.delete(point_constraint)
-			cmds.delete(orient_constraint)
+		cmds.delete(point_constraint)
+		cmds.delete(orient_constraint)
 
-			for obj in objs_to_pivot:
-				loc = cmds.spaceLocator(name=obj + "_temp_pivot_loc")
-				cmds.parent(loc, temp_pivot_offset_group)
-	
-				# Parent constrain loc to objs_to_pivot.
-				cmds.parentConstraint(obj, loc, weight=1)
-				cmds.delete(loc, constraints=True)
-				
-				if mode == "both":
-					# Parent constrain loc to objs_to_pivot.
-					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
-					cmds.orientConstraint(loc, obj, maintainOffset=True, weight=1)
-				
-				elif mode == "translate":
-					cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
-					
-			cmds.select(temp_pivot_offset_group)
+		for obj in objs_to_pivot:
+			loc = cmds.spaceLocator(name=obj + "_temp_pivot_loc")[0]
+			cmds.parent(loc, temp_pivot_offset_group)
 
-			# End with rotate manipulator active.
-			mel.eval("buildRotateMM ;")
-			mel.eval("destroySTRSMarkingMenu RotateTool ;")
+			# Parent constrain loc to objs_to_pivot.
+			cmds.parentConstraint(obj, loc, weight=1)
+			cmds.delete(loc, constraints=True)
+			"""
+			if mode == "both":
+				cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
+				cmds.orientConstraint(loc, obj, maintainOffset=True, weight=1)
+
+			elif mode == "translate":
+				cmds.pointConstraint(loc, obj, maintainOffset=True, weight=1)
+			"""
+			if mode == "both":
+				# Point and orient constrain.
+				mr_utilities.constrain_unlocked_attributes(loc, obj, mode="both")
+
+			elif mode == "translate":
+				# Point constrain.
+				mr_utilities.constrain_unlocked_attributes(loc, obj, "translate")
+
+
+		cmds.select(temp_pivot_offset_group, replace=True)
+
+		# End with rotate manipulator active.
+		mel.eval("buildRotateMM ;")
+		mel.eval("destroySTRSMarkingMenu RotateTool ;")
 
 	# -------------------------------------------------------------------
 	# 01. IF NO SELECTION SET EXISTS, GIVE A WARNING
 	# -------------------------------------------------------------------
 	else:
-		# (make sure -title is unique; otherwise, dialog won't trigger
+		# (make sure -title is unique; otherwise, dialog won't trigger)
 		cmds.confirmDialog(title="Error C", message="Create a follow selection set first.")
 
 ##################################################################################################################################################
