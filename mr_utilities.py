@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0013
+# VERSION: 0014
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
@@ -37,6 +37,11 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0014:
+#   - Added is_object_attribute_connected_to_referenced_animation_curve().
+#   - Updated get_animation_curves_from_object_attributes() to use is_object_attribute_connected_to_referenced_animation_curve().
+#       - Now it should only ignore animation curves that were created originally in the referenced file.
+#
 # 2024-01-14- 0013:
 #   - Using get_selection_generator() in more functions.
 #   - Adding is_attribute_connected_as_destination().   
@@ -271,13 +276,16 @@ def clear_keys(reset_selected_attributes=True):
             for attr in attributes:
                 # Check if it exists.
                 if cmds.attributeQuery(attr, node=item, exists=True):
-                    valid_attributes.append(attr)
-        else:
-            valid_attributes = cmds.listAttr(item, keyable=True)
 
-        # Get the relevant object attribute names.
-        valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False, filter_connected=False) 
-        object_attributes_to_clear.extend(valid_object_attributes)
+                    valid_attributes.append(attr)
+
+            if valid_attributes:
+                # Get the relevant object attribute names.
+                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False, filter_connected=False) 
+
+        else:
+            print_warning_from_caller('No attributes to clear.')
+            return
 
         # ---------------------------------------
         # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
@@ -287,7 +295,7 @@ def clear_keys(reset_selected_attributes=True):
         for curve in animation_curves:
             set_animation_curve_template_state(curve, lock_state=False)
 
-    cmds.cutKey(object_attributes_to_clear) 
+    cmds.cutKey(valid_object_attributes) 
       
 # ------------------------------------------------------------------------------ #
 def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
@@ -385,7 +393,6 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
         # ---------------------------------------
         if attributes:
             valid_attributes = []
-
             for attr in attributes:
                 # Check if it exists.
                 if cmds.attributeQuery(attr, node=obj, exists=True):
@@ -702,6 +709,44 @@ def is_nurbs_curve(node):
     return any(cmds.nodeType(shape) == 'nurbsCurve' for shape in shapes)
 
 # ------------------------------------------------------------------------------ #
+def is_object_attribute_connected_to_referenced_animation_curve(object_attribute):
+    """
+    Check if the given node attribute is connected to an animation curve, that was created in a referenced file.
+
+    :param object_attribute: The node attribute to check.
+    :type object_attribute: str
+    :return: True if the attribute is connected to an animation curve created in a referenced file.
+    :rtype: bool
+
+    :Example:
+
+    >>> object_attribute = "pSphere1.translateX"
+    >>> result = is_object_attribute_connected_to_referenced_animation_curve(object_attribute)
+    >>> print(result)
+    False
+
+    """
+    # Split the attribute into node and attribute name.
+    node, attr = object_attribute.split('.')
+
+    if cmds.attributeQuery(attr, node=node, exists=True):
+        # Get the attribute's connection.
+        connections = cmds.listConnections(f'{node}.{attr}', source=True, destination=False, plugs=True)
+
+        if connections:
+            for connection in connections:
+                # Check if the connection is from a reference.
+                if cmds.referenceQuery(connection, isNodeReferenced=True):
+                    return True
+        else:
+            # Check if the attribute has animation keys in the current scene.
+            anim_curves = cmds.listAttr('{}.{}'.format(node, attr), string="*animCurve*")
+            if anim_curves:
+                return True
+
+    return False
+
+# ------------------------------------------------------------------------------ #
 def is_transform(node):
     """
     Check if the given node is a transform.
@@ -753,7 +798,7 @@ def get_animation_curves_from_object_attributes(object_attributes, filter_refere
     """
     for obj_attr in object_attributes:
         if filter_referenced:
-            if cmds.referenceQuery(obj_attr, isNodeReferenced=True):
+            if is_object_attribute_connected_to_referenced_animation_curve(obj_attr):
                 continue
 
         get_attr_connection = cmds.listConnections(obj_attr, destination=False, source=True)
