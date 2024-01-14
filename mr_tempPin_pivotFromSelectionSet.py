@@ -59,7 +59,9 @@ mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("translate", "r
 # ---------------------------------------
 # REQUIREMENTS: 
 # ---------------------------------------
-# Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
+# This script requires functions from the following files:
+# 	- mr_find_constraint_targets_and_drivers.py
+# 	- mr_utilities.py
 #
 # ---------------------------------------
 # CHANGELOG:
