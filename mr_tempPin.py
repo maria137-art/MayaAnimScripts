@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0009
+# VERSION: 0010
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -33,7 +33,7 @@
 # To choose the type of constraints used, pick one of the three modes:
 #   - "both" - constrain translate and rotate attributes
 #   - "translate"
-#   - "rotate" 
+#   - "rotate"
 #
 # To choose where the pivot positon should be made when using the "multiple" function, use either:
 #   - "average"
@@ -67,26 +67,29 @@ mr_tempPin.multiple("rotate", "last_selected")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14 - 0010:
+#   - End multiple() with rotate manipulator active.
+#
 # 2023-12-28 - 0009:
-# - Adding check for valid command inputs + option to choose where pivot position is for the "multiple" function.
+#   - Adding check for valid command inputs + option to choose where pivot position is for the "multiple" function.
 #
 # 2023-12-28 - 0008:
-# - Updating script to not point/orient constraint at all if those attributes are all locked.
+#   - Updating script to not point/orient constraint at all if those attributes are all locked.
 #
 # 2023-12-09 - 0007:
-# - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
+#   - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
 #
 # 2023-12-09 - 0006:
-# - Fixing the multiple() function to respect locked attributes better.
+#   - Fixing the multiple() function to respect locked attributes better.
 #
 # 2023-12-07 - 0005:
-# - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
+#   - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
 #
 # 2023-12-04 - 0004: 
-# - Converted original MEL script to Python.
+#   - Converted original MEL script to Python.
 #
 # 2023-06-28 - 0003:
-# - Updated script to use Python function to find constraint targets.
+#   - Updated script to use Python function to find constraint targets.
 #
 # 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
 # ------------------------------------------------------------------------------ #
@@ -205,6 +208,10 @@ def multiple(mode=None, position=None):
             # Set a blank keyframe, to remember the frame the temp_pin_group was created on.
             cmds.setKeyframe(temp_pin_group)
             cmds.select(temp_pin_group)
+
+            # End with rotate manipulator active.
+            mel.eval("buildRotateMM ;")
+            mel.eval("destroySTRSMarkingMenu RotateTool ;")
 
 ##################################################################################################################################################
 
