@@ -1,12 +1,12 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0010
+# VERSION: 0011
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
-#
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
@@ -39,6 +39,10 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0011:
+#   - Adding more accepted_constraint_types to is_constrained().
+#   - Minor formatting.
+#
 # 2024-01-14- 0010:
 #   - Simplifying clear_keys().
 #   - Reordered functions.
@@ -323,9 +327,9 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
 
     :Example:
 
-    >>> reset_attributes_to_default_value(
-    ...     selection=['object1', 'object2'],
-    ...     attributes=['translateX', 'rotateY'],
+    >>> mr_utilities.reset_attributes_to_default_value(
+    ...     selection=None,
+    ...     attributes=None,
     ...     reset_selected_attributes=True,
     ...     reset_non_numeric_attributes=False
     ... )
@@ -359,7 +363,7 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
 
         # ---------------------------------------
-        # 01. GET VAILD ATTRIBUTES.
+        # 02. GET VAILD ATTRIBUTES.
         # ---------------------------------------
         if attributes:
             valid_attributes = []
@@ -382,7 +386,7 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
             return
 
         # ---------------------------------------
-        # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
+        # 02. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
         # ---------------------------------------
         all_keyable_object_attributes = cmds.listAttr(obj, keyable=True, unlocked=True, nodeName=True)
 
@@ -395,7 +399,6 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 if cmds.objExists(full_name):
                     # Unlock entire curve.
                     cmds.setAttr(full_name, lock=False)
-
     # ---------------------------------------
     # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
     # ---------------------------------------
@@ -597,15 +600,19 @@ def is_constrained(node):
     ['pSphere1_pointConstraint1']
 
     '''
-    accepted_constraint_types = ['pairBlend', 'constraint']
-    conns = cmds.listConnections(node, source=True, destination=False, plugs=False)
-    if not conns:
+    accepted_constraint_types = ['pairBlend', 'constraint', 'parentConstraint', 'pointConstraint', 'orientConstraint', 'scaleConstraint']
+    connections = cmds.listConnections(node, source=True, destination=False, plugs=False)
+    if not connections:
         return False, None, None
-    conns = [conn for conn in list(set(conns)) if cmds.objectType(conn) in accepted_constraint_types]
-    if conns:
+
+    # Get rid of duplicates.
+    connections = list(set(connections))   
+    accepted_connections = [conn for conn in connections if cmds.objectType(conn) in accepted_constraint_types]
+    if accepted_connections:
         constraint_relatives = cmds.listRelatives(node, type='constraint')
-        return True, conns, constraint_relatives
-    return False, None, None
+        return True, accepted_connections, constraint_relatives
+    else:
+        return False, None, None
 
 # ------------------------------------------------------------------------------ #
 def is_current_panel_modelPanel():
@@ -877,19 +884,19 @@ def get_object_attributes(selection=None, attributes=None, filter_locked=True, f
 
     for obj in selection:
         for attr in attributes:
-            object_attribute_name = f"{obj}.{attr}"
+            object_attribute = f"{obj}.{attr}"
 
-            if cmds.objExists(object_attribute_name):
-                if filter_locked and cmds.getAttr(object_attribute_name, lock=True):
+            if cmds.objExists(object_attribute):
+                if filter_locked and cmds.getAttr(object_attribute, lock=True):
                     continue
-                if filter_muted and is_attribute_muted(object_attribute_name):
+                if filter_muted and is_attribute_muted(object_attribute):
                     continue
                 if filter_constrained:
-                    has_constraint, conns, constraint_relatives = is_constrained(object_attribute_name)
+                    has_constraint, conns, constraint_relatives = is_constrained(object_attribute)
                     if has_constraint:
                         continue
 
-                yield object_attribute_name
+                yield object_attribute
 
     """
     # Ways to query if an object attribute exists.
