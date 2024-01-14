@@ -1,8 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0012
-#
+# VERSION: 0013
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
@@ -32,13 +31,16 @@ mr_utilities.#
 # ---------------------------------------
 # WISH LIST:
 # ---------------------------------------
-#   - Update more functions to use generators.
 #   - Replace get_selection() completely with get_selection_generator()
 #   - Finish adding docstrings.
 #
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0013:
+#   - Using get_selection_generator() in more functions.
+#   - Adding is_attribute_connected_as_destination().   
+#
 # 2024-01-14- 0012:
 #   - Readding missing descriptions.
 #   - clear_keys()
@@ -274,8 +276,8 @@ def clear_keys(reset_selected_attributes=True):
             valid_attributes = cmds.listAttr(item, keyable=True)
 
         # Get the relevant object attribute names.
-        valid_object_attribute_names = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False) 
-        object_attributes_to_clear.extend(valid_object_attribute_names)
+        valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False, filter_connected=False) 
+        object_attributes_to_clear.extend(valid_object_attributes)
 
         # ---------------------------------------
         # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
@@ -289,7 +291,7 @@ def clear_keys(reset_selected_attributes=True):
       
 # ------------------------------------------------------------------------------ #
 def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
-    selection = get_selection()
+    selection = get_selection_generator()
 
     for obj in selection:
         if not attributes_to_reset:
@@ -396,7 +398,7 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 else:
                     continue
             if valid_attributes:
-                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=True)
+                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=True, filter_connected=True)
         else:
             print_warning_from_caller('Nothing to reset')
             return
@@ -438,7 +440,7 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 if has_keyframes:
                     cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
             finally:
-                # print(f"{obj_attr} could not be reset.")
+                print(f"{obj_attr} could not be reset.")
                 continue
 
         else:
@@ -546,6 +548,36 @@ def constrain_unlocked_translates(driver, item):
 #                             IS FUNCTIONS                             #
 #                                                                      #
 ########################################################################
+
+# ------------------------------------------------------------------------------ #
+def is_attribute_connected_as_destination(obj_attr):
+    """
+    Check if an object's attribute is connected as a destination to certain types of nodes.
+
+    :param object_attribute: The object's attribute to check
+    :type object_attribute: str
+    :return: True if the attribute is connected.
+    :rtype: bool
+
+    :Example:
+
+    >>> object_attribute = "rivet.scaleX"
+    >>> result = is_attribute_connected_as_destination(object_attribute)
+    >>> print(result)
+    False
+
+    """
+    obj, attr = obj_attr.split('.')
+    source_connection = cmds.connectionInfo(obj_attr, sourceFromDestination=True)
+
+    # nodes_to_check = [['pointOnSurfaceInfo','pos'],['loft','loft'],['fourByFourMatrix','mat'],['decomposeMatrix','dcp']]  
+    nodes_to_check = ['pos','loft','mat','dcp']
+    
+    for node_info in nodes_to_check:
+        if node_info in source_connection:
+            return True
+    
+    return False
 
 # ------------------------------------------------------------------------------ #
 def is_attribute_muted(obj_attr):
@@ -858,7 +890,7 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
     return layered_attributes_dict
 
 # ------------------------------------------------------------------------------ #
-def get_object_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True):
+def get_object_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True, filter_connected=True):
     """
     Filter attributes based on specified conditions for the given selection.
 
@@ -873,6 +905,8 @@ def get_object_attributes(selection=None, attributes=None, filter_locked=True, f
     :type filter_muted: bool
     :param filter_constrained: If True, filters out constrained attributes.
     :type filter_constrained: bool
+    :param filter_connected: If True, filters out connected attributes.
+    :type filter_connected: bool
     :return: List of valid object attribute names based on the specified conditions.
     :rtype: list
 
@@ -912,11 +946,12 @@ def get_object_attributes(selection=None, attributes=None, filter_locked=True, f
                     has_constraint, conns, constraint_relatives = is_constrained(object_attribute)
                     if has_constraint:
                         continue
-
+                if filter_connected and is_attribute_connected_as_destination(object_attribute):
+                    continue
                 yield object_attribute
 
     """
-    # Ways to query if an object attribute exists.
+    # Different ways to query if an object attribute exists.
     cmds.objExists(obj_attr)
     cmds.attributeQuery(attr, node=obj, exists=True)
     """
@@ -1046,7 +1081,7 @@ def deselect_non_nurbs_curve_transforms():
     Deselect non-NURBS curve transform nodes in the current selection.
 
     """
-    selection = get_selection()
+    selection = get_selection_generator()
     nurbs_curve_transforms = [obj for obj in selection if cmds.objectType(obj) == 'transform' and cmds.listRelatives(obj, shapes=True, type='nurbsCurve')]
     cmds.select(nurbs_curve_transforms, replace=True)
 
@@ -1065,7 +1100,7 @@ def select_joints_under_selected_objects():
     """
     Select all joints under selected items in the Outliner.
     """
-    selection = get_selection()
+    selection = get_selection_generator()
     hierarchy_joints = []
     
     for item in selection:
@@ -1078,7 +1113,6 @@ def select_joints_under_selected_objects():
         cmds.select(hierarchy_joints, replace=True)
     else:
         display_viewport_warning("No joints found under", item)
-
 
 
 ##################################################################################################################################################
