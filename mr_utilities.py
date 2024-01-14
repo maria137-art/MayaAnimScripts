@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0014
+# VERSION: 0015
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
@@ -37,6 +37,11 @@ mr_utilities.#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0015:
+#   - reset_attributes_to_default_value()
+#       - Now uses set_animation_curve_template_state().
+#       - Updated try, except, finally.
+#
 # 2024-01-14- 0014:
 #   - Added is_object_attribute_connected_to_referenced_animation_curve().
 #   - Updated get_animation_curves_from_object_attributes() to use is_object_attribute_connected_to_referenced_animation_curve().
@@ -414,16 +419,10 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
         # 02. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
         # ---------------------------------------
         all_keyable_object_attributes = cmds.listAttr(obj, keyable=True, unlocked=True, nodeName=True)
-
         animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
-        attributes_to_unlock = ['.ktv', '.kix', '.kiy', '.kox', '.koy']
 
         for curve in animation_curves:
-            for k_attr in attributes_to_unlock:
-                full_name = f"{curve}{k_attr}"
-                if cmds.objExists(full_name):
-                    # Unlock entire curve.
-                    cmds.setAttr(full_name, lock=False)
+            set_animation_curve_template_state(curve, lock_state=False)
 
     # ---------------------------------------
     # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
@@ -446,8 +445,9 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 # Only set keys if the attribute already is keyed.
                 if has_keyframes:
                     cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
-            finally:
+            except:
                 print(f"{obj_attr} could not be reset.")
+            finally:
                 continue
 
         else:
@@ -737,6 +737,7 @@ def is_object_attribute_connected_to_referenced_animation_curve(object_attribute
             for connection in connections:
                 # Check if the connection is from a reference.
                 if cmds.referenceQuery(connection, isNodeReferenced=True):
+                    # cmds.warning(f"Ignoring {object_attribute} - it has keyes in its referenced file.")
                     return True
         else:
             # Check if the attribute has animation keys in the current scene.
