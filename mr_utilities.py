@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0009
+# VERSION: 0010
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -30,8 +30,26 @@ importlib.reload(mr_utilities)
 mr_utilities.#
 
 # ---------------------------------------
+# WISH LIST:
+# ---------------------------------------
+#   - Update more functions to use generators.
+#   - Replace get_selection() completely with get_selection_generator()
+#   - Finish adding docstrings.
+#
+# ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14- 0010:
+#   - Simplifying clear_keys().
+#   - Reordered functions.
+#   - Adding functions from mr_selectVisibleControl.py.
+#   - Renaming functions:
+#       - find_layered_attributes to get_layered_attributes().
+#       - filter_attributes() to get_object_attributes().
+#       - reset_to_default() to reset_attributes_to_default_value().
+#   - Learnt how efficient Python generators are. Started incorporating them more.
+#   - Reworked reset_attributes_to_default_value() to use generators to work faster.
+#
 # 2024-01-08- 0009:
 #   - reset_to_default()
 #       - Disabling script until freezes solved.
@@ -84,41 +102,7 @@ import maya.mel as mel
 import pymel.core as pm
 from maya import OpenMaya
 
-########################################################################
-#                                                                      #
-#                        ANIMATION CURVE FUNCTIONS                     #
-#                                                                      #
-########################################################################
-
-# ------------------------------------------------------------------------------ #
-def set_animation_curves_lock_state(anim_curve_nodes, lock_state=False):
-    """
-    Set the lock state of specified animation curve nodes.
-    
-    Thanks to DrWeeny at StackOverflow for explaining how the MEL commands "doTemplateChannel" and "expandSelectionConnectionAsArray" work:
-    https://stackoverflow.com/questions/37816681/maya-python-trying-to-template-untemplate-channel
-
-    :param anim_curve_nodes: List of animation curve nodes
-    :type anim_curve_nodes: list
-    :param lock_state: The lock state to be set
-    :type lock_state: bool
-
-    """
-    if anim_curve_nodes:
-        for node in anim_curve_nodes:
-            attrs_to_lock = [node + attr for attr in ['.ktv', '.kix', '.kiy', '.kox', '.koy']]
-            
-            current_lock_states = [cmds.getAttr(attr_name, lock=True) for attr_name in attrs_to_lock]
-
-            # Check if any attributes need to be updated
-            if any(lock_state != state for state in current_lock_states):
-                # Batch set the lock state for all attributes
-                for attr_name in attrs_to_lock:
-                    cmds.setAttr(attr_name, lock=lock_state)
-            else:
-                # print_warning_from_caller("No anim_curves_nodes specified.")
-                continue
-
+##################################################################################################################################################
 
 ########################################################################
 #                                                                      #
@@ -158,69 +142,7 @@ def filter_for_selected_animation_layers(animation_layers):
     if not animation_layers:
         print_warning_from_caller("No selected animation layers connected.")
         return
-
     return animation_layers
-
-# ------------------------------------------------------------------------------ #
-def find_layered_attributes(obj, filter_selected_animation_layers=False):
-    """
-    Find attributes connected to the specified object that are on animation layers.
-
-    :param obj: The object for which layered attributes are to be found.
-    :type obj: str
-    :param filter_selected_animation_layers: Whether the script should only process selected animation layers.
-    :type filter_selected_animation_layers: bool
-    :return: A dictionary mapping animation layers to their respective layered attributes.
-    :rtype: dict or None
-
-
-    :Example:
-
-    >>> result = find_layered_attributes(obj, filter_selected_animation_layers=False)
-    >>> print(result)
-    {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
-
-    """
-    # ---------------------------------------
-    # 01. GET CONNECTED ANIMATION LAYERS.
-    # ---------------------------------------
-    animation_layers = cmds.listConnections(obj, type="animLayer")
-    if not animation_layers:
-        print_warning_from_caller("No animation layers connected.")
-        return
-    # Remove duplicates.
-    animation_layers = list(set(animation_layers))
-
-    if filter_selected_animation_layers:
-        animation_layers = filter_for_selected_animation_layers(animation_layers)
-
-    # ---------------------------------------
-    # 01. GET CONNECTED ATTRIBUTES.
-    # ---------------------------------------
-    # Get shape node, to ignore later.
-    shape_node = cmds.listRelatives(obj, shapes=True)
-    if shape_node:
-        shape_node = shape_node[0]
-    else:
-        shape_node = None
-
-    layered_attributes_dict = {}
-
-    for layer in animation_layers:
-        long_name_layered_attributes = cmds.animLayer(layer, query=True, attribute=True)
-        if long_name_layered_attributes:
-
-            layer_attributes = []
-            for attr in long_name_layered_attributes:
-                # Ignore shape node attributes.
-                if not shape_node or (not attr.startswith(shape_node + ".") and attr.startswith(obj + ".")):
-                    attr_names = attr.split('.')[-1]
-                    if attr_names not in layer_attributes:
-                        layer_attributes.append(attr_names)
-
-            layered_attributes_dict[layer] = layer_attributes
-
-    return layered_attributes_dict
 
 # ------------------------------------------------------------------------------ #
 def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=False, reset_non_numeric_attributes=False, reset_selected_attributes=False):
@@ -294,13 +216,15 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
     # ---------------------------------------
     # 01. RESET.
     # ---------------------------------------
-    reset_to_default(
+    nullify_animation_layer_keys(
         selection=sel, 
-        attrsToReset=None, 
+        attributes_to_reset=None, 
         reset_selected_attributes=reset_selected_attributes, 
         reset_non_numeric_attributes=reset_non_numeric_attributes, 
-        nullify_animation_layers=True, 
-        nullify_only_selected_animation_layers=filter_selected_animation_layers)
+        nullify_only_selected_animation_layers=filter_selected_animation_layers
+    )
+
+##################################################################################################################################################
 
 ########################################################################
 #                                                                      #
@@ -317,150 +241,285 @@ def clear_keys():
     """
     selection = get_selection()
     selected_attributes = cmds.channelBox('mainChannelBox', query=True, selectedMainAttributes=True)
-    object_attribute_names_to_clear = []
 
-    # ---------------------------------------
-    # 01. OPTION A - IF ATTRIBUTES ARE SELECTED.
-    # ---------------------------------------
-    if selected_attributes:
-        selected_object_attribute_names = []
-        for item in selection:
-            existing_attributes = []
+    object_attribute_names_to_clear = []
+    for item in selection:
+        valid_attributes = []
+
+        if selected_attributes:
             for attr in selected_attributes:
                 if cmds.attributeQuery(attr, node=item, exists=True):
-                    existing_attributes.append(attr)
-                else:
-                    continue
-            # Ignore locked, muted and/or constrained object attributes.
-            valid_object_attribute_names = filter_attributes(attributes=existing_attributes, filter_locked=True, filter_muted=True, filter_constrained=False) 
-            for obj_attr in valid_object_attribute_names:
-                object_attribute_names_to_clear.append(obj_attr)          
-         
-        # Ensure the attributes' animation curves are unlocked.
-        animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_clear)
-        set_animation_curves_lock_state(animation_curves, lock_state=False)
-             
-        cmds.cutKey(object_attribute_names_to_clear) 
-        
-    # ---------------------------------------
-    # 01. OPTION B - IF NO ATTRIBUTES ARE SELECTED.
-    # ---------------------------------------             
-    else:
-        for item in selection:
-            keyable_attributes = cmds.listAttr(item, keyable=True)
-            # Ignore locked, muted and/or constrained object attributes.
-            valid_object_attribute_names = filter_attributes(attributes=keyable_attributes, filter_locked=True, filter_muted=True, filter_constrained=False)
-            for obj_attr in valid_object_attribute_names:
-                object_attribute_names_to_clear.append(obj_attr)
+                    valid_attributes.append(attr)
+        else:
+            valid_attributes = cmds.listAttr(item, keyable=True)
 
-        # Ensure the attributes' animation curves are unlocked.
-        animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_clear)
-        set_animation_curves_lock_state(animation_curves, lock_state=False)
-            
-        cmds.cutKey(object_attribute_names_to_clear)
-            
+        valid_object_attribute_names = filter_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False) 
+        object_attribute_names_to_clear.extend(valid_object_attribute_names)
+
+    """
+    TODO: STOP THIS FROM SLOWING OR FREEZING MAYA.
+    # Ensure the attributes' animation curves are unlocked.
+    animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_clear)
+    set_animation_curve_template_state(animation_curves, lock_state=False)
+    """
+
+    cmds.cutKey(object_attribute_names_to_clear) 
+      
+    """
+    TODO: REENABLE WHEN SLOW TEMPLATE CODE IS FIXED.
     # Reselect selection, to refresh Graph Editor.
     # Otherwise it might not show that animation curves have been untemplated, until reinteracting with it.
     cmds.select(selection, replace=True)
-
+    """
+     
 # ------------------------------------------------------------------------------ #
-"""
-def reset_to_default(selection=None, attrsToReset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_animation_layers=True, nullify_only_selected_animation_layers=False):
-    
-
-    
+def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
     selection = get_selection()
-    object_attribute_names_to_reset = []
 
     for obj in selection:
-        if not attrsToReset:
+        if not attributes_to_reset:
             if reset_selected_attributes:
                 # Reset selected channels, if nothing is selected then reset all keyable.
-                attrsToReset = get_selected_channels() or cmds.listAttr(obj, keyable=True)
+                attributes_to_reset = get_selected_channels() or cmds.listAttr(obj, keyable=True)
             else:
-                attrsToReset = cmds.listAttr(obj, keyable=True)
+                attributes_to_reset = cmds.listAttr(obj, keyable=True)
 
-        if attrsToReset:
-            # ---------------------------------------
-            # 03. OPTION A - NULLIFY ANIMATION LAYERS.
-            # ---------------------------------------
-            if nullify_animation_layers:
-                if nullify_only_selected_animation_layers:
-                    layered_attributes = find_layered_attributes(obj, filter_selected_animation_layers=True)
-                else:
-                    layered_attributes = find_layered_attributes(obj, filter_selected_animation_layers=False)
+        if attributes_to_reset:
+            if nullify_only_selected_animation_layers:
+                layered_attributes = get_layered_attributes(obj, filter_selected_animation_layers=True)
+            else:
+                layered_attributes = get_layered_attributes(obj, filter_selected_animation_layers=False)
 
-                for layer, attributes in layered_attributes.items():
-                    if reset_selected_attributes:
-                        for attr in attributes:
-                            if attr not in attrsToReset:
-                                attributes.remove(attr)
+            for layer, attributes in layered_attributes.items():
+                if reset_selected_attributes:
+                    for attr in attributes:
+                        if attr not in attributes_to_reset:
+                            attributes.remove(attr)
 
+                if not reset_non_numeric_attributes:
+                    for attr in attributes:
+                        if not is_attribute_numeric(obj, attr):
+                            attributes.remove(attr)
+
+                cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
+
+    # Set to current time again, to force the viewport to update with the change.
+    current_time = cmds.currentTime(query=True)
+    cmds.currentTime(current_time, edit=True)
+
+# ------------------------------------------------------------------------------ #
+def reset_attributes_to_default_value(selection=None, attributes=None, reset_selected_attributes=False, reset_non_numeric_attributes=False):
+    """
+    Reset attributes of selected objects to their default values.
+
+    :param selection: List of objects to reset attributes for. If None, uses the current selection.
+    :type selection: List[str], optional
+    :param attributes: List of attributes to reset. If None, reset all keyable and unlocked attributes.
+    :type attributes: List[str], optional
+    :param reset_selected_attributes: If True, reset only selected attributes in the Channel Box.
+    :type reset_selected_attributes: bool
+    :param reset_non_numeric_attributes: If True, reset only numeric attributes.
+    :type reset_non_numeric_attributes: bool
+
+    :Example:
+
+    >>> reset_attributes_to_default_value(
+    ...     selection=['object1', 'object2'],
+    ...     attributes=['translateX', 'rotateY'],
+    ...     reset_selected_attributes=True,
+    ...     reset_non_numeric_attributes=False
+    ... )
+
+    """
+    if not selection:
+        selection = get_selection_generator()
+
+    if not selection:
+        return
+
+    # ---------------------------------------
+    # 01. DISABLE AUTOKEYFRAME, TO AVOID SPAM IN THE LOG.
+    # ---------------------------------------
+    original_autoKey_state = cmds.autoKeyframe(query=True, state=True)
+    if original_autoKey_state: 
+        cmds.autoKeyframe(state=False)
+
+    # ---------------------------------------
+    # 01. FOR EVERY OBJECT.
+    # ---------------------------------------
+    for obj in selection:
+
+        # ---------------------------------------
+        # 02. GET ATTRIBUTES.
+        # ---------------------------------------
+        if not attributes:
+            if reset_selected_attributes:
+                attributes = get_selected_channels() or cmds.listAttr(obj, keyable=True, unlocked=True)
+            else:
+                attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
+
+        # ---------------------------------------
+        # 01. GET VAILD ATTRIBUTES.
+        # ---------------------------------------
+        if attributes:
+            valid_attributes = []
+
+            for attr in attributes:
+                # Check if it exists.
+                if cmds.attributeQuery(attr, node=obj, exists=True):
+
+                    # Skip if non-numeric attributes should be ignored.
                     if not reset_non_numeric_attributes:
-                        for attr in attributes:
-                            if not is_numeric_attribute(obj, attr):
-                                attributes.remove(attr)
-
-                    cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
-
-                # Set to current time again, to force the viewport to update with the change.
-                current_time = cmds.currentTime(query=True)
-                cmds.currentTime(current_time, edit=True)
-                return
-
-            # ---------------------------------------
-            # 03. OPTION B - RESET ATTRIBUTES.
-            # ---------------------------------------
-            else:
-                valid_attributes = []
-                for attr in attrsToReset:
-                    if cmds.attributeQuery(attr, node=obj, exists=True):
-                        if not reset_non_numeric_attributes:
-                            if not is_numeric_attribute(obj, attr):
-                                continue
-                        valid_attributes.append(attr)
-                    else:
-                        continue
-
-                valid_object_attribute_names = filter_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=True)
-                
-                for obj_attr in valid_object_attribute_names:
-                    object_attribute_names_to_reset.append(obj_attr)          
-
+                        if not is_attribute_numeric(obj, attr):
+                            continue
+                    valid_attributes.append(attr)
+                else:
+                    continue
+            if valid_attributes:
+                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=True)
         else:
             print_warning_from_caller('Nothing to reset')
             return
 
-    # CURRENTLY TOO SLOW.
-    # Ensure the attributes' animation curves are unlocked.
-    if object_attribute_names_to_reset:
-        animation_curves = get_animation_curves_from_object_attributes(object_attributes=object_attribute_names_to_reset)
-    if animation_curves:
-        set_animation_curves_lock_state(animation_curves, lock_state=False)
+        # ---------------------------------------
+        # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
+        # ---------------------------------------
+        all_keyable_object_attributes = cmds.listAttr(obj, keyable=True, unlocked=True, nodeName=True)
 
+        animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
+        attributes_to_unlock = ['.ktv', '.kix', '.kiy', '.kox', '.koy']
 
-    for obj_attr in object_attribute_names_to_reset:
-        attr = obj_attr.split('.')[-1]
-        obj = obj_attr.split('.')[0]
+        for curve in animation_curves:
+            for k_attr in attributes_to_unlock:
+                full_name = f"{curve}{k_attr}"
+                if cmds.objExists(full_name):
+                    # Unlock entire curve.
+                    cmds.setAttr(full_name, lock=False)
+
+    # ---------------------------------------
+    # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
+    # ---------------------------------------
+    for obj_attr in valid_object_attributes:
+        obj, attr = obj_attr.split('.')
 
         # Get the default value and check if the attribute is keyed.
         defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
-        
-        # Check if defaultValue is not None.
         if defaultValue:
             defaultValue = defaultValue[0]
             has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
 
-            # Set the attribute to its default value.
-            cmds.setAttr(obj_attr, defaultValue)
+            try:
+                # Using a try, as don't know yet how to query if an attribute is connected.
+                # e.g. ERROR: setAttr: The attribute 'rivet.translateX' is locked or connected and cannot be modified.
 
-            # Only set keys if the attribute already is keyed.
-            if has_keyframes:
-                cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+                # Set the attribute to its default value.
+                cmds.setAttr(obj_attr, defaultValue)
+                # Only set keys if the attribute already is keyed.
+                if has_keyframes:
+                    cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+            finally:
+                # print(f"{obj_attr} could not be reset.")
+                continue
+
         else:
             # print(f"Attribute {attr} has no default value on object {obj}.")
             continue
-"""
+
+    # ---------------------------------------
+    # 01. RESTORE AUTOKEYFRAME STATE
+    # ---------------------------------------
+    if original_autoKey_state:
+        cmds.autoKeyframe(state=True)
+  
+##################################################################################################################################################
+
+########################################################################
+#                                                                      #
+#                          CONSTRAINT FUNCTIONS                        #
+#                                                                      #
+########################################################################
+
+# ------------------------------------------------------------------------------ #
+def constrain_unlocked_attributes(driver, target, mode):
+    """
+    Constrain unlocked attributes of the target to follow the driver.
+    
+    :param driver: The object to control the target.
+    :type driver: str
+    :param target: The object to be constrained.
+    :type target: str
+    :param mode: The type of constraints to use.
+    :type mode: str
+
+    """
+    mode_functions = {
+        "translate": (constrain_unlocked_translates,),
+        "rotate": (constrain_unlocked_rotates,),
+        "both": (constrain_unlocked_translates, constrain_unlocked_rotates),
+    }
+
+    if mode in mode_functions:
+        mode_functions[mode]
+    else:
+        display_viewport_warning("Invalid mode. Supported modes are 'both', 'translate', and 'rotate'.")
+
+# ------------------------------------------------------------------------------ 
+def constrain_unlocked_rotates(driver, item):
+    """
+    Create an orient constraint between the driver and the item, skipping locked attributes.
+
+    :param driver: The object to control the target.
+    :type driver: str
+    :param item: The object to be constrained.
+    :type item: str
+    """
+    # Check if rotate X, Y, Z are locked.
+    skip_rot_axes = []
+    if cmds.getAttr(item + ".rotateX", lock=True):
+        skip_rot_axes.append("x")
+    if cmds.getAttr(item + ".rotateY", lock=True):
+        skip_rot_axes.append("y")
+    if cmds.getAttr(item + ".rotateZ", lock=True):
+        skip_rot_axes.append("z")
+
+    if skip_rot_axes:
+        if skip_rot_axes == ['x', 'y', 'z']:
+            return
+        else:
+            # Apply orient constraint with skipping specified axes.
+            cmds.orientConstraint(driver, item, maintainOffset=True, skip=skip_rot_axes)
+    else:
+        cmds.orientConstraint(driver, item, maintainOffset=True)
+
+# ------------------------------------------------------------------------------ #
+def constrain_unlocked_translates(driver, item):
+    """
+    Create a point constraint between the driver and the item, skipping locked attributes.
+
+    :param driver: The object to control the target.
+    :type driver: str
+    :param item: The object to be constrained.
+    :type item: str
+    """
+    # Check if translate X, Y, Z are locked.
+    skip_trans_axes = []
+    if cmds.getAttr(item + ".translateX", lock=True):
+        skip_trans_axes.append("x")
+    if cmds.getAttr(item + ".translateY", lock=True):
+        skip_trans_axes.append("y")
+    if cmds.getAttr(item + ".translateZ", lock=True):
+        skip_trans_axes.append("z")
+
+    if skip_trans_axes:
+        if skip_trans_axes == ['x', 'y', 'z']:
+            return
+        else:
+            # Apply point constraint with skipping specified axes.
+            cmds.pointConstraint(driver, item, maintainOffset=True, skip=skip_trans_axes)
+    else:
+        cmds.pointConstraint(driver, item, maintainOffset=True)
+
+##################################################################################################################################################
 
 ########################################################################
 #                                                                      #
@@ -471,18 +530,12 @@ def reset_to_default(selection=None, attrsToReset=None, reset_selected_attribute
 # ------------------------------------------------------------------------------ #
 def is_attribute_muted(obj_attr):
     """
-    Check if the specified object attribute is muted.
+    Check if an object's attribute is muted.
 
-    :param obj_attr: The object attribute to check for muting.
+    :param obj_attr: The object's attribute to check.
     :type obj_attr: str
     :return: True if the attribute is muted.
     :rtype: bool
-
-    :Example:
-
-    >>> result = is_attribute_muted("pSphere1.translateX")
-    >>> print(result)
-    True
 
     """
     source_nodes = cmds.listConnections(obj_attr, source=True, type="mute")
@@ -492,9 +545,32 @@ def is_attribute_muted(obj_attr):
     return False
 
 # ------------------------------------------------------------------------------ #
+def is_attribute_numeric(obj, attr):
+    """
+    Check if an object's attribute is numeric.
+
+    :param obj: The object to check.
+    :type obj: str
+    :param attr: The attribute to check.
+    :type attr: str
+    :return: True if the attribute is numeric.
+    :rtype: bool
+
+    """
+    object_attribute_name = f"{obj}.{attr}"
+
+    if not cmds.attributeQuery(attr, node=obj, exists=True):
+        # cmds.warning(f"Attribute \"{attr}\" not found on {obj}")
+        return
+
+    attrType = cmds.getAttr(object_attribute_name, type=True)
+    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
+
+# ------------------------------------------------------------------------------ #
 def is_constrained(node):
     '''
-    Check if the specified node is constrained.
+    Check if the given node is constrained.
+    Can be the object itself or a specified attribute.
 
     Original Creators
     ----------
@@ -532,102 +608,73 @@ def is_constrained(node):
     return False, None, None
 
 # ------------------------------------------------------------------------------ #
+def is_current_panel_modelPanel():
+    # Check the panel where the mouse cursor is over.
+    modelPanel = cmds.getPanel(withFocus=True)
+
+    # Check if the current panel is a modelPanel.
+    if cmds.getPanel(typeOf=modelPanel) != "modelPanel":
+        cmds.warning("The current panel is not a 3D view panel.")
+    else:
+        return modelPanel
+
+# ------------------------------------------------------------------------------ #
 def is_group_null(obj):
     """
-    Check if the specified object is a group null node.
+    Check if the given node is a group null transform.
 
-    :param obj: The object to check.
+    :param obj: The node to check.
     :type obj: str
     :return: True if the object is a group null.
     :rtype: bool
 
-    """
+    """   
     return cmds.objectType(obj) == 'transform' and not cmds.listRelatives(obj, shapes=True) and cmds.listRelatives(obj, children=True, type='transform')
 
 # ------------------------------------------------------------------------------ #
-def is_numeric_attribute(obj, attr):
+def is_nurbs_curve(node):
     """
-    Check if an object's specified attribute is a numeric type.
+    Check if the given node is a NURBS curve transform node, containing a NURBS curve shape.
 
-    :param obj: The object to check.
-    :type obj: str
-    :param attr: The attribute to check.
-    :type attr: str
-    :return: True if the attribute is numeric.
+    :param node: The node to check.
+    :type node: str
+    :return: True if object is a NURBS curve transform.
     :rtype: bool
 
     """
-    object_attribute_name = f"{obj}.{attr}"
+    shapes = cmds.listRelatives(node, shapes=True, fullPath=True) or []
+    return any(cmds.nodeType(shape) == 'nurbsCurve' for shape in shapes)
 
-    if not cmds.attributeQuery(attr, node=obj, exists=True):
-        # cmds.warning(f"Attribute \"{attr}\" not found on {obj}")
-        return
-
-    attrType = cmds.getAttr(object_attribute_name, type=True)
-    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
-
-########################################################################
-#                                                                      #
-#                           FILTER FUNCTIONS                           #
-#                                                                      #
-########################################################################
-
-def filter_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True):
+# ------------------------------------------------------------------------------ #
+def is_transform(node):
     """
-    Filter attributes based on specified conditions for the given selection.
+    Check if the given node is a transform.
 
-    :param selection: List of objects to filter attributes for.
-    :type selection: list, optional
-    :param attributes: List of attributes to filter.
-    :type attributes: list, optional
-
-    :param filter_locked: If True, filters out locked attributes.
-    :type filter_locked: bool
-    :param filter_muted: If True, filters out muted attributes.
-    :type filter_muted: bool
-    :param filter_constrained: If True, filters out constrained attributes.
-    :type filter_constrained: bool
-    :return: List of valid object attribute names based on the specified conditions.
-    :rtype: list
-
-    :Example:
-
-    >>> result = filter_attributes(
-    ...     selection=["pSphere1", "pSphere2"],
-    ...     attributes=["translateX", "rotateY"],
-    ...     filter_locked=True,
-    ...     filter_muted=True,
-    ...     filter_constrained=True
-    ... )
-    >>> print(result)
-    ['pSphere1.translateX', 'pSphere2.rotateY']
+    :param obj: The node to check.
+    :type obj: str
+    :return: True if the node is a transform type.
+    :rtype: bool
 
     """
-    if not selection:
-        selection = get_selection()
-        
-    if not attributes:
-        attributes = cmds.listAttr(selection, keyable=True)
 
-    valid_attributes = []
-    for obj in selection:
-        for attr in attributes:
-            object_attribute_name = f"{obj}.{attr}"
-            
-            if cmds.objExists(object_attribute_name):
-                if filter_locked:
-                    if cmds.getAttr(object_attribute_name, lock=True):
-                        continue
-                if filter_muted:
-                    if is_attribute_muted(object_attribute_name):
-                        continue
-                if filter_constrained:
-                    has_constraint, conns, constraint_relatives = is_constrained(object_attribute_name)
-                    if has_constraint:
-                        continue
-                
-                valid_attributes.append(object_attribute_name)
-    return valid_attributes
+    return cmds.nodeType(node) == 'transform'
+
+# ------------------------------------------------------------------------------ #
+def is_visible(node):
+    """
+    Check if the given node is visible.
+
+    :param node: The node to check.
+    :type node: str
+    :return: True if the object has both its visibility and lodVisibility set to on.
+    :rtype: bool
+
+    """
+    visibility = cmds.getAttr(node + '.visibility')
+    lod_visibility = cmds.getAttr(node + '.lodVisibility')
+    return visibility and lod_visibility
+
+##################################################################################################################################################
 
 ########################################################################
 #                                                                      #
@@ -636,36 +683,34 @@ def filter_attributes(selection=None, attributes=None, filter_locked=True, filte
 ########################################################################
 
 # ------------------------------------------------------------------------------ #
-def get_animation_curves_from_object_attributes(object_attributes=None):
+def get_animation_curves_from_object_attributes(object_attributes, filter_referenced=True):
     """
-    Get animation curves connected to specified object attributes.
+    Get animation curves connected to given object attributes.
 
-    :param object_attributes: List of object attributes to query animation curves.
-    :type object_attributes: list or None
-    :return: List of animation curves connected to the specified object attributes.
-    :rtype: list
-
-    :Example:
-
-    >>> curves = get_animation_curves_from_object_attributes(object_attributes=["pSphere1.translateX", "pSphere1.rotateY"])
-    >>> print(curves)
-    ['pSphere1_translateX', 'pSphere1_rotateY']
+    :param object_attributes: List of object attributes (e.g., ["pSphere1.translateX", "pSphere1.rotateY"]).
+    :type object_attributes: list
+    :param  filter_referenced: If True, skip attributes on referenced nodes.
+    :type filter_referenced: bool
+    :return: Animation curve names connected to the given object attributes.
+    :rtype: generator of str
 
     """
-    if not object_attributes:
-        display_viewport_warning("No object_attributes specified.")
-
     for obj_attr in object_attributes:
-        curve_types = ["animCurveTL", "animCurveTU", "animCurveTA", "animCurveTT"]
-        curves = []
-        for curve_type in curve_types:
-            connected_curves = cmds.listConnections(object_attributes, type=curve_type, destination=False, source=True) or []
-            curves.extend(connected_curves)
+        if filter_referenced:
+            if cmds.referenceQuery(obj_attr, isNodeReferenced=True):
+                continue
 
-    return curves
+        get_attr_connection = cmds.listConnections(obj_attr, destination=False, source=True)
+        # This should be better than just formatting the attribute name to replace . and _, as if the object or attribute gets renamed,
+        # it's animation curve won't be renamed and match it, unless its deleted and created again.
+        if get_attr_connection:
+            get_animation_curve = cmds.ls(get_attr_connection[0], type=("animCurveTL", "animCurveTU", "animCurveTA", "animCurveTT"))
+
+            for curve in get_animation_curve:
+                yield curve
 
 # ------------------------------------------------------------------------------ #
-def get_channel_from_anim_curve(curve, plugs=True):
+def get_channel_from_animation_curve(curve, plugs=True):
     """
     Get the channel associated with the given animation curve.
     
@@ -684,7 +729,7 @@ def get_channel_from_anim_curve(curve, plugs=True):
 
     :Example:
 
-    >>> result = get_channel_from_anim_curve('pSphere2_translateX')
+    >>> result = get_channel_from_animation_curve('pSphere2_translateX')
     >>> print(result)
     'pSphere2.translateX'
 
@@ -709,8 +754,148 @@ def get_channel_from_anim_curve(curve, plugs=True):
         if source:
             nodeType = cmds.nodeType(source[0])
             if nodeType.startswith('animCurveT') or nodeType.startswith('animBlendNode'):
-                return get_channel_from_anim_curve(source[0], plugs=plugs)
+                return get_channel_from_animation_curve(source[0], plugs=plugs)
             return source[0]
+
+# ------------------------------------------------------------------------------ #
+def get_keyed_nodes(objects_to_check=None):
+
+    if objects_to_check is None:
+        objects_to_check = cmds.ls(dag=True) or []
+
+    keyed_objects = []
+
+    for item in objects_to_check:
+        # Check if any attribute is keyed directly.
+        if cmds.listAttr(item, keyable=True, unlocked=True):
+            keyed_objects.append(item)
+
+    return keyed_objects
+    
+# ------------------------------------------------------------------------------ #
+def get_layered_attributes(obj, filter_selected_animation_layers=False):
+    """
+    Find attributes connected to the specified object that are on animation layers.
+
+    :param obj: The object for which layered attributes are to be found.
+    :type obj: str
+    :param filter_selected_animation_layers: Whether the script should only process selected animation layers.
+    :type filter_selected_animation_layers: bool
+    :return: A dictionary mapping animation layers to their respective layered attributes.
+    :rtype: dict or None
+
+
+    :Example:
+
+    >>> result = get_layered_attributes(obj, filter_selected_animation_layers=False)
+    >>> print(result)
+    {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
+
+    """
+    # ---------------------------------------
+    # 01. GET CONNECTED ANIMATION LAYERS.
+    # ---------------------------------------
+    animation_layers = cmds.listConnections(obj, type="animLayer")
+    if not animation_layers:
+        print_warning_from_caller("No animation layers connected.")
+        return
+    # Remove duplicates.
+    animation_layers = list(set(animation_layers))
+
+    if filter_selected_animation_layers:
+        animation_layers = filter_for_selected_animation_layers(animation_layers)
+
+    # ---------------------------------------
+    # 01. GET CONNECTED ATTRIBUTES.
+    # ---------------------------------------
+    # Get shape node, to ignore later.
+    shape_node = cmds.listRelatives(obj, shapes=True)
+    if shape_node:
+        shape_node = shape_node[0]
+    else:
+        shape_node = None
+
+    layered_attributes_dict = {}
+
+    for layer in animation_layers:
+        long_name_layered_attributes = cmds.animLayer(layer, query=True, attribute=True)
+        if long_name_layered_attributes:
+
+            layer_attributes = []
+            for attr in long_name_layered_attributes:
+                # Ignore shape node attributes.
+                if not shape_node or (not attr.startswith(shape_node + ".") and attr.startswith(obj + ".")):
+                    attr_names = attr.split('.')[-1]
+                    if attr_names not in layer_attributes:
+                        layer_attributes.append(attr_names)
+
+            layered_attributes_dict[layer] = layer_attributes
+
+    return layered_attributes_dict
+
+# ------------------------------------------------------------------------------ #
+def get_object_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True):
+    """
+    Filter attributes based on specified conditions for the given selection.
+
+    :param selection: List of objects to filter attributes for.
+    :type selection: list, optional
+    :param attributes: List of attributes to filter.
+    :type attributes: list, optional
+
+    :param filter_locked: If True, filters out locked attributes.
+    :type filter_locked: bool
+    :param filter_muted: If True, filters out muted attributes.
+    :type filter_muted: bool
+    :param filter_constrained: If True, filters out constrained attributes.
+    :type filter_constrained: bool
+    :return: List of valid object attribute names based on the specified conditions.
+    :rtype: list
+
+    :Example:
+
+    >>> result = get_object_attributes(
+    ...     selection=["pSphere1", "pSphere2"],
+    ...     attributes=["translateX", "rotateY"],
+    ...     filter_locked=True,
+    ...     filter_muted=True,
+    ...     filter_constrained=True
+    ... )
+    >>> print(result)
+    ['pSphere1.translateX', 'pSphere2.rotateY']
+
+    """
+    if not selection:
+        selection = get_selection_generator()
+
+    if not attributes:
+        attributes = cmds.listAttr(selection, keyable=True)
+
+    # Convert selection to a list if it's a single object name
+    if isinstance(selection, str):
+        selection = [selection]
+
+    for obj in selection:
+        for attr in attributes:
+            object_attribute_name = f"{obj}.{attr}"
+
+            if cmds.objExists(object_attribute_name):
+                if filter_locked and cmds.getAttr(object_attribute_name, lock=True):
+                    continue
+                if filter_muted and is_attribute_muted(object_attribute_name):
+                    continue
+                if filter_constrained:
+                    has_constraint, conns, constraint_relatives = is_constrained(object_attribute_name)
+                    if has_constraint:
+                        continue
+
+                yield object_attribute_name
+
+    """
+    # Ways to query if an object attribute exists.
+    cmds.objExists(obj_attr)
+    cmds.attributeQuery(attr, node=obj, exists=True)
+    """
 
 # ------------------------------------------------------------------------------ #
 def get_selected_channels():
@@ -735,9 +920,9 @@ def get_selected_channels():
     channelBox = mel.eval('global string $gChannelBoxName; $temp=$gChannelBoxName;')  # fetch maya's main channelbox
     selectedAttrs = []
 
-    shapeAttrs = cmds.channelBox(channelBox, q=True, selectedShapeAttributes=True)
-    mainAttrs = cmds.channelBox(channelBox, q=True, selectedMainAttributes=True)
-    inputAttrs = cmds.channelBox(channelBox, q=True, selectedHistoryAttributes=True)
+    shapeAttrs = cmds.channelBox(channelBox, query=True, selectedShapeAttributes=True)
+    mainAttrs = cmds.channelBox(channelBox, query=True, selectedMainAttributes=True)
+    inputAttrs = cmds.channelBox(channelBox, query=True, selectedHistoryAttributes=True)
 
     if shapeAttrs:
         selectedAttrs.extend(shapeAttrs)
@@ -770,19 +955,33 @@ def get_selection():
         display_viewport_warning("No selected objects found.")
         return [] 
 
+# ------------------------------------------------------------------------------ #
+def get_selection_generator():
+    """
+    Get the current selection as a generator, even if only one item is selected.
+
+    :yield: Selected object.
+    :rtype: str
+    """
+    selection = cmds.ls(selection=True)
+    if selection:
+        # If selection is just an instance of a string, yield it directly.
+        if isinstance(selection, str):
+            yield selection
+        else:
+            # If selection is a list, yield each item in the list.
+            for obj in selection:
+                yield obj
+    else:
+        display_viewport_warning("No selected objects found.")
+
+##################################################################################################################################################
+
 ########################################################################
 #                                                                      #
 #                           MESSAGE FUNCTIONS                          #
 #                                                                      #
 ########################################################################
-
-# ------------------------------------------------------------------------------ #
-def print_warning_from_caller(message):
-    """
-    A function made to find source of bugs easier.
-    """
-    caller_function_name = inspect.currentframe().f_back.f_code.co_name
-    cmds.warning(f"{message}\n    from {caller_function_name}()")
 
 # ------------------------------------------------------------------------------ #
 def display_viewport_warning(message, position='midCenterTop'):
@@ -801,11 +1000,31 @@ def display_viewport_warning(message, position='midCenterTop'):
     fadeTime = min(len(message)*150, 2000)
     cmds.inViewMessage( message=f"{message}\n\n    Warning from {caller_function_name}()", pos=position, fade=True, fadeStayTime=fadeTime, dragKill=True)
 
+# ------------------------------------------------------------------------------ #
+def print_warning_from_caller(message):
+    """
+    A function made to find source of bugs easier.
+    """
+    caller_function_name = inspect.currentframe().f_back.f_code.co_name
+    cmds.warning(f"{message}\n    from {caller_function_name}()")
+
+##################################################################################################################################################
+
 ########################################################################
 #                                                                      #
 #                          SELECT FUNCTIONS                            #
 #                                                                      #
 ########################################################################
+
+# ------------------------------------------------------------------------------ #
+def deselect_non_nurbs_curve_transforms():
+    """
+    Deselect non-NURBS curve transform nodes in the current selection.
+
+    """
+    selection = get_selection()
+    nurbs_curve_transforms = [obj for obj in selection if cmds.objectType(obj) == 'transform' and cmds.listRelatives(obj, shapes=True, type='nurbsCurve')]
+    cmds.select(nurbs_curve_transforms, replace=True)
 
 # ------------------------------------------------------------------------------ #
 def select_group_nulls_in_scene():
@@ -836,12 +1055,48 @@ def select_joints_under_selected_objects():
     else:
         cmds.warning("No joints found under", item)
 
+
+
+##################################################################################################################################################
+
+########################################################################
+#                                                                      #
+#                           SET STATE FUNCTIONS                        #
+#                                                                      #
+########################################################################
+
 # ------------------------------------------------------------------------------ #
-def deselect_non_nurbs_curve_transforms():
+def set_animation_curve_template_state(anim_curve, lock_state=False):
     """
-    Deselect non-NURBS curve transform nodes in the current selection.
+    Set the lock state of specified animation curve nodes.
+    
+    Thanks to DrWeeny at StackOverflow for explaining how the MEL commands "doTemplateChannel" and "expandSelectionConnectionAsArray" work:
+    https://stackoverflow.com/questions/37816681/maya-python-trying-to-template-untemplate-channel
+
+
+    :param anim_curve_nodes: List of animation curve nodes
+    :type anim_curve_nodes: list
+    :param lock_state: The lock state to be set
+    :type lock_state: bool
 
     """
-    selection = get_selection()
-    nurbs_curve_transforms = [obj for obj in selection if cmds.objectType(obj) == 'transform' and cmds.listRelatives(obj, shapes=True, type='nurbsCurve')]
-    cmds.select(nurbs_curve_transforms, replace=True)
+    attributes_to_unlock = ['.ktv', '.kix', '.kiy', '.kox', '.koy']
+
+    for attribute in attributes_to_unlock:
+        # Unlock entire channel.
+        cmds.setAttr(anim_curve + attribute, lock=lock_state)
+
+    """
+    if anim_curve_nodes:
+        for node in anim_curve_nodes:
+            attrs_to_lock = [node + attr for attr in ['.ktv', '.kix', '.kiy', '.kox', '.koy']]
+            
+            current_lock_states = [cmds.getAttr(attr_name, lock=True) for attr_name in attrs_to_lock]
+
+            # Check if any attributes need to be updated.
+            if any(lock_state != state for state in current_lock_states):
+                cmds.setAttr(attrs_to_lock, lock=lock_state)
+            else:
+                # print_warning_from_caller("No anim_curves_nodes specified.")
+                continue
+    """
