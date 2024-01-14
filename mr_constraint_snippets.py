@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_constraint_utilities.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -18,16 +18,19 @@ import importlib
 import mr_constraint_utilities
 importlib.reload(mr_constraint_utilities)
 
-# Use any of the following:
-mr_constraint_utilities.parent_maintain_offset()
-mr_constraint_utilities.point_maintain_offset()
-mr_constraint_utilities.orient_maintain_offset()
+# USE ANY OF THE FOLLOWING:
+mr_constraint_utilities.parent_constraint()
+mr_constraint_utilities.point_constraint()
+mr_constraint_utilities.orient_constraint()
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0003:
+#	- Adding options for maintainOffset.
+#
 # 2023-12-30 - 0002:
-# - Adding check for if nothing is selected.
+# 	- Adding check for if nothing is selected.
 #
 # 2023-12-19 - 0001:
 # 	- First pass.
@@ -36,26 +39,32 @@ mr_constraint_utilities.orient_maintain_offset()
 
 import maya.cmds as cmds
 
-def parent_maintain_offset():
+# ------------------------------------------------------------------------------ #
+def parent_constraint(maintain_offset=True):
 	sel = cmds.ls(selection=True)
 	if sel:
-		cmds.parentConstraint(maintainOffset=True)
+		if maintain_offset:
+			cmds.parentConstraint(maintainOffset=True)
+		else:
+			cmds.parentConstraint()
 		cmds.select(sel[0])
-	else:
-		cmds.warning("No selected objects found.")
 
-def point_maintain_offset():
+# ------------------------------------------------------------------------------ #
+def point_constraint(maintain_offset=True):
 	sel = cmds.ls(selection=True)
 	if sel:
-		cmds.orientConstraint(maintainOffset=True)
+		if maintain_offset:
+			cmds.pointConstraint(maintainOffset=True)
+		else:
+			cmds.pointConstraint()
 		cmds.select(sel[0])
-	else:
-		cmds.warning("No selected objects found.")
 
-def orient_maintain_offset():
+# ------------------------------------------------------------------------------ #
+def orient_constraint(maintain_offset=True):
 	sel = cmds.ls(selection=True)
 	if sel:
-		cmds.orientConstraint(maintainOffset=True)
+		if maintain_offset:
+			cmds.orientConstraint(maintainOffset=True)
+		else:
+			cmds.orientConstraint()
 		cmds.select(sel[0])
-	else:
-		cmds.warning("No selected objects found.")
