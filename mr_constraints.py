@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_constraint_utilities.py
-# VERSION: 0003
+# SCRIPT: mr_constraints.py
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -15,17 +15,20 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_constraint_utilities
-importlib.reload(mr_constraint_utilities)
+import mr_constraints
+importlib.reload(mr_constraints)
 
 # USE ANY OF THE FOLLOWING:
-mr_constraint_utilities.parent_constraint()
-mr_constraint_utilities.point_constraint()
-mr_constraint_utilities.orient_constraint()
+mr_constraints.parent_constraint()
+mr_constraints.point_constraint()
+mr_constraints.orient_constraint()
 
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-12-30 - 0004:
+#	- Updating script name.
+#
 # 2023-12-30 - 0003:
 #	- Adding options for maintainOffset.
 #
