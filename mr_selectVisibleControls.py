@@ -1,20 +1,14 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_selectVisibleControls.py
-# VERSION: 0005
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# Select one of several object types, based on their visibility in the current 
-# panel (whichever model panel the mouse cursor is pointing over at the time).
-#
-# Current function options are:
-# - NURB curves
-# - Locators
-# - Key Locators
-# - NURBs curves + keyed locators
+# Select one of several object types, based on their visibility in the current panel
+# (whichever model panel the mouse cursor is pointing over at the time).
 #
 # EXAMPLE USES:
 # ---------------------------------------
@@ -31,27 +25,29 @@
 # ---------------------------------------
 
 import importlib
-import mr_select_visible_controls
-importlib.reload(mr_select_visible_controls)
+import mr_selectVisibleControls
+importlib.reload(mr_selectVisibleControls)
 
-# USE ONE OF THE FOLLOWING
-mr_select_visible_controls.select_visible_curves_in_panel(select_keyed_only=False)
-mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=False)
-mr_select_visible_controls.select_visible_locators_in_panel(select_keyed_only=True)
-mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
+# USE ANY OF THE FOLLOWING FUNCTIONS
+cmds.select(mr_selectVisibleControls.get_visible_NURBS_curves_in_panel(only_keyed=False))
+cmds.select(mr_selectVisibleControls.get_visible_locators_in_panel(only_keyed=False))
+mr_selectVisibleControls.select_visible_curves_and_keyed_locators_in_panel()
 
 # ---------------------------------------
-# RESEARCH THAT HELPED:
+# REQUIREMENTS: 
 # ---------------------------------------
-# For learning more how dictionaries can work with functions.
-# https://stackoverflow.com/a/9168387
-#
-# Dictionary examples
-# https://www.w3schools.com/python/python_dictionaries.asp
+# This script uses functions from mr_utilities.py.
 #
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-01-14 - 0007:
+#   - Updating script to use mr_utilities functions.
+#       - Check for lodVisibility as well.
+#   - Learnt how amazing Python generators are!
+#       - Replaced some lists with generators to speed things up.
+#           - e.g. one test of selecting 2000 locators that took 48 secs before now takes 2 secs.
+#
 # 2023-12-30 - 0006:
 #   - Rename.
 #
@@ -72,112 +68,99 @@ mr_select_visible_controls.select_visible_curves_and_keyed_locators_in_panel()
 
 import maya.cmds as cmds
 
-def select_visible_curves_in_panel(select_keyed_only=False):
-    # -------------------------------------------------------------------
-    # 01. CHECK IF CURRENT PANEL IS VALID.
-    # -------------------------------------------------------------------
-    modelPanel = check_current_panel_is_valid()
-    if not modelPanel:
-        return
-
-    # -------------------------------------------------------------------
-    # 01. SELECT ONLY TRANSFORMS OF VISIBLE NURBS CURVES IN THE CURRENT PANEL.
-    # -------------------------------------------------------------------
-    visible_curves = cmds.ls(type="nurbsCurve", visible=True, long=True)
-    visible_curves_in_panel = []
-    visible_curves_transforms_in_panel = [] 
-
-    if visible_curves:
-
-        for curve in visible_curves:
-            # Check if visible in the current panel.
-            if cmds.modelEditor(modelPanel, query=True, nurbsCurves=True):
-                visible_curves_in_panel.append(curve)
-    
-        if visible_curves_in_panel:
-            for curve in visible_curves_in_panel:
-                visible_curves_transforms_in_panel.append(cmds.listRelatives(curve, parent=True)[0])
-
-            # -------------------------------------------------------------------
-            # 01. CHECK WHETHER TO SELECT ONLY KEYED OBJECTS.
-            # -------------------------------------------------------------------
-            if select_keyed_only:
-                keyed_visible_curves_transforms_in_panel = select_keyed_objects_from_selection(visible_curves_transforms_in_panel)
-                return keyed_visible_curves_transforms_in_panel
-            else:
-                cmds.select(visible_curves_transforms_in_panel)
-                return visible_curves_transforms_in_panel
+import importlib
+import mr_utilities
+importlib.reload(mr_utilities)
 
 # ------------------------------------------------------------------------------ #
+def get_visible_NURBS_curves_in_panel(only_keyed=False):
+    """
+    Get a list of visible NURBS curve transform nodes in the current Maya modelPanel.
 
-def select_visible_locators_in_panel(select_keyed_only=False):
-    # -------------------------------------------------------------------
-    # 01. CHECK IF CURRENT PANEL IS VALID.
-    # -------------------------------------------------------------------
-    modelPanel = check_current_panel_is_valid()
+    :param only_keyed: If True, only return nodes that have keys on them.
+    :type only_keyed: bool
+    :return: List of visible NURBS curve transform nodes.
+    :rtype: list
+    """
+    # Check the mouse cursor is over a modelPanel.
+    modelPanel = mr_utilities.is_current_panel_modelPanel()
     if not modelPanel:
-        return
+        return []
 
-    # -------------------------------------------------------------------
-    # 01. SELECT ONLY TRANSFORMS OF VISIBLE LOCATORS IN THE CURRENT PANEL.
-    # -------------------------------------------------------------------
-    visible_locators = cmds.ls(type="locator", visible=True, long=True)
-    visible_locators_in_panel = []
-    visible_locators_transforms_in_panel = []
+    # Check if Display NURB Curves is enabled in the modelPanel.
+    if not cmds.modelEditor(modelPanel, query=True, nurbsCurves=True):
+        return []
+   
+   # Get all visible nurb curves.
+    visible_transforms = cmds.ls(type='transform', visible=True, dag=True)
+    visible_nurbs_curve_transforms = [
+        node for node in visible_transforms
+        if (
+            mr_utilities.is_nurbs_curve(node) and
+            mr_utilities.is_visible(node) and
+            # Check if the shape node is visible too.
+            any(mr_utilities.is_visible(shape) for shape in cmds.listRelatives(node, shapes=True) or ())
+        )
+    ]
 
-    if visible_locators:
-        for loc in visible_locators:
-            if cmds.modelEditor(modelPanel, query=True, locators=True):
-                visible_locators_in_panel.append(loc)  
+    # OPTIONAL - Select only keyed visible NURBS curves.
+    if only_keyed:
+        keyed_visible_nurbs_curve_transforms = mr_utilities.get_keyed_nodes(visible_nurbs_curve_transforms)
+        # print(f'Found {len(visible_nurbs_curve_transforms)} valid NURBS curves.')
+        return keyed_visible_nurbs_curve_transforms
+    else:
+        return visible_nurbs_curve_transforms
 
-        # Create a list of their transform nodes.
-        for loc in visible_locators_in_panel:
-            visible_locators_transforms_in_panel.append(cmds.listRelatives(loc, parent=True)[0])
+# ------------------------------------------------------------------------------ #
+def get_visible_locators_in_panel(only_keyed=False):
+    """
+    Get a list of visible locators in the current Maya modelPanel.
 
-        # -------------------------------------------------------------------
-        # 01. CHECK WHETHER TO SELECT ONLY KEYED OBJECTS.
-        # -------------------------------------------------------------------
-        if select_keyed_only:
-            keyed_visible_locator_transforms_in_panel = select_keyed_objects_from_selection(visible_locators_transforms_in_panel)
-            return keyed_visible_locator_transforms_in_panel
+    :param only_keyed: If True, only return nodes that have keys on them.
+    :type only_keyed: bool
+    :return: List of visible locators.
+    :rtype: list
+    """
+    # Check the mouse cursor is over a modelPanel.
+    modelPanel = mr_utilities.is_current_panel_modelPanel()
+    if not modelPanel:
+        return []
+
+    # Check if Display Locators is enabled in the modelPanel.
+    if not cmds.modelEditor(modelPanel, query=True, locators=True):
+        return []
+
+    # Get transforms of visible locators.
+    visible_locator_shapes = cmds.ls(type="locator", visible=True)
+    visible_locator_shapes = (
+        shape for shape in visible_locator_shapes
+        if (
+            mr_utilities.is_visible(shape)
+        )
+    )
+
+    for shape in visible_locator_shapes:
+        loc_transform = cmds.listRelatives(shape, parent=True)[0]
+        
+        # OPTIONAL - Select only keyed visible locators.
+        if only_keyed:
+            if cmds.keyframe(loc_transform, query=True):
+                yield loc_transform
         else:
-            cmds.select(visible_locators_transforms_in_panel)
-            return visible_locators_transforms_in_panel
+            yield loc_transform
 
 
 # ------------------------------------------------------------------------------ #
-
 def select_visible_curves_and_keyed_locators_in_panel():
-    curves = select_visible_curves_in_panel(select_keyed_only=False)
-    keyed_locators = select_visible_locators_in_panel(select_keyed_only=True)
+    """
+    Selects visible NURBS curves and visible keyed locators in the current Maya model panel.
+
+    :return: None
+    :rtype: None
+    """
+    curves = get_visible_NURBS_curves_in_panel(only_keyed=False)
+
+    keyed_locators = get_visible_locators_in_panel(only_keyed=True)
 
     cmds.select(curves, replace=True)
     cmds.select(keyed_locators, add=True)
-
-# ------------------------------------------------------------------------------ #
-
-def check_current_panel_is_valid():
-    # Check the panel where the mouse cursor is over.
-    modelPanel = cmds.getPanel(withFocus=True)
-
-    # Check if the current panel is a modelPanel.
-    if cmds.getPanel(typeOf=modelPanel) != "modelPanel":
-        cmds.warning("The current panel is not a 3D view panel.")
-    else:
-        return modelPanel
-
-# ------------------------------------------------------------------------------ #
-
-def select_keyed_objects_from_selection(selection):
-    keyed_objects = []
-
-    for obj in selection:
-        attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
-
-        if attributes:
-            for attr in attributes:
-                if cmds.keyframe(obj, query=True, attribute=attr):
-                    keyed_objects.append(obj)
-
-    if keyed_objects:
-        return keyed_objects
