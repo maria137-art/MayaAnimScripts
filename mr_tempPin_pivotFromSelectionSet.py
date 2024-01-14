@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin_pivotFromSelectionSet.py
-# VERSION: 0008
+# VERSION: 0009
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -64,6 +64,10 @@ mr_tempPin_pivotFromSelectionSet.pivot_from_follow_selection_set("translate", "r
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-14 - 0009:
+#	- Added are_translations_or_rotations_constrained().
+#		- Before, script would error if object had unconstrained translates and rotates, but constrained scales.
+#
 # 2023-12-18 - 0008:
 # 	- Add warning if follow_set_name does not exist.
 #
@@ -97,12 +101,17 @@ import importlib
 import mr_find_constraint_targets_and_drivers
 importlib.reload(mr_find_constraint_targets_and_drivers)
 
+import importlib
+import mr_utilities
+importlib.reload(mr_utilities)
+
 ########################################################################
 #                                                                      #
 #                    CREATE A SELECTION SET TO FOLLOW                  #
 #                                                                      #
 ########################################################################
 
+# ------------------------------------------------------------------------------ #
 def create_follow_selection_set():
 	follow_set_name = "objToFollowSet"
 
@@ -118,13 +127,13 @@ def create_follow_selection_set():
 		# Create a selection set for the selected object.
 		obj_to_follow_set = cmds.sets(name=follow_set_name)
 
-
 ########################################################################
 #                                                                      #
 #           CREATE AN OFFSET GROUP TO PIVOT WITH SET TO FOLLOW         #
 #                                                                      #
 ########################################################################
 
+# ------------------------------------------------------------------------------ #
 def pivot_from_follow_selection_set(mode=None, time=None):
 	if mode != "both" and mode != "translate":
 		cmds.warning("Please input a valid manipulation mode.")
@@ -150,10 +159,9 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 
 	# If the selected object has any constraints, cancel script.
 	for obj in objs_to_pivot:
-		constraints = cmds.listRelatives(obj, type="constraint") or []
-		unique_constraints = list(set(constraints))
- 
-		if len(constraints) > 0:
+		is_trans_rot_constrained = are_translations_or_rotations_constrained(obj)
+
+		if is_trans_rot_constrained:
 			cmds.confirmDialog(title="Error D", message="Selected object has constraints.")
 			cmds.select(objs_to_pivot)
 			raise RuntimeError("Selected objects have constraints, please remove them first.")
@@ -162,7 +170,6 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 	# -------------------------------------------------------------------
 	# 01. IF AN OFFSET GROUP ALREADY EXISTS, KEY THE TARGETS AND DELETE THE GROUP
 	# -------------------------------------------------------------------
-	# If an offset group already exists,
 	if cmds.objExists(temp_pivot_offset_group_name):
 		# delete its connections.
 		cmds.delete(temp_pivot_offset_group_name, constraints=True)
@@ -263,3 +270,32 @@ def pivot_from_follow_selection_set(mode=None, time=None):
 	else:
 		# (make sure -title is unique; otherwise, dialog won't trigger
 		cmds.confirmDialog(title="Error C", message="Create a follow selection set first.")
+
+##################################################################################################################################################
+
+########################################################################
+#                                                                      #
+#                          SUPPORTING FUNCTIONS                        #
+#                                                                      #
+########################################################################
+
+# ------------------------------------------------------------------------------ #
+def are_translations_or_rotations_constrained(object):
+    attributes = [
+        f"{object}.translateX", 
+        f"{object}.translateY", 
+        f"{object}.translateZ",
+        f"{object}.rotateX", 
+        f"{object}.rotateY", 
+        f"{object}.rotateZ"
+    ]
+
+    are_attributes_constrained = False
+
+    for attr in attributes:
+        has_constraint, constraint_nodes, constraint_relatives = mr_utilities.is_constrained(attr)
+        if has_constraint:
+            are_attributes_constrained = True
+            break
+
+    return are_attributes_constrained
