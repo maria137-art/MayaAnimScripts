@@ -1,16 +1,16 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_select_inbetween_nurb_controls.py
+# SCRIPT: mr_selectNURBSCurvesInbetween.py
 # VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
-#
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
 # A script to help make selecting controls in hierarchies faster.
-
+#
 # EXAMPLE USES:
 # ---------------------------------------
 #   - Selecting tail controls
@@ -19,28 +19,25 @@
 # INSTRUCTIONS:
 # ---------------------------------------
 # Select two NURB controls, and run the script to also select any inbetween NURB controls.
+#   e.g. select tail_01_ctrl and tail_12_ctrl to also select every tail_ctrl inbetween them.
 #
 # ---------------------------------------
 # RUN COMMAND:
 # ---------------------------------------
-e.g.
 
 import importlib
-import mr_select_inbetween_nurb_controls
-importlib.reload(mr_select_inbetween_nurb_controls)
+import mr_selectNURBSCurvesInbetween
+importlib.reload(mr_selectNURBSCurvesInbetween)
 
-mr_select_inbetween_nurb_controls.mr_select_inbetween_nurb_controls()
+mr_selectNURBSCurvesInbetween.main(always_select_top_to_bottom=False)
 
-# ---------------------------------------
-# WISHLIST:
-# ---------------------------------------
-# - Get it working properly so it respects only one hierarchy path
-#   e.g. when root and a head is selected, it must only select them, not everything else
-# - Work when controls are selected backwards
-#
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-15 - 0003:
+#   - Renaming from mr_select_inbetween_nurb_controls.py to mr_selectNURBSCurvesInbetween.py.
+#   - Added option to always select from top to bottom, regardless of selection order.
+#
 # 2023-07-09 - 0002:
 #   - Cleaning comments.
 #   - Removing unneeded check for constraints.
@@ -56,21 +53,20 @@ mr_select_inbetween_nurb_controls.mr_select_inbetween_nurb_controls()
 import maya.cmds as cmds
 import maya.mel as mel
 
-def mr_select_inbetween_nurb_controls():
-
+def main(always_select_top_to_bottom=False):
     # ------------------------------------------------------------------- 
-    # 01. CHECK IF ONLY TWO OBJECTS ARE SELECTED
+    # 01. CHECK IF ONLY TWO OBJECTS ARE SELECTED.
     # ------------------------------------------------------------------- 
-    sel = cmds.ls(selection=True)
+    selection = cmds.ls(selection=True)
 
-    if len(sel) != 2:
+    if len(selection) != 2:
         cmds.warning("Please select exactly two objects.")
         return
 
     # ------------------------------------------------------------------- 
-    # 01. CHECK IF SELECTED CONTROLS ARE NURB CURVE TRANSFORMS
+    # 01. CHECK IF SELECTED CONTROLS ARE NURBS CURVE TRANSFORMS.
     # ------------------------------------------------------------------- 
-    for obj in sel:
+    for obj in selection:
         shape = cmds.listRelatives(obj, shapes=True)
         if shape and cmds.nodeType(shape[0]) == "nurbsCurve":
             continue
@@ -79,11 +75,10 @@ def mr_select_inbetween_nurb_controls():
             return
 
     # ------------------------------------------------------------------- 
-    # 01. CHECK IF OBJECTS SHARE SAME HIERARCHY
+    # 01. CHECK IF OBJECTS SHARE SAME HIERARCHY.
     # -------------------------------------------------------------------
-    # Declare and initialize variables.
-    first_item = sel[0]
-    second_item = sel[1]
+    first_item = selection[0]
+    second_item = selection[1]
 
     first_fullpath = cmds.ls(first_item, long=True)[0]
     second_fullpath = cmds.ls(second_item, long=True)[0]
@@ -94,7 +89,6 @@ def mr_select_inbetween_nurb_controls():
     hierarchy_objects = []
     order = []
 
-    # If objects are in same hierarchy, add them to hierarchy_objects variable.
     if first_item in second_object_hierarchy:
         order = "top-to-bottom"
         for obj in second_object_hierarchy[1:]:
@@ -105,11 +99,11 @@ def mr_select_inbetween_nurb_controls():
         for obj in first_object_hierarchy[1:]:
             hierarchy_objects.append(obj)
     else:
-        cmds.warning("Must select two objects in same branch")
+        cmds.warning("Must select two objects in the same hierarchy branch.")
         return
 
     # ------------------------------------------------------------------- 
-    # 01. SELECT ONLY OBJECTS INBETWEEN SELECTION
+    # 01. SELECT ONLY NURBS CURVES INBETWEEN THE SELECTION.
     # -------------------------------------------------------------------
     # Find the index of the selected objects in hierarchy_objects.
     index1 = hierarchy_objects.index(first_item)
@@ -121,20 +115,27 @@ def mr_select_inbetween_nurb_controls():
     selected_transforms = [obj for obj in inbetween_objects if cmds.nodeType(obj) == "transform"]
 
     # Create list of only NURBS curve transforms from selected_transforms.
-    nurbs_curve_transforms = [transform for transform in selected_transforms if cmds.listRelatives(transform, shapes=True) and cmds.nodeType(cmds.listRelatives(transform, shapes=True)[0]) == "nurbsCurve"]
+    nurbs_curve_transforms = [
+        transform 
+        for transform in selected_transforms 
+        if cmds.listRelatives(transform, shapes=True) and 
+        cmds.nodeType(cmds.listRelatives(transform, shapes=True)[0]) == "nurbsCurve"]
 
     if not nurbs_curve_transforms:
         cmds.warning("No NURBS curve transforms found between the selected objects.")
         return
 
     # ------------------------------------------------------------------- 
-    # 01. FINISH SCRIPT WITH FOUND NURB CURVE TRANSFORMS SELECTED
+    # 01. FINSH WITH FOUND NURBS CURVE TRANSFORMS SELECTED.
     # -------------------------------------------------------------------
     if order == "top-to-bottom":
         cmds.select(nurbs_curve_transforms, replace=True)
     else:
-        reversed_nurbs_curve_transforms = nurbs_curve_transforms[::-1] 
-        cmds.select(reversed_nurbs_curve_transforms, replace=True)
+        if always_select_top_to_bottom:
+            cmds.select(nurbs_curve_transforms, replace=True)
+        else:
+            reversed_nurbs_curve_transforms = nurbs_curve_transforms[::-1] 
+            cmds.select(reversed_nurbs_curve_transforms, replace=True)
 
     # End with the Translate manipulator on.
     mel.eval("buildTranslateMM;")
