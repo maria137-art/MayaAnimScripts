@@ -1,9 +1,11 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_selectVisibleControls.py
-# VERSION: 0007
+# VERSION: 0008
 #
 # CREATORS: Maria Robertson
+# ---------------------------------------
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
@@ -37,32 +39,6 @@ mr_selectVisibleControls.select_visible_curves_and_keyed_locators_in_panel()
 # REQUIREMENTS: 
 # ---------------------------------------
 # This script uses functions from mr_utilities.py.
-#
-# ---------------------------------------
-# CHANGELOG:
-# ---------------------------------------
-# 2023-01-14 - 0007:
-#   - Updating script to use mr_utilities functions.
-#       - Check for lodVisibility as well.
-#   - Learnt how amazing Python generators are!
-#       - Replaced some lists with generators to speed things up.
-#           - e.g. one test of selecting 2000 locators that took 48 secs before now takes 2 secs.
-#
-# 2023-12-30 - 0006:
-#   - Rename.
-#
-# 2023-12-29 - 0005:
-#   - Adding function for selecting only keyed objects.
-#
-# 2023-12-29 - 0004:
-#   - Simplifying script, and adding more checks to avoid NoneType errors.
-#
-# 2023-04-11 - 0003:
-#   - Worked to make script more flexible, separating logic into more functions while learning Python.
-#
-# 2023-04-11 - 0002:
-#   - Added option to select locators that have keys on unlocked channels.
-# -  For when animating with temp locators.
 # ------------------------------------------------------------------------------ #
 """
 
@@ -76,11 +52,11 @@ importlib.reload(mr_utilities)
 def get_visible_NURBS_curves_in_panel(only_keyed=False):
     """
     Get a list of visible NURBS curve transform nodes in the current Maya modelPanel.
-
+    
     :param only_keyed: If True, only return nodes that have keys on them.
     :type only_keyed: bool
     :return: List of visible NURBS curve transform nodes.
-    :rtype: list
+    :rtype: list (str)
     """
     # Check the mouse cursor is over a modelPanel.
     modelPanel = mr_utilities.is_current_panel_modelPanel()
@@ -94,12 +70,17 @@ def get_visible_NURBS_curves_in_panel(only_keyed=False):
    # Get all visible nurb curves.
     visible_transforms = cmds.ls(type='transform', visible=True, dag=True)
     visible_nurbs_curve_transforms = [
-        node for node in visible_transforms
+        node 
+        for node in visible_transforms
         if (
             mr_utilities.is_nurbs_curve(node) and
             mr_utilities.is_visible(node) and
-            # Check if the shape node is visible too.
-            any(mr_utilities.is_visible(shape) for shape in cmds.listRelatives(node, shapes=True) or ())
+            any(
+                # Check if the shape node is visible too.
+                mr_utilities.is_visible(shape) and 
+                # Check if the shape node's Drawing Override is set to Normal.
+                cmds.getAttr(f"{shape}.overrideDisplayType") == 0 for shape in cmds.listRelatives(node, shapes=True) or ()
+            )
         )
     ]
 
@@ -115,11 +96,11 @@ def get_visible_NURBS_curves_in_panel(only_keyed=False):
 def get_visible_locators_in_panel(only_keyed=False):
     """
     Get a list of visible locators in the current Maya modelPanel.
-
-    :param only_keyed: If True, only return nodes that have keys on them.
+    
+    :param only_keyed: If True, only return nodes that are keyed.
     :type only_keyed: bool
-    :return: List of visible locators.
-    :rtype: list
+    :return: Generator of visible locator transform nodes.
+    :rtype: generator (str)
     """
     # Check the mouse cursor is over a modelPanel.
     modelPanel = mr_utilities.is_current_panel_modelPanel()
@@ -155,8 +136,6 @@ def select_visible_curves_and_keyed_locators_in_panel():
     """
     Selects visible NURBS curves and visible keyed locators in the current Maya model panel.
 
-    :return: None
-    :rtype: None
     """
     curves = get_visible_NURBS_curves_in_panel(only_keyed=False)
 
@@ -164,3 +143,38 @@ def select_visible_curves_and_keyed_locators_in_panel():
 
     cmds.select(curves, replace=True)
     cmds.select(keyed_locators, add=True)
+
+"""
+##################################################################################################################################################
+# ---------------------------------------
+# CHANGELOG:
+# ---------------------------------------
+# 2023-01-15 - 0008:
+#   - Add check for if a NURBS curve has its shape's Drawing Override Display Type set to normal.
+#       - This should help avoid NURBS curves in rigs that shouldn't be touched.
+#
+# 2023-01-14 - 0007:
+#   - Updating script to use mr_utilities functions.
+#       - Check for lodVisibility as well.
+#   - Learnt how amazing Python generators are!
+#       - Replaced some lists with generators to speed things up.
+#           - e.g. one test of selecting 2000 locators that took 48 secs before now takes 2 secs.
+#
+# 2023-12-30 - 0006:
+#   - Rename.
+#
+# 2023-12-29 - 0005:
+#   - Adding function for selecting only keyed objects.
+#
+# 2023-12-29 - 0004:
+#   - Simplifying script, and adding more checks to avoid NoneType errors.
+#
+# 2023-04-11 - 0003:
+#   - Worked to make script more flexible, separating logic into more functions while learning Python.
+#
+# 2023-04-11 - 0002:
+#   - Added option to select locators that have keys on unlocked channels.
+# -  For when animating with temp locators.
+# ---------------------------------------
+##################################################################################################################################################
+"""
