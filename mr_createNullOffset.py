@@ -36,7 +36,7 @@ mr_createNullOffset.mr_createNullOffset_keyed()
 # ---------------------------------------
 # REQUIREMENTS: 
 # ---------------------------------------
-# mr_bake_to_worldspace.py
+# mr_bakeToWorldspace.py
 # ---------------------------------------
 # RESEARCH THAT HELPED:
 # ---------------------------------------
@@ -78,8 +78,8 @@ mr_createNullOffset.mr_createNullOffset_keyed()
 import maya.cmds as cmds
 import importlib
 
-import mr_bake_to_worldspace
-importlib.reload(mr_bake_to_worldspace)
+import mr_bakeToWorldspace
+importlib.reload(mr_bakeToWorldspace)
 import mr_find_constraint_targets_and_drivers
 importlib.reload(mr_find_constraint_targets_and_drivers)
 
@@ -122,7 +122,7 @@ def mr_createNullOffset_keyed():
     # If keyed, bake them to spare locators, to hold their worldspace position while placing the item in a parent.
     if keyed_objects:
         cmds.select(keyed_objects)
-        mr_bake_to_worldspace.mr_bake_to_worldspace("both")
+        mr_bakeToWorldspace.mr_bakeToWorldspace("both")
                   
     # Create null group.
     
@@ -226,7 +226,7 @@ def mr_createNullOffset_static():
 
     if keyed_objects:
         cmds.select(keyed_objects)
-        mr_bake_to_worldspace.mr_bake_to_worldspace("both")
+        mr_bakeToWorldspace.mr_bakeToWorldspace("both")
 
     for item in sel:
         if parent and parent[0].endswith("_offset_grp"):

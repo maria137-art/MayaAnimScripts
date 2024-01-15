@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_bake_to_worldspace.py
+# SCRIPT: mr_bakeToWorldspace.py
 # VERSION: 0005
 #
 # CREATORS: Maria Robertson
@@ -24,31 +24,31 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_bake_to_worldspace
-importlib.reload(mr_bake_to_worldspace)
+import mr_bakeToWorldspace
+importlib.reload(mr_bakeToWorldspace)
 
 # USE ONE OF THE FOLLOWING COMMANDS:
 
 # Use these for the default settings.
-mr_bake_to_worldspace.main("both")
-mr_bake_to_worldspace.main("translate")
-mr_bake_to_worldspace.main("rotate")
+mr_bakeToWorldspace.main("both")
+mr_bakeToWorldspace.main("translate")
+mr_bakeToWorldspace.main("rotate")
 
 # Slower version for baking dynamic objects:
-mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
-mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
-mr_bake_to_worldspace.main(mode="both", constrain=True, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=True, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=True, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=True, simulate_bake=True)
 
 # To create locators without constraining anything to them:
 # Faster version:
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=False)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=False)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=False)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=False)
 
 # Slower version for baking dynamic objects:
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
-mr_bake_to_worldspace.main(mode="both", constrain=False, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=True)
+mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=True)
 
 
 # ---------------------------------------

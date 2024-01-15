@@ -35,7 +35,7 @@ def mr_create_null_offset(mode):
     # If items are keyed, bake them to spare locators, to hold their worldspace position.
     if keyed_objects:
         cmds.select(keyed_objects)
-        mr_bake_to_worldspace.mr_bake_to_worldspace("both")
+        mr_bakeToWorldspace.main("both")
     
     # Create nulls, and match position and orientation          
     for item in valid_objects:
