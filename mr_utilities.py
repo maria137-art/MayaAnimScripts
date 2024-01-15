@@ -1,7 +1,8 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0016
+# VERSION: 0017
+#
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
 # ---------------------------------------
@@ -9,8 +10,8 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-# A collection of short and/or support functions.
-# Individual tools will mention if this script is required.
+# A collection of short support functions.
+# Individual scripts in other files will mention if this script is required.
 #
 # Major thanks to:
 #   - Morgan Loomis' ml_tools library: http://morganloomis.com/tool/ml_utilities/
@@ -32,93 +33,6 @@ mr_utilities.#
 # WISH LIST:
 # ---------------------------------------
 #   - Replace get_selection() completely with get_selection_generator()
-#   - Finish adding docstrings.
-#
-# ---------------------------------------
-# CHANGELOG:
-# ---------------------------------------
-# 2024-01-14- 0016:
-#   - constrain_unlocked_attributes()
-#       - Fixing bug where it wouldn't trigger constraints.
-#
-# 2024-01-14- 0015:
-#   - reset_attributes_to_default_value()
-#       - Now uses set_animation_curve_template_state().
-#       - Updated try, except, finally.
-#
-# 2024-01-14- 0014:
-#   - Added is_object_attribute_connected_to_referenced_animation_curve().
-#   - Updated get_animation_curves_from_object_attributes() to use is_object_attribute_connected_to_referenced_animation_curve().
-#       - Now it should only ignore animation curves that were created originally in the referenced file.
-#
-# 2024-01-14- 0013:
-#   - Using get_selection_generator() in more functions.
-#   - Adding is_attribute_connected_as_destination().   
-#
-# 2024-01-14- 0012:
-#   - Readding missing descriptions.
-#   - clear_keys()
-#       - Untemplate animation curves before clearing.
-#       - Added option to disable clearing only selected keys.
-#
-# 2024-01-14- 0011:
-#   - Adding more accepted_constraint_types to is_constrained().
-#   - Minor formatting.
-#
-# 2024-01-14- 0010:
-#   - Simplifying clear_keys().
-#   - Reordered functions.
-#   - Adding functions from mr_selectVisibleControl.py.
-#   - Renaming functions:
-#       - find_layered_attributes to get_layered_attributes().
-#       - filter_attributes() to get_object_attributes().
-#       - reset_to_default() to reset_attributes_to_default_value().
-#   - Learnt how efficient Python generators are. Started incorporating them more.
-#   - Reworked reset_attributes_to_default_value() to use generators to work faster.
-#
-# 2024-01-08- 0009:
-#   - reset_to_default()
-#       - Disabling script until freezes solved.
-#       - Added checks for it defaultValue is None.
-#
-# 2024-01-08- 0008:
-#   - reset_to_default()
-#       Add variable checks.
-#
-# 2024-01-08- 0007:
-#   - reset_to_default()
-#       - Don't set keys if attribute wasn't keyed. Use setAttr instead then. 
-#
-# 2024-01-08- 0006:
-#   - Trying to use reStructuredText docString style.
-#       - https://stackabuse.com/common-docstring-formats-in-python/
-#       - https://www.rdegges.com/2010/python-docstring-symmetry/
-#       - https://peps.python.org/pep-0257/
-#       - https://www.writethedocs.org/guide/writing/reStructuredText/
-#   - Added several functions.
-#   - Added check for locked attributes in reset_to_default().
-#   - Added check for if attr in attrToRest reset_to_default().
-#   - Starting to use get_selection() for most functions.
-#
-# 2024-01-03- 0005:
-#   - Added select_joints_under_selected_objects().
-#
-# 2024-01-03- 0004:
-#   - Added functions.
-#
-# 2024-01-03 - 0003:
-#   - Updated clear_keys() to check if selected attributes exist on each selected object.
-#
-# 2024-01-02 - 0002:
-#   - Working on adding docstrings.
-#   - Added reset key functions.
-#   - Added animation layer functions.
-#
-# 2023-12-30 - 0001:
-#   - Added scripts:
-#       - mr_clear_attributeKeys.mel
-#       - mr_zeroOut_selectedAttributes.mel
-#       - mr_zeroOut_selectedKeysInGraphEditor.mel
 # ------------------------------------------------------------------------------ #
 """
 
@@ -300,7 +214,8 @@ def clear_keys(reset_selected_attributes=True):
         # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
         # ---------------------------------------
         all_keyable_object_attributes = cmds.listAttr(item, keyable=True, unlocked=True, nodeName=True)
-        animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
+        if all_keyable_object_attributes:
+            animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
         for curve in animation_curves:
             set_animation_curve_template_state(curve, lock_state=False)
 
@@ -1203,3 +1118,97 @@ def set_animation_curve_template_state(animation_curves, lock_state=False):
             full_name = f"{curve}{k_attr}"
             if cmds.objExists(full_name):
                 cmds.setAttr(full_name, lock=lock_state)
+
+##################################################################################################################################################
+"""
+# ---------------------------------------
+# CHANGELOG:
+# ---------------------------------------
+# 2024-01-15- 0017:
+#   - clear_keys()
+#   -   Adding check for all_keyable_object_attributes to avoid NoneType error.
+#   - Moving CHANGELOG to the bottom.
+#
+# 2024-01-14- 0016:
+#   - constrain_unlocked_attributes()
+#       - Fixing bug where it wouldn't trigger constraints.
+#
+# 2024-01-14- 0015:
+#   - reset_attributes_to_default_value()
+#       - Now uses set_animation_curve_template_state().
+#       - Updated try, except, finally.
+#
+# 2024-01-14- 0014:
+#   - Added is_object_attribute_connected_to_referenced_animation_curve().
+#   - Updated get_animation_curves_from_object_attributes() to use is_object_attribute_connected_to_referenced_animation_curve().
+#       - Now it should only ignore animation curves that were created originally in the referenced file.
+#
+# 2024-01-14- 0013:
+#   - Using get_selection_generator() in more functions.
+#   - Adding is_attribute_connected_as_destination().   
+#
+# 2024-01-14- 0012:
+#   - Readding missing descriptions.
+#   - clear_keys()
+#       - Untemplate animation curves before clearing.
+#       - Added option to disable clearing only selected keys.
+#
+# 2024-01-14- 0011:
+#   - Adding more accepted_constraint_types to is_constrained().
+#   - Minor formatting.
+#
+# 2024-01-14- 0010:
+#   - Simplifying clear_keys().
+#   - Reordered functions.
+#   - Adding functions from mr_selectVisibleControl.py.
+#   - Renaming functions:
+#       - find_layered_attributes to get_layered_attributes().
+#       - filter_attributes() to get_object_attributes().
+#       - reset_to_default() to reset_attributes_to_default_value().
+#   - Learnt how efficient Python generators are. Started incorporating them more.
+#   - Reworked reset_attributes_to_default_value() to use generators to work faster.
+#
+# 2024-01-08- 0009:
+#   - reset_to_default()
+#       - Disabling script until freezes solved.
+#       - Added checks for it defaultValue is None.
+#
+# 2024-01-08- 0008:
+#   - reset_to_default()
+#       Add variable checks.
+#
+# 2024-01-08- 0007:
+#   - reset_to_default()
+#       - Don't set keys if attribute wasn't keyed. Use setAttr instead then. 
+#
+# 2024-01-08- 0006:
+#   - Trying to use reStructuredText docString style.
+#       - https://stackabuse.com/common-docstring-formats-in-python/
+#       - https://www.rdegges.com/2010/python-docstring-symmetry/
+#       - https://peps.python.org/pep-0257/
+#       - https://www.writethedocs.org/guide/writing/reStructuredText/
+#   - Added several functions.
+#   - Added check for locked attributes in reset_to_default().
+#   - Added check for if attr in attrToRest reset_to_default().
+#   - Starting to use get_selection() for most functions.
+#
+# 2024-01-03- 0005:
+#   - Added select_joints_under_selected_objects().
+#
+# 2024-01-03- 0004:
+#   - Added functions.
+#
+# 2024-01-03 - 0003:
+#   - Updated clear_keys() to check if selected attributes exist on each selected object.
+#
+# 2024-01-02 - 0002:
+#   - Working on adding docstrings.
+#   - Added reset key functions.
+#   - Added animation layer functions.
+#
+# 2023-12-30 - 0001:
+#   - Added scripts:
+#       - mr_clear_attributeKeys.mel
+#       - mr_zeroOut_selectedAttributes.mel
+#       - mr_zeroOut_selectedKeysInGraphEditor.mel
+# ------------------------------------------------------------------------------ #
