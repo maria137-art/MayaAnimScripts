@@ -1,6 +1,6 @@
 """
 # ------------------------------------------------------------------------------ #
-# SCRIPT: mr_create_null_offset.py
+# SCRIPT: mr_createNullOffset.py
 # VERSION: 0005
 #
 # CREATORS: Maria Robertson
@@ -26,12 +26,12 @@
 # ---------------------------------------
 
 import importlib
-import mr_create_null_offset
-importlib.reload(mr_create_null_offset)
+import mr_createNullOffset
+importlib.reload(mr_createNullOffset)
 
-mr_create_null_offset.mr_create_null_offset_static()
+mr_createNullOffset.mr_createNullOffset_static()
 OR
-mr_create_null_offset.mr_create_null_offset_keyed()
+mr_createNullOffset.mr_createNullOffset_keyed()
 
 # ---------------------------------------
 # REQUIREMENTS: 
@@ -55,12 +55,12 @@ mr_create_null_offset.mr_create_null_offset_keyed()
 # ---------------------------------------
 # 2023-07-19 - 0005:
 #   - Adding comments to script to make rereading easier.
-#   - Made bakeResults bake on both translate and rotate attributes, for mr_create_null_offset_keyed()
+#   - Made bakeResults bake on both translate and rotate attributes, for mr_createNullOffset_keyed()
 #         Decided to have it, while experimenting with Aim Space scripts.
 #
 # 2023-06-29 - 0004:
-#   - For mr_create_null_offset_keyed, added function to set all transform keys on original selection to default values, keeping the original key timings.
-#   - Added mr_find_drivers_of_selected and baking for mr_create_null_offset_static to remove temp worldspace locators.
+#   - For mr_createNullOffset_keyed, added function to set all transform keys on original selection to default values, keeping the original key timings.
+#   - Added mr_find_drivers_of_selected and baking for mr_createNullOffset_static to remove temp worldspace locators.
 #   - Made bakeResults only bake on translate attributes.
 #
 # 2023-06-29 - 0003:
@@ -83,7 +83,7 @@ importlib.reload(mr_bake_to_worldspace)
 import mr_find_constraint_targets_and_drivers
 importlib.reload(mr_find_constraint_targets_and_drivers)
 
-def mr_create_null_offset_keyed():
+def mr_createNullOffset_keyed():
     sel = cmds.ls(selection=True)
     start_time = cmds.playbackOptions(q=True, min=True)
     end_time = cmds.playbackOptions(q=True, max=True)
@@ -194,7 +194,7 @@ def mr_create_null_offset_keyed():
     cmds.select(sel)
 
 
-def mr_create_null_offset_static():
+def mr_createNullOffset_static():
     sel = cmds.ls(selection=True)
     start_time = cmds.playbackOptions(q=True, min=True)
     end_time = cmds.playbackOptions(q=True, max=True)
