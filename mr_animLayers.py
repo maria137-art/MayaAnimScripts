@@ -38,7 +38,6 @@ mr_animLayers.reset_animation_layer_keys_at_currentTime(
 """
 
 import maya.cmds as cmds
-import sys
 
 import importlib
 import mr_utilities
