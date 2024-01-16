@@ -76,7 +76,7 @@ def filter_for_selected_animation_layers(animation_layers):
     animation_layers = [animLayer for animLayer in animation_layers if animLayer in selected_layers]
 
     if not animation_layers:
-        print_warning_from_caller("No selected animation layers connected.")
+        # print_warning_from_caller("No selected animation layers connected.")
         return
     return animation_layers
 
