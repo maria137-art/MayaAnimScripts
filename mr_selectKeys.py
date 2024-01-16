@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------------------------------------------------------------------------
 # SCRIPT: mr_selectKeys.py
-# VERSION: 0005
+# VERSION: 0006
 #
 # CREATORS: Maria Robertson
 # CREDIT: Brian Horgan / Jørn-Harald Paulsen
@@ -43,6 +43,9 @@ mr_selectKeys.main("all")
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-16 - 0006:
+# 	- Minor formatting and changes.
+#
 # 2023-12-30 - 0005:
 #	- Typo fix.
 #
@@ -63,41 +66,45 @@ mr_selectKeys.main("all")
 
 import maya.cmds as cmds
 
+# ------------------------------------------------------------------------------ #
 def main(selection_mode=None):
 	# -------------------------------------------------------------------
 	# 01. INITIALISE VARIABLES
 	# -------------------------------------------------------------------
-	start_time = cmds.playbackOptions(query=True, min=True)
-	end_time = cmds.playbackOptions(query=True, max=True)
-	current_time = cmds.currentTime(query=True)
+	selection = cmds.ls(selection=True)
+	if not selection:
+		cmds.warning("No selected items found.")
+		return
 
-	sel = cmds.ls(selection=True)
-	deselect_unkeyed_objects(sel)
+	# deselect_unkeyed_objects(selection)
+
 	visible_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
+	if not visible_curves:
+		cmds.warning("No visible animation curves found.")
+		return
 
-	if visible_curves:
-		cmds.selectKey(clear=True)
+	cmds.selectKey(clear=True)
 
-		# -------------------------------------------------------------------
-		# 01. PICK A SELECTION TYPE.
-		# -------------------------------------------------------------------
-		# Select keys only within the playback range.
-		if selection_mode == "playback_range":
-			for curve in visible_curves:
-				cmds.selectKey(curve, toggle=True, time=(start_time, end_time), add=True)
+	# -------------------------------------------------------------------
+	# 01. PICK A SELECTION TYPE.
+	# -------------------------------------------------------------------
+	# Select keys only within the playback range.
+	if selection_mode == "playback_range":
+		start_time = cmds.playbackOptions(query=True, min=True)
+		end_time = cmds.playbackOptions(query=True, max=True)
+		for curve in visible_curves:
+			cmds.selectKey(curve, toggle=True, time=(start_time, end_time), add=True)
 
-		# Select all keys.
-		if selection_mode == "all":
-			for curve in visible_curves:
-				cmds.selectKey(curve, toggle=True)
+	# Select all keys.
+	if selection_mode == "all":
+		for curve in visible_curves:
+			cmds.selectKey(curve, toggle=True)
 
-		# Select keys only at the current time.
-		if selection_mode == "currentTime":
-			for obj in sel:
-				cmds.selectKey(visible_curves, add=True, time=(current_time,))
-
-	else:
-		 cmds.warning("No visible animation curves found.")
+	# Select keys only at the current time.
+	if selection_mode == "currentTime":
+		current_time = cmds.currentTime(query=True)
+		for curve in visible_curves:
+			cmds.selectKey(curve, toggle=True, time=(current_time, current_time))
 
 
 ##################################################################################################################################################
