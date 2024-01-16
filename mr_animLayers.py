@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayers.py
-# VERSION: 0006
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -9,7 +9,7 @@
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
-
+# A collection of functions to help work with animation layers.
 #
 # ---------------------------------------
 # RUN COMMAND:
@@ -19,13 +19,26 @@ import mr_animLayers
 importlib.reload(mr_animLayers)
 
 # EXAMPLES
-mr_animLayers.create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False)
-mr_animLayers.bake_to_selected_override_animation_layer(simulation=True, preserveOutsideKeys=True)
+mr_animLayers.bake_to_selected_override_animation_layer(
+    simulation=True, 
+    preserveOutsideKeys=True
+)
+
+mr_animLayers.create_animation_layer_with_baseAnimation_keyTiming(
+    override_layerMode=False
+)
+
+mr_animLayers.reset_animation_layer_keys_at_currentTime(
+    filter_selected_animation_layers=True, 
+    reset_non_numeric_attributes=True, 
+    reset_selected_attributes=True
+)
 
 # ------------------------------------------------------------------------------ #
 """
 
 import maya.cmds as cmds
+import sys
 
 import importlib
 import mr_utilities
@@ -164,7 +177,11 @@ def create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False
 ##################################################################################################################################################
 
 # ------------------------------------------------------------------------------ #
-def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=False, reset_non_numeric_attributes=False, reset_selected_attributes=False):
+def reset_animation_layer_keys_at_currentTime(
+    filter_selected_animation_layers=False, 
+    reset_non_numeric_attributes=False, 
+    reset_selected_attributes=False
+):
     """
     Reset keys of animation layers at the current time for selected objects.
     This works the same as setting an animation layer's weight to 0, setting a key to store the current pose frame, then restoring its weight.
@@ -185,45 +202,31 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
     ... )
 
     """
-
     # ---------------------------------------
     # 01. GET SELECTION.
     # ---------------------------------------
-    selection = mr_utilities.get_selection()
-
-    """
     selection = mr_utilities.get_selection_generator()
-    if not any(selection):
-        sys.exit("Script terminated: No objects are selected.")
-    """
+
+    # ---------------------------------------
+    # 01. CHECK IF ANIMATION LAYERS CONNECTED TO SELECTED OBJECTS ARE LOCKED OR MUTED.
+    # ---------------------------------------
+    animation_layers = set()
+
+    for obj in selection:
+        connected_animation_layers = cmds.listConnections(obj, type="animLayer") or []
+        animation_layers.update(connected_animation_layers)
+
     # ---------------------------------------
     # 01. OPTIONAL - CHECK IF ANIMATION LAYERS ARE SELECTED.
     # ---------------------------------------
     if filter_selected_animation_layers:
-        tool_name = "AnimLayerTab"
-        selected_animation_layers = cmds.treeView(tool_name + "animLayerEditor", query=True, selectItem=True)
-        if not selected_animation_layers:
-            mr_utilities.print_warning_from_caller("No animation layers are highlighted.")
-            return
+        animation_layers = mr_utilities.filter_for_selected_animation_layers(animation_layers)
 
     # ---------------------------------------
     # 01. CHECK IF CONNECTED ANIMATION LAYERS ARE LOCKED OR MUTED.
     # ---------------------------------------
-    connected_animation_layers = []
-
-    for obj in selection:
-        animation_layers = cmds.listConnections(obj, type="animLayer")
+    if animation_layers:
         for layer in animation_layers:
-            connected_animation_layers.append(layer)
-
-    # Remove duplicates.
-    connected_animation_layers = list(set(connected_animation_layers))
-
-    if filter_selected_animation_layers:
-        connected_animation_layers = mr_utilities.filter_for_selected_animation_layers(connected_animation_layers)
-
-    if connected_animation_layers:
-        for layer in connected_animation_layers:
             mute_state = cmds.getAttr(layer + ".mute")
             lock_state = cmds.getAttr(layer + ".lock")
 
@@ -237,14 +240,15 @@ def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=F
                 mr_utilities.print_warning_from_caller(f"\"{layer}\" is locked.")
                 return
     else:
-        mr_utilities.print_warning_from_caller("No connection found to queried animation layers.")
+        mr_utilities.print_warning_from_caller("No connections found to queried animation layers.")
         return
+
 
     # ---------------------------------------
     # 01. RESET KEYS.
     # ---------------------------------------
     nullify_animation_layer_keys(
-        selection=selection, 
+        selection=mr_utilities.get_selection_generator(),
         attributes_to_reset=None, 
         reset_selected_attributes=reset_selected_attributes, 
         reset_non_numeric_attributes=reset_non_numeric_attributes, 
@@ -279,25 +283,26 @@ def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset
             else:
                 layered_attributes = mr_utilities.get_layered_attributes(obj, filter_selected_animation_layers=False)
 
-            for layer, attributes in layered_attributes.items():
-                # ---------------------------------------
-                # 03. OPTIONAL - FILTER FOR SELECTED ATTRIBUTES.
-                # ---------------------------------------
-                if reset_selected_attributes:
-                    for attr in attributes:
-                        if attr not in attributes_to_reset:
-                            attributes.remove(attr)
-                # ---------------------------------------
-                # 03. OPTIONAL - FILTER OUT NON-NUMERIC ATTRIBUTES
-                # ---------------------------------------
-                if not reset_non_numeric_attributes:
-                    for attr in attributes:
-                        if not mr_utilities.is_attribute_numeric(obj, attr):
-                            attributes.remove(attr)
-                # ---------------------------------------
-                # 03. SET KEYS.
-                # ---------------------------------------
-                cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
+            if layered_attributes:
+                for layer, attributes in layered_attributes.items():
+                    # ---------------------------------------
+                    # 03. OPTIONAL - FILTER FOR SELECTED ATTRIBUTES.
+                    # ---------------------------------------
+                    if reset_selected_attributes:
+                        for attr in attributes:
+                            if attr not in attributes_to_reset:
+                                attributes.remove(attr)
+                    # ---------------------------------------
+                    # 03. OPTIONAL - FILTER OUT NON-NUMERIC ATTRIBUTES
+                    # ---------------------------------------
+                    if not reset_non_numeric_attributes:
+                        for attr in attributes:
+                            if not mr_utilities.is_attribute_numeric(obj, attr):
+                                attributes.remove(attr)
+                    # ---------------------------------------
+                    # 03. SET KEYS.
+                    # ---------------------------------------
+                    cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
         else:
             continue
 
@@ -311,6 +316,13 @@ def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-16 - 0007:
+#   - reset_animation_layer_keys_at_currentTime()
+#       - Using generators more for efficiency.
+#   - nullify_animation_layer_keys()
+#       - Added layered_attributes check.
+#
+#
 # 2024-01-16 - 0006:
 #   - Add following functions for mr_utilities.
 #       - reset_animation_layer_keys_at_currentTime()
