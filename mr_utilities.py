@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0017
+# VERSION: 0018
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -29,10 +29,6 @@ importlib.reload(mr_utilities)
 # USE ANY OF THE FUNCTIONS BELOW:
 mr_utilities.#
 
-# ---------------------------------------
-# WISH LIST:
-# ---------------------------------------
-#   - Replace get_selection() completely with get_selection_generator()
 # ------------------------------------------------------------------------------ #
 """
 
@@ -85,84 +81,11 @@ def filter_for_selected_animation_layers(animation_layers):
     return animation_layers
 
 # ------------------------------------------------------------------------------ #
-def reset_animation_layer_keys_at_currentTime(filter_selected_animation_layers=False, reset_non_numeric_attributes=False, reset_selected_attributes=False):
-    """
-    Resets animation layer keys at the current time for the specified objects.
-    This works the same as setting an animation layer's weight to 0, setting a key to store the current pose frame, then restoring its weight.
-
-    :param filter_selected_animation_layers: If True, reset only for the currently selected animation layers.
-    :type filter_selected_animation_layers: bool
-    :param reset_non_numeric_attributes: If True, reset non-numeric attributes.
-    :type reset_non_numeric_attributes: bool
-    :param reset_selected_attributes: If True, reset only the selected attributes on the objects.
-    :type reset_selected_attributes: bool
-
-    :Example:
-
-    >>> reset_animation_layer_keys_at_currentTime(
-    ...     filter_selected_animation_layers=True,
-    ...     reset_non_numeric_attributes=False,
-    ...     reset_selected_attributes=True
-    ... )
-
-    """
-    sel = get_selection()
-    if not sel:
-        print_warning_from_caller("Nothing is selected.")
-
-    # ---------------------------------------
-    # 01. OPTIONAL - CHECK IF ANIMATION LAYERS ARE HIGHLIGHTED.
-    # ---------------------------------------
-    if filter_selected_animation_layers:
-        tool_name = "AnimLayerTab"
-        selected_layers = cmds.treeView(tool_name + "animLayerEditor", query=True, selectItem=True)
-        if not selected_layers:
-            print_warning_from_caller("No animation layers are highlighted.")
-            return
-
-    # ---------------------------------------
-    # 01. CHECK IF ANY CONNECTED ANIMATION LAYERS ARE LOCKED OR MUTED.
-    # ---------------------------------------
-    connected_animation_layers = []
-
-    for obj in sel:
-        animation_layers = cmds.listConnections(obj, type="animLayer")
-        for layer in animation_layers:
-            connected_animation_layers.append(layer)
-    # Remove duplicates.
-    connected_animation_layers = list(set(connected_animation_layers))
-
-    if filter_selected_animation_layers:
-        connected_animation_layers = filter_for_selected_animation_layers(connected_animation_layers)
-
-    if connected_animation_layers:
-        for layer in connected_animation_layers:
-            mute_state = cmds.getAttr(layer + ".mute")
-            lock_state = cmds.getAttr(layer + ".lock")
-
-            if mute_state and lock_state:
-                print_warning_from_caller(f"\"{layer}\" is muted and locked.")
-                return
-            elif mute_state:
-                print_warning_from_caller(f"\"{layer}\" is muted.")
-                return
-            elif lock_state:
-                print_warning_from_caller(f"\"{layer}\" is locked.")
-                return
-    else:
-        print_warning_from_caller("No connection found to queried animation layers.")
-        return
-
-    # ---------------------------------------
-    # 01. RESET.
-    # ---------------------------------------
-    nullify_animation_layer_keys(
-        selection=sel, 
-        attributes_to_reset=None, 
-        reset_selected_attributes=reset_selected_attributes, 
-        reset_non_numeric_attributes=reset_non_numeric_attributes, 
-        nullify_only_selected_animation_layers=filter_selected_animation_layers
-    )
+def set_selected_for_all_layers(state):
+    # Python version of setSelectedForAllLayers from Autodesk Maya's layerEditor.mel, line 1220
+    layers = cmds.ls(type='animLayer')
+    for layer in layers:
+        cmds.animLayer(layer, edit=True, selected=state)
 
 ##################################################################################################################################################
 
@@ -220,41 +143,6 @@ def clear_keys(reset_selected_attributes=True):
             set_animation_curve_template_state(curve, lock_state=False)
 
     cmds.cutKey(valid_object_attributes) 
-      
-# ------------------------------------------------------------------------------ #
-def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
-    selection = get_selection_generator()
-
-    for obj in selection:
-        if not attributes_to_reset:
-            if reset_selected_attributes:
-                # Reset selected channels, if nothing is selected then reset all keyable.
-                attributes_to_reset = get_selected_channels() or cmds.listAttr(obj, keyable=True)
-            else:
-                attributes_to_reset = cmds.listAttr(obj, keyable=True)
-
-        if attributes_to_reset:
-            if nullify_only_selected_animation_layers:
-                layered_attributes = get_layered_attributes(obj, filter_selected_animation_layers=True)
-            else:
-                layered_attributes = get_layered_attributes(obj, filter_selected_animation_layers=False)
-
-            for layer, attributes in layered_attributes.items():
-                if reset_selected_attributes:
-                    for attr in attributes:
-                        if attr not in attributes_to_reset:
-                            attributes.remove(attr)
-
-                if not reset_non_numeric_attributes:
-                    for attr in attributes:
-                        if not is_attribute_numeric(obj, attr):
-                            attributes.remove(attr)
-
-                cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
-
-    # Set to current time again, to force the viewport to update with the change.
-    current_time = cmds.currentTime(query=True)
-    cmds.currentTime(current_time, edit=True)
 
 # ------------------------------------------------------------------------------ #
 def reset_attributes_to_default_value(selection=None, attributes=None, reset_selected_attributes=False, reset_non_numeric_attributes=False):
@@ -475,6 +363,37 @@ def constrain_unlocked_translates(driver, item):
 #                             IS FUNCTIONS                             #
 #                                                                      #
 ########################################################################
+
+# ------------------------------------------------------------------------------ #
+def are_parents_visible(node):
+    """
+    Check if all parents of the given node are visible.
+
+    :param node: The node to check for visibility.
+    :type: str
+    :return: True, if all parents are visible.
+    :rtype: bool
+    """
+
+    # Set up recursive counter.
+    rec_num = 0
+    rec_limit = 1000
+    # Start with the given node as the parent.
+    parent = node
+
+    # Recursion loop.
+    while parent and rec_num < rec_limit:
+        parent = cmds.listRelatives(parent, parent=True, fullPath=True)
+        if not parent:
+            break
+
+        parent = parent[0]
+        if not is_visible(parent):
+            return False
+
+        rec_num += 1
+
+    return True
 
 # ------------------------------------------------------------------------------ #
 def is_attribute_connected_as_destination(obj_attr):
@@ -1124,6 +1043,14 @@ def set_animation_curve_template_state(animation_curves, lock_state=False):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-16- 0018:
+#   - Moving following functions into mr_animLayers.py
+#       - reset_animation_layer_keys_at_currentTime()
+#       - nullify_animation_layer_keys()
+#   - Added functions:
+#       - set_selected_for_all_layers()
+#       - are_parents_visible()
+#
 # 2024-01-15- 0017:
 #   - clear_keys()
 #   -   Adding check for all_keyable_object_attributes to avoid NoneType error.
@@ -1212,3 +1139,4 @@ def set_animation_curve_template_state(animation_curves, lock_state=False):
 #       - mr_zeroOut_selectedAttributes.mel
 #       - mr_zeroOut_selectedKeysInGraphEditor.mel
 # ------------------------------------------------------------------------------ #
+"""
