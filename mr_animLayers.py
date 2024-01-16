@@ -260,7 +260,8 @@ def nullify_animation_layer_keys(
     attributes_to_reset=None, 
     reset_selected_attributes=False, 
     reset_non_numeric_attributes=False, 
-    nullify_only_selected_animation_layers=False):
+    nullify_only_selected_animation_layers=False
+):
 
     """
     A support function for reset_animation_layer_keys_at_currentTime(), to filter for the specific attributes to reset.
