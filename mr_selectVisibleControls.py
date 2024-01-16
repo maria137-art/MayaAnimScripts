@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_selectVisibleControls.py
-# VERSION: 0008
+# VERSION: 0009
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -69,28 +69,33 @@ def get_visible_NURBS_curves_in_panel(only_keyed=False):
    
    # Get all visible nurb curves.
     visible_transforms = cmds.ls(type='transform', visible=True, dag=True)
-    visible_nurbs_curve_transforms = [
+    visible_nurbs_curve_transforms = (
         node 
         for node in visible_transforms
         if (
+            # Check the node.
             mr_utilities.is_nurbs_curve(node) and
             mr_utilities.is_visible(node) and
-            any(
-                # Check if the shape node is visible too.
+            # Check its shapes.
+            all(
                 mr_utilities.is_visible(shape) and 
                 # Check if the shape node's Drawing Override is set to Normal.
-                cmds.getAttr(f"{shape}.overrideDisplayType") == 0 for shape in cmds.listRelatives(node, shapes=True) or ()
-            )
+                cmds.getAttr(f"{shape}.overrideDisplayType") == 0 
+                for shape in cmds.listRelatives(node, shapes=True) or ()
+            ) and
+            # Check its parensts.
+            mr_utilities.are_parents_visible(node)
         )
-    ]
+    )
+
 
     # OPTIONAL - Select only keyed visible NURBS curves.
     if only_keyed:
-        keyed_visible_nurbs_curve_transforms = mr_utilities.get_keyed_nodes(visible_nurbs_curve_transforms)
-        # print(f'Found {len(visible_nurbs_curve_transforms)} valid NURBS curves.')
-        return keyed_visible_nurbs_curve_transforms
+        return mr_utilities.get_keyed_nodes(visible_nurbs_curve_transforms)
+
     else:
         return visible_nurbs_curve_transforms
+        # print(f'Found {len(visible_nurbs_curve_transforms)} valid NURBS curves.')
 
 # ------------------------------------------------------------------------------ #
 def get_visible_locators_in_panel(only_keyed=False):
@@ -130,7 +135,6 @@ def get_visible_locators_in_panel(only_keyed=False):
         else:
             yield loc_transform
 
-
 # ------------------------------------------------------------------------------ #
 def select_visible_curves_and_keyed_locators_in_panel():
     """
@@ -149,6 +153,10 @@ def select_visible_curves_and_keyed_locators_in_panel():
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2023-01-16 - 0009:
+#   - get_visible_NURBS_curves_in_panel()
+#       - Add check for if all parents are visible.
+#
 # 2023-01-15 - 0008:
 #   - Add check for if a NURBS curve has its shape's Drawing Override Display Type set to normal.
 #       - This should help avoid NURBS curves in rigs that shouldn't be touched.
