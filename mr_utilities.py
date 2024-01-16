@@ -732,6 +732,13 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
     >>> print(result)
     {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
 
+    >>> layered_attributes_dict = mr_utilities.get_layered_attributes(obj, filter_selected_animation_layers=True)
+    >>> for layer, attributes in layered_attributes.items():
+    ...     print(layer)
+    ...     print(attributes)
+    AnimLayer1
+    ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'visibility', 'scaleX', 'scaleY', 'scaleZ']
+    
     """
     # ---------------------------------------
     # 01. GET CONNECTED ANIMATION LAYERS.
