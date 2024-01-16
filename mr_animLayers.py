@@ -256,7 +256,28 @@ def reset_animation_layer_keys_at_currentTime(
     )
 
 # ------------------------------------------------------------------------------ #
-def nullify_animation_layer_keys(selection=None, attributes_to_reset=None, reset_selected_attributes=False, reset_non_numeric_attributes=False, nullify_only_selected_animation_layers=False):
+def nullify_animation_layer_keys(
+    selection=None, 
+    attributes_to_reset=None, 
+    reset_selected_attributes=False, 
+    reset_non_numeric_attributes=False, 
+    nullify_only_selected_animation_layers=False):
+
+    """
+    A support function for reset_animation_layer_keys_at_currentTime(), to filter for the specific attributes to reset.
+
+    :param selection: A list of objects to process
+    :type selection: list(str), optional
+    :param attributes_to_reset: A list of attributes to reset.
+    :type attributes_to_reset: list(str), optional
+    :param reset_selected_attributes: If True, reset only selected attributes.
+    :type reset_selected_attributes: bool
+    :param reset_non_numeric_attributes: If true, also reset non-numeric attributes.
+    :type reset_non_numeric_attributes: bool
+    :param nullify_only_selected_animation_layers: If true, reset keys on only selected animation layers.
+    :type nullify_only_selected_animation_layers: bool
+
+    """
     if not selection:
         mr_utilities.print_warning_from_caller("Nothing is selected.")
 
