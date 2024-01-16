@@ -733,7 +733,7 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
     {'AnimLayer1': ['translateX', 'translateY', 'translateZ'], 'AnimLayer2': ['rotateX', 'rotateY', 'rotateZ']}
 
     >>> layered_attributes_dict = mr_utilities.get_layered_attributes(obj, filter_selected_animation_layers=True)
-    >>> for layer, attributes in layered_attributes.items():
+    >>> for layer, attributes in layered_attributes_dict.items():
     ...     print(layer)
     ...     print(attributes)
     AnimLayer1
