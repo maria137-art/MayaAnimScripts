@@ -1,11 +1,11 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_tempPin.py
-# VERSION: 0010
+# VERSION: 0011
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
-#
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
@@ -63,35 +63,7 @@ mr_tempPin.multiple("rotate", "last_selected")
 # REQUIREMENTS: 
 # ---------------------------------------
 # Must have mr_find_constraint_targets_and_drivers.py in order to use mr_find_targets_of_selected()
-# 
-# ---------------------------------------
-# CHANGELOG:
-# ---------------------------------------
-# 2024-01-14 - 0010:
-#   - End multiple() with rotate manipulator active.
 #
-# 2023-12-28 - 0009:
-#   - Adding check for valid command inputs + option to choose where pivot position is for the "multiple" function.
-#
-# 2023-12-28 - 0008:
-#   - Updating script to not point/orient constraint at all if those attributes are all locked.
-#
-# 2023-12-09 - 0007:
-#   - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
-#
-# 2023-12-09 - 0006:
-#   - Fixing the multiple() function to respect locked attributes better.
-#
-# 2023-12-07 - 0005:
-#   - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
-#
-# 2023-12-04 - 0004: 
-#   - Converted original MEL script to Python.
-#
-# 2023-06-28 - 0003:
-#   - Updated script to use Python function to find constraint targets.
-#
-# 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
 # ------------------------------------------------------------------------------ #
 """
 
@@ -121,6 +93,11 @@ def single(mode=None):
         key_targets(temp_pin)
         cmds.delete(temp_pin)
 
+        # Refresh the viewport.
+        # This helps when using the script to reposition objects on animation layers, while BaseAnimation is locked.
+        current_time = cmds.currentTime(query=True)
+        cmds.currentTime(current_time)
+
     # -------------------------------------------------------------------
     # 00. CREATE TEMP PIN FOR EACH SELECTED OBJECT.
     # -------------------------------------------------------------------
@@ -142,6 +119,7 @@ def single(mode=None):
         # Set a blank keyframe, to remember the frame the loc was created on.
         cmds.setKeyframe(loc)
         cmds.select(loc)
+
 
 ##################################################################################################################################################
 
@@ -345,3 +323,42 @@ def constrain_unlocked_rotates(driver, item):
             cmds.orientConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_rot_axes)
     else:
         cmds.orientConstraint(driver, item, maintainOffset=True, weight=1)
+
+
+"""
+##################################################################################################################################################
+# ---------------------------------------
+# CHANGELOG:
+# ---------------------------------------
+# 2024-01-18 - 0011:
+#   - Refresh viewport after deleting tempPin, to reflect changes on animation layers while BaseAnimation is locked.
+#   - Moved changlog to the bottom.
+#
+# 2024-01-14 - 0010:
+#   - End multiple() with rotate manipulator active.
+#
+# 2023-12-28 - 0009:
+#   - Adding check for valid command inputs + option to choose where pivot position is for the "multiple" function.
+#
+# 2023-12-28 - 0008:
+#   - Updating script to not point/orient constraint at all if those attributes are all locked.
+#
+# 2023-12-09 - 0007:
+#   - Forgot to update single() function, after making lock_and_hide_same_attributes() and constrain_unlocked_attributes() work for one object at a time.
+#
+# 2023-12-09 - 0006:
+#   - Fixing the multiple() function to respect locked attributes better.
+#
+# 2023-12-07 - 0005:
+#   - Converting and mergnig MEL script "mr_tempPin_createIndividualPins.mel" here.
+#
+# 2023-12-04 - 0004: 
+#   - Converted original MEL script to Python.
+#
+# 2023-06-28 - 0003:
+#   - Updated script to use Python function to find constraint targets.
+#
+# 0002: Added catch command, to stop script from failing if any translation or rotation attributes are locked.
+# ---------------------------------------
+##################################################################################################################################################
+"""
