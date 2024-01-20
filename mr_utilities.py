@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0019
+# VERSION: 0020
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -1011,6 +1011,26 @@ def select_group_nulls_in_scene():
     cmds.select(group_nulls, replace=True)
 
 # ------------------------------------------------------------------------------ #
+def select_hierarchy(transforms_only=True):
+    """
+    Select the hierarchy of selected objects.
+
+    :param transforms_only: If True, only select transform nodes in hierarchies.
+    :type transforms_only: bool
+
+    """
+    original_selection = cmds.ls(selection=True)
+    cmds.select(hierarchy=True)
+
+    if transforms_only:
+        # Get transform nodes in hierarchy.
+        transform_nodes = cmds.listRelatives(cmds.ls(selection=True), type="transform", fullPath=True) or []
+
+        # Select only transform nodes.
+        cmds.select(original_selection, replace=True)
+        cmds.select(transform_nodes, add=True)
+
+# ------------------------------------------------------------------------------ #
 def select_joints_under_selected_objects():
     """
     Select all joints under selected items in the Outliner.
@@ -1028,7 +1048,6 @@ def select_joints_under_selected_objects():
         cmds.select(hierarchy_joints, replace=True)
     else:
         display_viewport_warning("No joints found under", item)
-
 
 ##################################################################################################################################################
 
@@ -1116,6 +1135,10 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-20- 0020:
+#   - Added functions:
+#       - select_hierarchy()
+#
 # 2024-01-20- 0019:
 #   - Added functions:
 #       - set_corresponding_attribute_states()
