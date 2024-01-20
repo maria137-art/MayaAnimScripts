@@ -33,10 +33,10 @@ def main(translate=True, rotate=True):
         return None
 
     a, b = selection
-
     has_keyframes_a = cmds.keyframe(a, query=True, keyframeCount=True)
     has_keyframes_b = cmds.keyframe(b, query=True, keyframeCount=True)
-    
+
+    # Swap positions.
     if translate:
         pos_a = cmds.xform(a, query=True, worldSpace=True, translation=True)
         pos_b = cmds.xform(b, query=True, worldSpace=True, translation=True)
@@ -51,7 +51,8 @@ def main(translate=True, rotate=True):
         if has_keyframes_b:
             for attr in translate_attributes:
                 cmds.setKeyframe(b, attribute=attr)
-      
+    
+    # Swap rotations.
     if rotate:   
         rot_a = cmds.xform(a, query=True, worldSpace=True, rotation=True)
         rot_b = cmds.xform(b, query=True, worldSpace=True, rotation=True)
