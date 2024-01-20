@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0018
+# VERSION: 0019
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -1045,11 +1045,60 @@ def set_animation_curve_template_state(animation_curves, lock_state=False):
             if cmds.objExists(full_name):
                 cmds.setAttr(full_name, lock=lock_state)
 
+
+# ------------------------------------------------------------------------------ #
+def set_corresponding_attribute_states(source, target, mode, keyable=False, lock=True):
+    """
+    Originally made for mr_bakeToWorldspace.py
+
+    mode should be one of following: translate, rotate, both
+    """
+
+
+    main_attributes = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
+    extra_attributes = ["scaleX", "scaleY", "scaleZ", "visibility"]
+
+    for attr in main_attributes:
+        source_attr = source + "." + attr
+
+        target_attr = target + "." + attr
+        target_lock = cmds.getAttr(target_attr, lock=lock)
+        target_keyable = cmds.getAttr(target_attr, keyable=keyable)
+
+        if target_lock or not target_keyable:
+            cmds.setAttr(source_attr, keyable=keyable)
+
+    for attr in extra_attributes:
+        set_attribute_state(source, attr, keyable=keyable, lock=lock)
+
+    if mode == "translate":
+        rotation_attributes = ["rotateX", "rotateY", "rotateZ"]
+        for attr in rotation_attributes:
+            set_attribute_state(source, attr, keyable=keyable, lock=lock)
+
+    elif mode == "rotate":
+        translation_attributes = ["translateX", "translateY", "translateZ"]
+        for attr in translation_attributes:
+            set_attribute_state(source, attr, keyable=keyable, lock=lock)     
+
+# ------------------------------------------------------------------------------ #
+def set_attribute_state(source, attr, keyable=False, lock=True):
+    source_attr = source + "." + attr
+    cmds.setAttr(source_attr, keyable=keyable)
+    cmds.setAttr(source_attr, lock=lock)
+
+
 """
 ##################################################################################################################################################
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-20- 0019:
+#   - Added functions:
+#       - set_corresponding_attribute_states()
+#           - Previously named lock_and_hide_corresponding_attributes(), when from mr_bakeToWorldspace().
+#       - set_attribute_state()
+#
 # 2024-01-16- 0018:
 #   - Moving following functions into mr_animLayers.py
 #       - reset_animation_layer_keys_at_currentTime()
