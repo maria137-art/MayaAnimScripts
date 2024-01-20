@@ -1,24 +1,28 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_bakeToWorldspace.py
-# VERSION: 0005
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # CREDIT: Richard Lico (for workflow)
 # ---------------------------------------
-#
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
 # Bake selected objects to worldspace translation and rotation.
-# 
+# Also bake follow locators. 
+#
 # INSTRUCTIONS:
 # ---------------------------------------
-# 
 # Select objects you would like to bake to worldspace, and run the function in one of the three modes:
-#   - "both"            :   Convert to both worldspace translation and rotation.
+#   - "both"          :   Convert to both worldspace translation and rotation.
 #   - "translate"     :   Convert to just worldspace translation.
 #   - "rotate"        :   Convert to just worldspace rotation (locator will follow objects translation).
+#
+#
+# EXAMPLE USES:
+# On a shelf button, single-click to create a worldspace locator constraint. Double-click to just create a follow locator.
 #
 # ---------------------------------------
 # RUN COMMAND:
@@ -52,42 +56,29 @@ mr_bakeToWorldspace.main(mode="both", constrain=False, simulate_bake=True)
 
 
 # ---------------------------------------
+# REQUIREMENTS:
+# ---------------------------------------
+# The mr_utilities.py file, for support functions:
+# https://github.com/maria137-art/MayaAnimScripts/blob/main/mr_utilities.py
+#
+# ---------------------------------------
 # RESEARCH THAT HELPED:
 # ---------------------------------------
 # Richard Lico's "Space Switching for Animators" course on Animation Sherpa.
 #
 # WISH LIST:
 # ---------------------------------------
-#   - Give warning if selected object is already constrained.
-#       - But still work for any axis that isn't constrained.
+#   - Give warning if selected object has its relevant attributes constrained.
 #
-# ---------------------------------------
-# CHANGELOG:
-# ---------------------------------------
-# 2023-12-28 - 0006:
-# - Adding option to just bake a worldspace locator, without reversing constraints.
-# - Adding option to bake with or without simulation, depending on needing to bake fast vs baking physics.
-#
-# 2023-12-17 - 0005:
-#   - End script with relevant manipulators active.
-#
-# 2023-12-06 - 0004:
-#   - Fixed lock_and_hide_corresponding_attributes to lock and hide attributes on multiple objects.
-#
-# 2023-12-06 - 0003:
-#   - Adding functions to hide and ignore locked and unkeyable attributes on targests, avoiding errors.
-#
-# 2023-07-10 - 0002:
-#   - Fixing issue with locking constrained attributes.
-#
-# 2023-06-30 - 0001:
-#   - First pass of workflow in Python, to bake all objects at once.
-#   - Provide 3 options.
 # ------------------------------------------------------------------------------ #
 """
 
 import maya.cmds as cmds
 import maya.mel as mel
+
+import importlib
+import mr_utilities
+importlib.reload(mr_utilities)
 
 def main(mode=None, constrain=True, simulate_bake=False):
     # -------------------------------------------------------------------
@@ -103,6 +94,13 @@ def main(mode=None, constrain=True, simulate_bake=False):
     
     locators = []
     constraints = []
+
+    # Store the lock state of the BaseAnimation animation layer.
+    if cmds.objExists("BaseAnimation"):
+        is_baseAnimation_locked = cmds.getAttr("BaseAnimation" + ".lock")  
+
+        if is_baseAnimation_locked:
+            cmds.animLayer("BaseAnimation", edit=True, lock=False)
 
     # -------------------------------------------------------------------
     # 01. CREATE A LOCATOR PER OBJECT.
@@ -153,18 +151,18 @@ def main(mode=None, constrain=True, simulate_bake=False):
         for i, item in enumerate(selection):
             locator = locators[i]
             if mode == "both":
-                constrain_unlocked_translates(locator, item)
-                constrain_unlocked_rotates(locator, item)
+                mr_utilities.constrain_unlocked_translates(locator, item)
+                mr_utilities.constrain_unlocked_rotates(locator, item)
 
             if mode == "translate":  
-                constrain_unlocked_translates(locator, item)
+                mr_utilities.constrain_unlocked_translates(locator, item)
 
                 # End with the Translate manipulator on.
                 mel.eval("buildTranslateMM ;")
                 mel.eval("destroySTRSMarkingMenu MoveTool ;")
 
             if mode == "rotate":
-                constrain_unlocked_rotates(locator, item)
+                mr_utilities.constrain_unlocked_rotates(locator, item)
                 cmds.pointConstraint(item, locator)
 
                 # End with Rotate manipulator active.
@@ -172,83 +170,47 @@ def main(mode=None, constrain=True, simulate_bake=False):
                 mel.eval("destroySTRSMarkingMenu RotateTool ;")
 
             # Lock and hide attributes on the locator if corresponding ones on the target are locked.
-            lock_and_hide_corresponding_attributes(locator, item, mode)
+            mr_utilities.set_corresponding_attribute_states(locator, item, mode, keyable=False, lock=True)
 
     # End with the locators selected.
     cmds.select(locators)
 
+    # Restore original lock state of BaseAnimation.
+    if cmds.objExists("BaseAnimation"):
+        if is_baseAnimation_locked:
+            cmds.animLayer("BaseAnimation", edit=True, lock=True)
+            
+
+"""
 ##################################################################################################################################################
-
-########################################################################
-#                                                                      #
-#                         SUPPORTING FUNCTIONS                         #
-#                                                                      #
-########################################################################
-
-def lock_and_hide_corresponding_attributes(source, target, mode):
-    main_attributes_to_lock_hide = ["translateX", "translateY", "translateZ", "rotateX", "rotateY", "rotateZ"]
-    extra_attributes_to_lock_hide = ["scaleX", "scaleY", "scaleZ", "visibility"]
-
-    for attr in main_attributes_to_lock_hide:
-        source_attr = source + "." + attr
-
-        target_attr = target + "." + attr
-        target_lock = cmds.getAttr(target_attr, lock=True)
-        target_keyable = cmds.getAttr(target_attr, keyable=True)
-
-        if target_lock or not target_keyable:
-            cmds.setAttr(source_attr, keyable=False)
-
-    def lock_hide_attribute(source, attr):
-        source_attr = source + "." + attr
-        cmds.setAttr(source_attr, keyable=False)
-        cmds.setAttr(source_attr, lock=True)
-
-    for attr in extra_attributes_to_lock_hide:
-        lock_hide_attribute(source, attr)
-
-    if mode == "translate":
-        rotation_attributes = ["rotateX", "rotateY", "rotateZ"]
-        for attr in rotation_attributes:
-            lock_hide_attribute(source, attr)
-
-    elif mode == "rotate":
-        translation_attributes = ["translateX", "translateY", "translateZ"]
-        for attr in translation_attributes:
-            lock_hide_attribute(source, attr)
-
+# ---------------------------------------
+# CHANGELOG:
+# ---------------------------------------
+# 2024-01-20- 0007:
+#   - Checking if the BaseAnimation animation layer is locked before running tool, to avoid potential bugs.
+#   - Moving changelog to the bottom.
+#   - Moving support functions to mr_utilities.py.
+#       - Renaming lock_and_hide_corresponding_attributes() inside it, to set_corresponding_attribute_states().
+#
+# 2023-12-28 - 0006:
+#   - Adding option to just bake a worldspace locator, without reversing constraints.
+#   - Adding option to bake with or without simulation, depending on needing to bake fast vs baking physics.
+#
+# 2023-12-17 - 0005:
+#   - End script with relevant manipulators active.
+#
+# 2023-12-06 - 0004:
+#   - Fixed lock_and_hide_corresponding_attributes to lock and hide attributes on multiple objects.
+#
+# 2023-12-06 - 0003:
+#   - Adding functions to hide and ignore locked and unkeyable attributes on targests, avoiding errors.
+#
+# 2023-07-10 - 0002:
+#   - Fixing issue with locking constrained attributes.
+#
+# 2023-06-30 - 0001:
+#   - First pass of workflow in Python, to bake all objects at once.
+#   - Provide 3 options.
+# ---------------------------------------
 ##################################################################################################################################################
-    
-def constrain_unlocked_translates(driver, item):
-    # Check if translate X, Y, Z are locked
-    skip_trans_axes = []
-    if cmds.getAttr(item + ".translateX", lock=True):
-        skip_trans_axes.append("x")
-    if cmds.getAttr(item + ".translateY", lock=True):
-        skip_trans_axes.append("y")
-    if cmds.getAttr(item + ".translateZ", lock=True):
-        skip_trans_axes.append("z")
-
-    # Apply point constraint with skipping specified axes
-    if skip_trans_axes:
-        cmds.pointConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_trans_axes)
-    else:
-        cmds.pointConstraint(driver, item, maintainOffset=True, weight=1)
-
-##################################################################################################################################################
-
-def constrain_unlocked_rotates(driver, item):
-    # Check if rotate X, Y, Z are locked
-    skip_rot_axes = []
-    if cmds.getAttr(item + ".rotateX", lock=True):
-        skip_rot_axes.append("x")
-    if cmds.getAttr(item + ".rotateY", lock=True):
-        skip_rot_axes.append("y")
-    if cmds.getAttr(item + ".rotateZ", lock=True):
-        skip_rot_axes.append("z")
-
-    # Apply orient constraint with skipping specified axes
-    if skip_rot_axes:
-        cmds.orientConstraint(driver, item, maintainOffset=True, weight=1, skip=skip_rot_axes)
-    else:
-        cmds.orientConstraint(driver, item, maintainOffset=True, weight=1)
+"""
