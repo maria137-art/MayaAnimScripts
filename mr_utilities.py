@@ -101,10 +101,24 @@ def clear_keys(reset_selected_attributes=True):
     Clear animation keys for selected attributes or all keyable attributes of selected objects.
     This function ensures that the animation curves of attributes to clear will be unlocked.
 
+    Current expected behaviour is clear_keys() will only clear keys of the top most active animation layer per attribute.
+
     """
     selection = get_selection_generator()
     if not selection:
         return
+
+    """
+    # ---------------------------------------
+    # 01. CHECK LOCK STATE OF BASEANIMATION.
+    # ---------------------------------------
+    # Store the lock state of the BaseAnimation animation layer.
+    if cmds.objExists("BaseAnimation"):
+        is_baseAnimation_locked = cmds.getAttr("BaseAnimation" + ".lock")  
+
+        if is_baseAnimation_locked:
+            cmds.animLayer("BaseAnimation", edit=True, lock=False)
+    """
 
     # ---------------------------------------
     # 01. GET VALID OBJECT ATTRIBUTES.
@@ -143,6 +157,15 @@ def clear_keys(reset_selected_attributes=True):
             set_animation_curve_template_state(curve, lock_state=False)
 
     cmds.cutKey(valid_object_attributes) 
+
+    """
+    # ---------------------------------------
+    # 01. RESTORE LOCK STATE OF BASEANIMATION.
+    # ---------------------------------------
+    if cmds.objExists("BaseAnimation"):
+        if is_baseAnimation_locked:
+            cmds.animLayer("BaseAnimation", edit=True, lock=True)
+    """
 
 # ------------------------------------------------------------------------------ #
 def reset_attributes_to_default_value(selection=None, attributes=None, reset_selected_attributes=False, reset_non_numeric_attributes=False):
