@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0022
+# VERSION: 0023
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -212,7 +212,12 @@ def clear_keys(reset_selected_attributes=True):
     """
 
 # ------------------------------------------------------------------------------ #
-def reset_attributes_to_default_value(selection=None, attributes=None, reset_selected_attributes=False, reset_non_numeric_attributes=False):
+def reset_attributes_to_default_value(
+    selection=None, 
+    attributes=None, 
+    reset_selected_attributes=False, 
+    reset_non_numeric_attributes=False
+):
     """
     Reset attributes of selected objects to their default values.
 
@@ -284,7 +289,15 @@ def reset_attributes_to_default_value(selection=None, attributes=None, reset_sel
                 else:
                     continue
             if valid_attributes:
-                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=True, filter_connected=True)
+                valid_object_attributes = get_object_attributes(
+                    selection=obj,
+                    attributes=valid_attributes, 
+                    filter_locked=True, 
+                    filter_muted=True, 
+                    filter_constrained=True, 
+                    filter_connected=True
+                )
+
         else:
             print_warning_from_caller('Nothing to reset')
             return
@@ -487,7 +500,7 @@ def is_attribute_connected_as_destination(obj_attr):
     nodes_to_check = ['pos','loft','mat','dcp']
     
     for node_info in nodes_to_check:
-        if node_info in source_connection:
+        if source_connection.startswith(node_info + '.'):
             return True
     
     return False
@@ -849,7 +862,14 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
     return layered_attributes_dict
 
 # ------------------------------------------------------------------------------ #
-def get_object_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True, filter_connected=True):
+def get_object_attributes(
+    selection=None, 
+    attributes=None, 
+    filter_locked=True, 
+    filter_muted=True, 
+    filter_constrained=True, 
+    filter_connected=True
+):
     """
     Filter attributes based on specified conditions for the given selected objects.
 
@@ -1192,6 +1212,12 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-22 - 0023:
+#   - Fixing is_attribute_connected_as_destination() bug.
+#       - It was returning true for e.g. poseOutput.outputX, because 'pos' was in the name.
+#           - Changed it to only return true if text before the . is exactly one of the strings in nodes_to_check.
+#   - Minor formatting.
+#
 # 2024-01-22 - 0022:
 #   - Added functions:
 #       - remove_from_animation_layers()
