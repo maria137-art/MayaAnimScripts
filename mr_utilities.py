@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0020
+# VERSION: 0021
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -81,7 +81,7 @@ def filter_for_selected_animation_layers(animation_layers):
     return animation_layers
 
 # ------------------------------------------------------------------------------ #
-def set_selected_for_all_layers(state):
+def set_selected_for_all_animation_layers(state):
     # Python version of setSelectedForAllLayers from Autodesk Maya's layerEditor.mel, line 1220
     layers = cmds.ls(type='animLayer')
     for layer in layers:
@@ -807,7 +807,7 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
 # ------------------------------------------------------------------------------ #
 def get_object_attributes(selection=None, attributes=None, filter_locked=True, filter_muted=True, filter_constrained=True, filter_connected=True):
     """
-    Filter attributes based on specified conditions for the given selection.
+    Filter attributes based on specified conditions for the given selected objects.
 
     :param selection: List of objects to filter attributes for.
     :type selection: list, optional
@@ -872,29 +872,38 @@ def get_object_attributes(selection=None, attributes=None, filter_locked=True, f
     """
 
 # ------------------------------------------------------------------------------ #
-def get_selected_channels():
+def get_selected_channels(longName=False, node_to_query=None):
     """ 
     Get selected attributes in the Channel Box.
-    
-    Original Creators:
+    This funciton is intended to work for one node at a time.
+     
+    :Credit:
     ----------
-    Fernando Ortega: From Ortega's reset_to_default.py script:
+    Fernando Ortega: Adapted from Ortega's reset_to_default.py script:
         https://animtd.gumroad.com/l/reset_to_default
-
+    
+    :param longName: If True, return the long name versions of attribute channels.
+    :type longName: bool
+    :param node_to_query: If longName is True, the node to query attribute long names from.
+    :type node_to_query: str
     :return: List of selected attributes in the Channel Box.
     :rtype: list
 
     :Example:
 
-    >>> result = get_selected_channels()
+    >>> result = get_selected_channels(longName=False, node_to_query=None)
     >>> print(result)
-    ['pSphere1.translateX', 'pSphere1.translateY']
+    ['tx', 'ty']
+
+    >>> result = get_selected_channels(longName=True, node_to_query='pSphere')
+    >>> print(result)
+    ['translateX', 'translateY']
 
     """
-    channelBox = mel.eval('global string $gChannelBoxName; $temp=$gChannelBoxName;')  # fetch maya's main channelbox
+    channelBox = mel.eval('global string $gChannelBoxName; $temp=$gChannelBoxName;')
     selectedAttrs = []
 
-    shapeAttrs = cmds.channelBox(channelBox, query=True, selectedShapeAttributes=True)
+    shapeAttrs = cmds.channelBox(channelBox, query=True, selectedShapeAttributes=True,)
     mainAttrs = cmds.channelBox(channelBox, query=True, selectedMainAttributes=True)
     inputAttrs = cmds.channelBox(channelBox, query=True, selectedHistoryAttributes=True)
 
@@ -907,6 +916,10 @@ def get_selected_channels():
     if inputAttrs:
         selectedAttrs.extend(inputAttrs)
 
+    if longName:
+        if not node_to_query:
+            display_viewport_warning("Please specify a node_to_query.")
+        selectedAttrs = [cmds.attributeQuery(attr, longName=True, node=node_to_query) for attr in selectedAttrs]
     return selectedAttrs
 
 # ------------------------------------------------------------------------------ #
@@ -971,7 +984,7 @@ def display_viewport_warning(message, position='midCenterTop'):
     caller_function_name = inspect.currentframe().f_back.f_code.co_name
 
     OpenMaya.MGlobal.displayWarning(message)
-    fadeTime = min(len(message)*150, 2000)
+    fadeTime = min(len(message)*100, 2000)
     cmds.inViewMessage( message=f"{message}\n\n    Warning from {caller_function_name}()", pos=position, fade=True, fadeStayTime=fadeTime, dragKill=True)
 
 # ------------------------------------------------------------------------------ #
@@ -1135,6 +1148,11 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-21 - 0021:
+#   - Renaming set_selected_for_all_layers() to set_selected_for_all_animation_layers(), for clarity.
+#   - Adjustimg fadeTime in display_viewport_warning()
+#   - Adding option to get_selected_channels() to return longNames.
+#
 # 2024-01-20- 0020:
 #   - Added functions:
 #       - select_hierarchy()
