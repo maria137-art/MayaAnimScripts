@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayers.py
-# VERSION: 0007
+# VERSION: 0008
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -46,13 +46,12 @@ importlib.reload(mr_utilities)
 # ------------------------------------------------------------------------------ #
 def bake_to_selected_override_animation_layer(simulation=True, preserveOutsideKeys=True):
     """
-    Working with multiple Override animation layers in a scene, and wanting to bake additve layers to it.
-    Personally find it better than using Maya's Default Merge Layers, when dealing with a scene with multiple override animation layers.
+    Bake animation to selected override animation layers.
 
     Example Uses
     -------
-    Working with multiple Override animation layers in a scene, and wanting to bake additve layers to it.
-    Personally find it better than using Maya's Default Merge Layers.
+    Found this helpful when working with multiple Override animation layers in a scene, and wanting to bake information from others layers to it.
+    Personally find it better than using Maya's Default Merge Layers, which currently seems to bake objects even if they aren't attached to other layers.
 
     Wish List
     -------
@@ -149,7 +148,7 @@ def create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False
     # 01. COPY BASEANIMATION KEY TIMING.
     # ---------------------------------------
     # Deselect all animation layers.
-    mr_utilities.set_selected_for_all_layers(0)
+    mr_utilities.set_selected_for_all_animation_layers(0)
     # Select just BaseAnimation.
     cmds.animLayer("BaseAnimation", edit=True, selected=True)
 
@@ -170,7 +169,7 @@ def create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False
     cmds.select(selection, replace=True)
 
     # Select the new animation layer.
-    mr_utilities.set_selected_for_all_layers(0)
+    mr_utilities.set_selected_for_all_animation_layers(0)
     cmds.animLayer(animation_layer, edit=True, selected=True)
 
 ##################################################################################################################################################
@@ -242,13 +241,11 @@ def reset_animation_layer_keys_at_currentTime(
         mr_utilities.print_warning_from_caller("No connections found to queried animation layers.")
         return
 
-
     # ---------------------------------------
     # 01. RESET KEYS.
     # ---------------------------------------
     nullify_animation_layer_keys(
         selection=mr_utilities.get_selection_generator(),
-        attributes_to_reset=None, 
         reset_selected_attributes=reset_selected_attributes, 
         reset_non_numeric_attributes=reset_non_numeric_attributes, 
         nullify_only_selected_animation_layers=filter_selected_animation_layers
@@ -256,20 +253,16 @@ def reset_animation_layer_keys_at_currentTime(
 
 # ------------------------------------------------------------------------------ #
 def nullify_animation_layer_keys(
-    selection=None, 
-    attributes_to_reset=None, 
+    selection=None,
     reset_selected_attributes=False, 
     reset_non_numeric_attributes=False, 
     nullify_only_selected_animation_layers=False
 ):
-
     """
     A support function for reset_animation_layer_keys_at_currentTime(), to filter for the specific attributes to reset.
 
     :param selection: A list of objects to process
     :type selection: list(str), optional
-    :param attributes_to_reset: A list of attributes to reset.
-    :type attributes_to_reset: list(str), optional
     :param reset_selected_attributes: If True, reset only selected attributes.
     :type reset_selected_attributes: bool
     :param reset_non_numeric_attributes: If true, also reset non-numeric attributes.
@@ -285,11 +278,10 @@ def nullify_animation_layer_keys(
         # ---------------------------------------
         # 02. IF NO ATTRIBUTES SPECIFIED, USE ALL KEYABLE.
         # ---------------------------------------
-        if not attributes_to_reset:
-            if reset_selected_attributes:
-                attributes_to_reset = mr_utilities.get_selected_channels() or cmds.listAttr(obj, keyable=True)
-            else:
-                attributes_to_reset = cmds.listAttr(obj, keyable=True)
+        if reset_selected_attributes:
+            attributes_to_reset = mr_utilities.get_selected_channels(longName=True, node_to_query=obj) or cmds.listAttr(obj, keyable=True)
+        else:
+            attributes_to_reset = cmds.listAttr(obj, keyable=True)
 
         # ---------------------------------------
         # 02. FILTER KEYS TO NULLIFY.
@@ -306,24 +298,22 @@ def nullify_animation_layer_keys(
 
             if layered_attributes:
                 for layer, attributes in layered_attributes.items():
+                    filtered_attributes = []
                     # ---------------------------------------
                     # 03. OPTIONAL - FILTER FOR SELECTED ATTRIBUTES.
                     # ---------------------------------------
                     if reset_selected_attributes:
-                        for attr in attributes:
-                            if attr not in attributes_to_reset:
-                                attributes.remove(attr)
+                        filtered_attributes = [attr for attr in attributes if attr in attributes_to_reset]
+
                     # ---------------------------------------
                     # 03. OPTIONAL - FILTER OUT NON-NUMERIC ATTRIBUTES
                     # ---------------------------------------
                     if not reset_non_numeric_attributes:
-                        for attr in attributes:
-                            if not mr_utilities.is_attribute_numeric(obj, attr):
-                                attributes.remove(attr)
+                        filtered_attributes = [attr for attr in filtered_attributes if mr_utilities.is_attribute_numeric(obj, attr)]
                     # ---------------------------------------
                     # 03. SET KEYS.
                     # ---------------------------------------
-                    cmds.setKeyframe(obj, animLayer=layer, attribute=attributes, identity=True)
+                    cmds.setKeyframe(obj, animLayer=layer, attribute=filtered_attributes, identity=True)
         else:
             continue
 
@@ -331,12 +321,17 @@ def nullify_animation_layer_keys(
     current_time = cmds.currentTime(query=True)
     cmds.currentTime(current_time, edit=True)
 
-
 ##################################################################################################################################################
 """
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-21 - 0008:
+#   - Updating renamed function in mr_utilities:
+#       -  set_selected_for_all_layers() to set_selected_for_all_animation_layers()
+#   - Bug fix for nullify_animation_layer_keys()
+#       - reset_selected_attributes was not exclusively resetting selected attributes. 
+#
 # 2024-01-16 - 0007:
 #   - reset_animation_layer_keys_at_currentTime()
 #       - Using generators more for efficiency.
