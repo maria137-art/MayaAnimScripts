@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0021
+# VERSION: 0022
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -79,6 +79,50 @@ def filter_for_selected_animation_layers(animation_layers):
         # print_warning_from_caller("No selected animation layers connected.")
         return
     return animation_layers
+
+# ------------------------------------------------------------------------------ #
+def remove_from_animation_layers(objects=None, animation_layers=None):
+    """
+    Remove objects from connected animation layers.
+    
+    Credit
+    -------
+    Based on Autodesk Maya 2023's layerEditorRemoveObjectsAnimLayer(), from layerEditor.mel, line 2470.
+    
+    :param objects: Objects to remove from animation. If none are given, this function will process the current selection.
+    :type objects: list(str)
+    :param animation_layers: Animation layers to remove the selected objects from. If none are given, this function will process all animation layers.
+    :type animation_layers: list(str)
+
+    """
+    # There are differences in how objects are listed between several commands (e.g.: group|item vs |group|item).
+    # To avoid this, with the help of 'ls -l', long names are used for comparisons
+    
+    if not objects:
+        objects = cmds.ls(selection=True, long=True)
+    if not objects:
+        return
+    
+    if not animation_layers:
+        animation_layers = cmds.ls(type='animLayer')
+    
+    if "BaseAnimation" in animation_layers:
+        animation_layers.remove("BaseAnimation")
+        
+    for layer in animation_layers:
+        if cmds.objectType(layer) == "animLayer":
+            
+            attributes = cmds.animLayer(layer, query=True, attribute=True)
+            for attr in attributes:
+                attribute_full_name = cmds.ls(attr, long=True)[0]
+                
+                mel_plugNode_command = f'plugNode {attribute_full_name};'
+                node_full_name = mel.eval(mel_plugNode_command)
+
+                for obj in objects:
+                    obj_full_name = cmds.ls(obj, long=True)[0]
+                    if node_full_name == obj_full_name:
+                        cmds.animLayer(layer, edit=True, removeAttribute=attr)
 
 # ------------------------------------------------------------------------------ #
 def set_selected_for_all_animation_layers(state):
@@ -1148,6 +1192,10 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-22 - 0022:
+#   - Added functions:
+#       - remove_from_animation_layers()
+#
 # 2024-01-21 - 0021:
 #   - Renaming set_selected_for_all_layers() to set_selected_for_all_animation_layers(), for clarity.
 #   - Adjustimg fadeTime in display_viewport_warning()
