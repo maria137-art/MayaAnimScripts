@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0023
+# VERSION: 0024
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -874,9 +874,9 @@ def get_object_attributes(
     Filter attributes based on specified conditions for the given selected objects.
 
     :param selection: List of objects to filter attributes for.
-    :type selection: list, optional
+    :type selection: list(str), optional
     :param attributes: List of attributes to filter.
-    :type attributes: list, optional
+    :type attributes: list(str), optional
 
     :param filter_locked: If True, filters out locked attributes.
     :type filter_locked: bool
@@ -891,28 +891,33 @@ def get_object_attributes(
 
     :Example:
 
-    >>> result = get_object_attributes(
+    >>> valid_object_attributes = get_object_attributes(
     ...     selection=["pSphere1", "pSphere2"],
     ...     attributes=["translateX", "rotateY"],
     ...     filter_locked=True,
     ...     filter_muted=True,
     ...     filter_constrained=True
     ... )
-    >>> print(result)
+    >>> for attr in valid_object_attributes:
+    ...     print(attr)
     ['pSphere1.translateX', 'pSphere2.rotateY']
 
     """
     if not selection:
         selection = get_selection_generator()
-
-    if not attributes:
-        attributes = cmds.listAttr(selection, keyable=True)
+    if not selection:
+        return
 
     # Convert selection to a list if it's a single object name
     if isinstance(selection, str):
         selection = [selection]
 
     for obj in selection:
+        # If attributes not provided, get keyable attributes.
+        if not attributes:
+            # Not sure if these should be included: scalar=True, hasData=True,
+            attributes = cmds.listAttr(obj, keyable=True) or []
+
         for attr in attributes:
             object_attribute = f"{obj}.{attr}"
 
@@ -1212,6 +1217,11 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-22 - 0024:
+#   - Bug fixing for get_object_attributes():
+#       - Updating description.
+#       - Ensuring it returns attributes.
+#
 # 2024-01-22 - 0023:
 #   - Fixing is_attribute_connected_as_destination() bug.
 #       - It was returning true for e.g. poseOutput.outputX, because 'pos' was in the name.
