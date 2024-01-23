@@ -78,8 +78,8 @@ def main(selection_mode=None):
 
 	# deselect_unkeyed_objects(selection)
 
-	visible_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
-	if not visible_curves:
+	visible_animation_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
+	if not visible_animation_curves:
 		cmds.warning("No visible animation curves found.")
 		return
 
@@ -92,18 +92,18 @@ def main(selection_mode=None):
 	if selection_mode == "playback_range":
 		start_time = cmds.playbackOptions(query=True, min=True)
 		end_time = cmds.playbackOptions(query=True, max=True)
-		for curve in visible_curves:
+		for curve in visible_animation_curves:
 			cmds.selectKey(curve, toggle=True, time=(start_time, end_time), add=True)
 
 	# Select all keys.
 	if selection_mode == "all":
-		for curve in visible_curves:
+		for curve in visible_animation_curves:
 			cmds.selectKey(curve, toggle=True)
 
 	# Select keys only at the current time.
 	if selection_mode == "currentTime":
 		current_time = cmds.currentTime(query=True)
-		for curve in visible_curves:
+		for curve in visible_animation_curves:
 			cmds.selectKey(curve, toggle=True, time=(current_time, current_time))
 
 
