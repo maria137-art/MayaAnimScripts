@@ -6,7 +6,7 @@
 # CREATORS: Maria Robertson
 # CREDIT: Brian Horgan / Jørn-Harald Paulsen
 # -------------------------------------------------------------------
-#
+# Last tested for Autodesk Maya 2023.3
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
