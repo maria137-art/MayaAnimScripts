@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0024
+# VERSION: 0025
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -916,7 +916,7 @@ def get_object_attributes(
         # If attributes not provided, get keyable attributes.
         if not attributes:
             # Not sure if these should be included: scalar=True, hasData=True,
-            attributes = cmds.listAttr(obj, keyable=True) or []
+            attributes = cmds.listAttr(obj, keyable=True, scalar=True) or []
 
         for attr in attributes:
             object_attribute = f"{obj}.{attr}"
@@ -1217,6 +1217,11 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-23 - 0025:
+#   - get_object_attributes()
+#       - get only scalar attributes, to avoid error "Message attributes have no data values."
+#       - This should help avoid errors for mr_curveOffset.py.
+#
 # 2024-01-22 - 0024:
 #   - Bug fixing for get_object_attributes():
 #       - Updating description.
