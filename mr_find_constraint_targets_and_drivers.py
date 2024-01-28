@@ -64,6 +64,7 @@ from collections import OrderedDict
 import maya.cmds as cmds
 
 
+# ------------------------------------------------------------------------------ #
 def mr_find_targets_of_selected():
     selected = cmds.ls(selection=True)
 
@@ -83,7 +84,7 @@ def mr_find_targets_of_selected():
             if target not in unique_targets:
                 unique_targets[target] = None
 
-    # Maintain the oroginal order list.
+    # Maintain the original order list.
     targets_in_order = list(unique_targets.keys())
 
     if targets_in_order:
@@ -95,6 +96,7 @@ def mr_find_targets_of_selected():
         print("No targets found.")
 
 
+# ------------------------------------------------------------------------------ #
 def mr_find_drivers_of_selected():
     selected = cmds.ls(selection=True)
     cmds.select(cl=True)
