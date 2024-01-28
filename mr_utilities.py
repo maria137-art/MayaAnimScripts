@@ -108,21 +108,22 @@ def remove_from_animation_layers(objects=None, animation_layers=None):
     
     if "BaseAnimation" in animation_layers:
         animation_layers.remove("BaseAnimation")
-        
-    for layer in animation_layers:
-        if cmds.objectType(layer) == "animLayer":
-            
-            attributes = cmds.animLayer(layer, query=True, attribute=True)
-            for attr in attributes:
-                attribute_full_name = cmds.ls(attr, long=True)[0]
+    
+    if animation_layers:
+        for layer in animation_layers:
+            if cmds.objectType(layer) == "animLayer":
                 
-                mel_plugNode_command = f'plugNode {attribute_full_name};'
-                node_full_name = mel.eval(mel_plugNode_command)
+                attributes = cmds.animLayer(layer, query=True, attribute=True)
+                for attr in attributes:
+                    attribute_full_name = cmds.ls(attr, long=True)[0]
+                    
+                    mel_plugNode_command = f'plugNode {attribute_full_name};'
+                    node_full_name = mel.eval(mel_plugNode_command)
 
-                for obj in objects:
-                    obj_full_name = cmds.ls(obj, long=True)[0]
-                    if node_full_name == obj_full_name:
-                        cmds.animLayer(layer, edit=True, removeAttribute=attr)
+                    for obj in objects:
+                        obj_full_name = cmds.ls(obj, long=True)[0]
+                        if node_full_name == obj_full_name:
+                            cmds.animLayer(layer, edit=True, removeAttribute=attr)
 
 # ------------------------------------------------------------------------------ #
 def set_selected_for_all_animation_layers(state):
@@ -311,35 +312,35 @@ def reset_attributes_to_default_value(
         for curve in animation_curves:
             set_animation_curve_template_state(curve, lock_state=False)
 
-    # ---------------------------------------
-    # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
-    # ---------------------------------------
-    for obj_attr in valid_object_attributes:
-        obj, attr = obj_attr.split('.')
+        # ---------------------------------------
+        # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
+        # ---------------------------------------
+        for obj_attr in valid_object_attributes:
+            obj, attr = obj_attr.split('.')
 
-        # Get the default value and check if the attribute is keyed.
-        defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
-        if defaultValue:
-            defaultValue = defaultValue[0]
-            has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
+            # Get the default value and check if the attribute is keyed.
+            defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
+            if defaultValue:
+                defaultValue = defaultValue[0]
+                has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
 
-            try:
-                # Using a try, as don't know yet how to query if an attribute is connected.
-                # e.g. ERROR: setAttr: The attribute 'rivet.translateX' is locked or connected and cannot be modified.
+                try:
+                    # Using a try, as don't know yet how to query if an attribute is connected.
+                    # e.g. ERROR: setAttr: The attribute 'rivet.translateX' is locked or connected and cannot be modified.
 
-                # Set the attribute to its default value.
-                cmds.setAttr(obj_attr, defaultValue)
-                # Only set keys if the attribute already is keyed.
-                if has_keyframes:
-                    cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
-            except:
-                print(f"{obj_attr} could not be reset.")
-            finally:
+                    # Set the attribute to its default value.
+                    cmds.setAttr(obj_attr, defaultValue)
+                    # Only set keys if the attribute already is keyed.
+                    if has_keyframes:
+                        cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+                except:
+                    print(f"{obj_attr} could not be reset.")
+                finally:
+                    continue
+
+            else:
+                # print(f"Attribute {attr} has no default value on object {obj}.")
                 continue
-
-        else:
-            # print(f"Attribute {attr} has no default value on object {obj}.")
-            continue
 
     # ---------------------------------------
     # 01. RESTORE AUTOKEYFRAME STATE
@@ -716,19 +717,20 @@ def get_animation_curves_from_object_attributes(object_attributes, filter_refere
     :rtype: generator of str
 
     """
-    for obj_attr in object_attributes:
-        if filter_referenced:
-            if is_object_attribute_connected_to_referenced_animation_curve(obj_attr):
-                continue
+    if object_attributes:
+        for obj_attr in object_attributes:
+            if filter_referenced:
+                if is_object_attribute_connected_to_referenced_animation_curve(obj_attr):
+                    continue
 
-        get_attr_connection = cmds.listConnections(obj_attr, destination=False, source=True)
-        # This should be better than just formatting the attribute name to replace . and _, as if the object or attribute gets renamed,
-        # it's animation curve won't be renamed and match it, unless its deleted and created again.
-        if get_attr_connection:
-            get_animation_curve = cmds.ls(get_attr_connection[0], type=("animCurveTL", "animCurveTU", "animCurveTA", "animCurveTT"))
+            get_attr_connection = cmds.listConnections(obj_attr, destination=False, source=True)
+            # This should be better than just formatting the attribute name to replace . and _, as if the object or attribute gets renamed,
+            # it's animation curve won't be renamed and match it, unless its deleted and created again.
+            if get_attr_connection:
+                get_animation_curve = cmds.ls(get_attr_connection[0], type=("animCurveTL", "animCurveTU", "animCurveTA", "animCurveTT"))
 
-            for curve in get_animation_curve:
-                yield curve
+                for curve in get_animation_curve:
+                    yield curve
 
 # ------------------------------------------------------------------------------ #
 def get_channel_from_animation_curve(curve, plugs=True):
@@ -845,19 +847,20 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
 
     layered_attributes_dict = {}
 
-    for layer in animation_layers:
-        long_name_layered_attributes = cmds.animLayer(layer, query=True, attribute=True)
-        if long_name_layered_attributes:
+    if animation_layers:
+        for layer in animation_layers:
+            long_name_layered_attributes = cmds.animLayer(layer, query=True, attribute=True)
+            if long_name_layered_attributes:
 
-            layer_attributes = []
-            for attr in long_name_layered_attributes:
-                # Ignore shape node attributes.
-                if not shape_node or (not attr.startswith(shape_node + ".") and attr.startswith(obj + ".")):
-                    attr_names = attr.split('.')[-1]
-                    if attr_names not in layer_attributes:
-                        layer_attributes.append(attr_names)
+                layer_attributes = []
+                for attr in long_name_layered_attributes:
+                    # Ignore shape node attributes.
+                    if not shape_node or (not attr.startswith(shape_node + ".") and attr.startswith(obj + ".")):
+                        attr_names = attr.split('.')[-1]
+                        if attr_names not in layer_attributes:
+                            layer_attributes.append(attr_names)
 
-            layered_attributes_dict[layer] = layer_attributes
+                layered_attributes_dict[layer] = layer_attributes
 
     return layered_attributes_dict
 
@@ -1217,6 +1220,11 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-01-27 - 0026:
+#   - Bug fixing:
+#       - Fixing idents in reset_attributes_to_default_value().
+#       - Avoid NoneType error in get_layered_attributes().
+#
 # 2024-01-23 - 0025:
 #   - get_object_attributes()
 #       - get only scalar attributes, to avoid error "Message attributes have no data values."
