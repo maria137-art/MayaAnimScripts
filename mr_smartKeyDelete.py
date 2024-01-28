@@ -22,8 +22,6 @@
 #       - If NO keys are selected:
 #           - delete keys on visible anim curves on the current frame.
 # 
-#
-#
 # ---------------------------------------
 # RUN COMMAND:
 # ---------------------------------------
