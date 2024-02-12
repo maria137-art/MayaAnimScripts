@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0025
+# VERSION: 0027
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -168,40 +168,42 @@ def clear_keys(reset_selected_attributes=True):
     # ---------------------------------------
     # 01. GET VALID OBJECT ATTRIBUTES.
     # ---------------------------------------
-    object_attributes_to_clear = []
-    for item in selection:
+    valid_object_attributes = []
 
+    for item in selection:
         if reset_selected_attributes:
             attributes = get_selected_channels() or cmds.listAttr(item, keyable=True, unlocked=True)
         else:
             attributes = cmds.listAttr(item, keyable=True, unlocked=True)
 
-        if attributes:
-            valid_attributes = []
-            for attr in attributes:
-                # Check if it exists.
-                if cmds.attributeQuery(attr, node=item, exists=True):
+        if not attributes:
+            continue
 
-                    valid_attributes.append(attr)
+        valid_attributes = [attr for attr in attributes if cmds.attributeQuery(attr, node=item, exists=True)]
+        if not valid_attributes: 
+            continue
 
-            if valid_attributes:
-                # Get the relevant object attribute names.
-                valid_object_attributes = get_object_attributes(attributes=valid_attributes, filter_locked=True, filter_muted=True, filter_constrained=False, filter_connected=False) 
-
-        else:
-            print_warning_from_caller('No attributes to clear.')
-            return
+        valid_object_attributes.extend(get_object_attributes(
+            selection=item,
+            attributes=valid_attributes, 
+            filter_locked=True, 
+            filter_muted=True, 
+            filter_constrained=False, 
+            filter_connected=False)
+        )
 
         # ---------------------------------------
         # 01. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
         # ---------------------------------------
         all_keyable_object_attributes = cmds.listAttr(item, keyable=True, unlocked=True, nodeName=True)
+
         if all_keyable_object_attributes:
             animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
-        for curve in animation_curves:
-            set_animation_curve_template_state(curve, lock_state=False)
+            for curve in animation_curves:
+                set_animation_curve_template_state(curve, lock_state=False)
 
-    cmds.cutKey(valid_object_attributes) 
+    if valid_object_attributes:
+        cmds.cutKey(valid_object_attributes)
 
     """
     # ---------------------------------------
@@ -1220,6 +1222,14 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-02-11 - 0027:
+#   - clear_keys()
+#       - Bug fix for not all attribute keys being cleared.
+#           - Using extend to use valid_object_attributes more reliably.
+#           - Use continue instead of return. Otherwise when one object had all attributes locked, the others would be ignored.
+#       - Realised that get_object_attributes wasn't given a selection argument, so it was taking longer to run.
+#           - (Maybe functions should print a warning if any of their arguments are empty, to help avoid this mistake again?)
+#
 # 2024-01-27 - 0026:
 #   - Bug fixing:
 #       - Fixing idents in reset_attributes_to_default_value().
