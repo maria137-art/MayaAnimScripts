@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_set_currentTime_halfway.py
-# VERSION: 0005
+# VERSION: 0006
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -86,8 +86,8 @@ def main(float=False):
             return
 
     # ---------------------------------------
-    # 01. OTHERWISE.
-    # ---------------------------------------               
+    # 01. IF THERE ARE VISIBLE ANIMATIONS CURVES IN THE GRAPH EDITOR.
+    # ---------------------------------------  
     # Check if any visible animation curves in the Graph Editor have keys at current time.
     visible_animation_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 
@@ -102,6 +102,15 @@ def main(float=False):
         # Otherwise, do nothing.
         else:
             return
+
+    # ---------------------------------------
+    # 01. OTHERWISE
+    # ---------------------------------------  
+    else:
+        midPoint = get_midpoint_of_next_and_previous_key_at_currentTime(float=float)
+        cmds.currentTime(midPoint)
+        return
+
 
 ##################################################################################################################################################
 
@@ -145,6 +154,9 @@ def get_midpoint_of_next_and_previous_key_at_currentTime(float=False):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-02-25 - 0006:
+#   - Adding outcome for if mouse cursor is not over graph editor and no visible animation curves are there.
+#
 # 2024-01-28 - 0005:
 #   - Renamed and divided original function.
 #   - Fixed logic for when mouse cursor is over graph editor, and no keys are selected.
