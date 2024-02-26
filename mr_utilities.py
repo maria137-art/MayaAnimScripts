@@ -109,7 +109,7 @@ def select_animation_layers(animation_layers):
 
     # Select only specified animation layers.
     for animLayer in animation_layers:
-        mel.eval(f"animLayerEditorOnSelect \"{animLayer}\" 1;")
+        cmds.animLayer(animLayer, edit=True, selected=True)
 
 # ------------------------------------------------------------------------------ #
 def set_selected_for_all_animation_layers(state):
