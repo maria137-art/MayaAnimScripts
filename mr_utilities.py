@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0029
+# VERSION: 0030
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -717,8 +717,11 @@ def is_object_attribute_connected_to_referenced_animation_curve(object_attribute
     False
 
     """
+
     # Split the attribute into node and attribute name.
-    node, attr = object_attribute.split('.')
+    attribute_parts = object_attribute.split('.')
+    node = attribute_parts[0]
+    attr = '.'.join(attribute_parts[1:])
 
     if cmds.attributeQuery(attr, node=node, exists=True):
         # Get the attribute's connection.
@@ -1291,6 +1294,11 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-03-02 - 0030:
+#       - is_object_attribute_connected_to_referenced_animation_curve()
+#           - Changing how .split splits object_attribute to node and attr,
+#               to avoid this error: "too many values to unpack (expected 2)" 
+#
 # 2024-03-02 - 0029:
 # - Added new function:
 #       - delete_empty_animation_layers()
