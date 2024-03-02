@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_utilities.py
-# VERSION: 0028
+# VERSION: 0029
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morgan Loomis, Tom Bailey
@@ -45,6 +45,25 @@ from maya import OpenMaya
 #                       ANIMATION LAYER FUNCTIONS                      #
 #                                                                      #
 ########################################################################
+
+# ------------------------------------------------------------------------------ #
+def delete_empty_animation_layers(animation_layers):
+    """
+    Delete any empty animation layers from a given list.
+
+    :param animation_layers: Animation layers to check.
+    :type animation_layers: list
+
+    """
+    if not animation_layers:
+        animation_layers = get_all_animation_layers
+
+    if animation_layers:
+        for layer in animation_layers:
+            children = cmds.animLayer(layer, query=True, children=True)
+            attr = cmds.animLayer(layer, query=True, attribute=True)
+            if not children and not attr:
+                cmds.delete(layer)
 
 # ------------------------------------------------------------------------------ #
 def filter_for_selected_animation_layers(animation_layers):
@@ -156,7 +175,7 @@ def modify_objects_on_animation_layers(modify="add", objects=None, animation_lay
     
     if "BaseAnimation" in animation_layers:
         animation_layers.remove("BaseAnimation")
-
+    
     # ---------------------------------------
     # 01. PROCESS EACH ANIMATION LAYER.
     # ---------------------------------------    
@@ -1272,6 +1291,10 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-03-02 - 0029:
+# - Added new function:
+#       - delete_empty_animation_layers()
+#
 # 2024-02-26 - 0028:
 #   - Added and renamed animation layer functions:
 #       - get_all_animation_layers()
