@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_animLayers.py
-# VERSION: 0008
+# VERSION: 0009
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -109,7 +109,7 @@ def bake_to_selected_override_animation_layer(simulation=True, preserveOutsideKe
 def create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False):
     """
     Create a new additive animation layer for selected objects,
-    that has the same umber of keyframes as the BaseAnimation layer.
+    that has the same number of keyframes as the BaseAnimation layer.
 
     :param override_layerMode: If True, create an Override animation layer, instead of Additive.
     :type override_layerMode: bool
@@ -171,6 +171,84 @@ def create_animation_layer_with_baseAnimation_keyTiming(override_layerMode=False
     # Select the new animation layer.
     mr_utilities.set_selected_for_all_animation_layers(0)
     cmds.animLayer(animation_layer, edit=True, selected=True)
+
+# ------------------------------------------------------------------------------ #
+def set_key_every_frame_on_animation_layers(
+    filter_selected_animation_layers=True, 
+    reset_non_numeric_attributes=True, 
+    reset_selected_attributes=True,
+    reset_to_default_value=True
+):
+    """
+    (I can't remember why I made this... Maybe to clickly make manual noise on animation layers?
+    Or to reset every keyframe on animation layers? In which case, need to stop it processing every frame regardless.)
+
+    :param filter_selected_animation_layers: If True, filter only selected animation layers.
+    :type filter_selected_animation_layers: bool
+    :param reset_non_numeric_attributes: If True, reset non-numeric attributes as well.
+    :type reset_non_numeric_attributes: bool
+    :param reset_selected_attributes: If True, reset only selected attributes.
+    :type reset_selected_attributes: bool
+
+    """
+
+    # ---------------------------------------
+    # 01. GET SELECTION.
+    # ---------------------------------------
+    selection = mr_utilities.get_selection_generator()
+
+    # ---------------------------------------
+    # 01. CHECK IF ANIMATION LAYERS CONNECTED TO SELECTED OBJECTS ARE LOCKED OR MUTED.
+    # ---------------------------------------
+    animation_layers = set()
+
+    for obj in selection:
+        connected_animation_layers = cmds.listConnections(obj, type="animLayer") or []
+        animation_layers.update(connected_animation_layers)
+
+    # ---------------------------------------
+    # 01. OPTIONAL - CHECK IF ANIMATION LAYERS ARE SELECTED.
+    # ---------------------------------------
+    if filter_selected_animation_layers:
+        animation_layers = mr_utilities.filter_for_selected_animation_layers(animation_layers)
+
+    # ---------------------------------------
+    # 01. CHECK IF CONNECTED ANIMATION LAYERS ARE LOCKED OR MUTED.
+    # ---------------------------------------
+    if animation_layers:
+        for layer in animation_layers:
+            mute_state = cmds.getAttr(layer + ".mute")
+            lock_state = cmds.getAttr(layer + ".lock")
+
+            if mute_state and lock_state:
+                mr_utilities.print_warning_from_caller(f"\"{layer}\" is muted and locked.")
+                return
+            elif mute_state:
+                mr_utilities.print_warning_from_caller(f"\"{layer}\" is muted.")
+                return
+            elif lock_state:
+                mr_utilities.print_warning_from_caller(f"\"{layer}\" is locked.")
+                return
+    else:
+        mr_utilities.print_warning_from_caller("No connections found to queried animation layers.")
+        return
+
+    # ---------------------------------------
+    # 01. RESET KEYS.
+    # ---------------------------------------
+    start_frame = int(cmds.playbackOptions(query=True, minTime=True))
+    end_frame = int(cmds.playbackOptions(query=True, maxTime=True))
+
+    selection = cmds.ls(selection=True)
+
+
+    for frame in range(start_frame, end_frame + 1):
+        cmds.currentTime(frame, edit=True)
+        for layer in animation_layers:
+            if reset_to_default_value:
+                cmds.setKeyframe(selection, animLayer=layer, identity=True)
+            else:
+                cmds.setKeyframe(selection, animLayer=layer)          
 
 ##################################################################################################################################################
 
@@ -326,6 +404,10 @@ def nullify_animation_layer_keys(
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-03-02 - 0009:
+#   - Adding functions:
+#       - set_key_every_frame_on_animation_layers()
+#
 # 2024-01-21 - 0008:
 #   - Updating renamed function in mr_utilities:
 #       -  set_selected_for_all_layers() to set_selected_for_all_animation_layers()
@@ -337,7 +419,6 @@ def nullify_animation_layer_keys(
 #       - Using generators more for efficiency.
 #   - nullify_animation_layer_keys()
 #       - Added layered_attributes check.
-#
 #
 # 2024-01-16 - 0006:
 #   - Add following functions for mr_utilities.
