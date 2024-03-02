@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_curveOffset.py
-# VERSION: 0001
+# VERSION: 0002
 #
 # CREATORS: Maria Robertson
 # CREDIT: Nicolas Prothais (for original np_curveOffset.mel script)
@@ -15,8 +15,6 @@
 # Based on Nicolas Prothais's np_curveOffset.mel script.
 # Original link: http://nicolas-prothais.com/script.html
 # Alternate link: https://docs.google.com/document/d/1vEaG8KTG3BXYx6yusfGmnU1DjO2rVywWb2rSxqRIWqA/edit
-# 
-# They've been a great resource for script and animation workflows.
 #
 # ---------------------------------------
 # EXAMPLE USES:
@@ -62,6 +60,7 @@ def offset_press():
 	# If auto keyframe was on, temporarily disable it.
 	global original_autoKey_state
 	original_autoKey_state = cmds.autoKeyframe(query=True, state=True)
+
 	if original_autoKey_state: 
 		cmds.autoKeyframe(state=False)
 
@@ -81,7 +80,6 @@ def offset_press():
 		att_buffer.append(att_value)
 		attr_value.append(att_value)
 
-	cmds.undoInfo(closeChunk=True)
 
 # ------------------------------------------------------------------------------ #
 def offset_release():
@@ -133,7 +131,6 @@ def offset_release():
 	finally:
 		# If auto keyframe was originally on, restore its state.
 		cmds.autoKeyframe(state=original_autoKey_state)
-
 		cmds.undoInfo(closeChunk=True)
 
 """
@@ -141,6 +138,9 @@ def offset_release():
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-02-02 - 0002:
+#	- Fixing undo queue, so autokeyframe doesn't unexpectadly get disabled when undoing.
+#
 # 2024-01-23 - 0001:
 #   - First pass, converting the original mel script to python.
 #		- Incorporating mr_utilities.get_object_attributes(), to avoid errors with incompatible attributes.
