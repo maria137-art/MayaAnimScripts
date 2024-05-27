@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_selectVisibleControls.py
-# VERSION: 0009
+# VERSION: 0010
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
@@ -76,14 +76,32 @@ def get_visible_NURBS_curves_in_panel(only_keyed=False):
             # Check the node.
             mr_utilities.is_nurbs_curve(node) and
             mr_utilities.is_visible(node) and
-            # Check its shapes.
-            all(
-                mr_utilities.is_visible(shape) and 
-                # Check if the shape node's Drawing Override is set to Normal.
-                cmds.getAttr(f"{shape}.overrideDisplayType") == 0 
+
+            # Check if at least one its shapes are visible.
+            any(
+                mr_utilities.is_visible(shape) 
+                for shape in cmds.listRelatives(node, shapes=True) or ()
+
+            # Check if at least one of its shapes have their Drawing Override set to Normal.
+            ) and 
+            any(
+                (
+                    # Fetch the overrideDisplayType attribute for the shape.
+                    cmds.getAttr(f"{shape}.overrideDisplayType") == 0
+                    
+                    # If it's an integer, check if it's equal to 0.
+                    if isinstance(cmds.getAttr(f"{shape}.overrideDisplayType"), int)
+
+                    # If it's a list, check if any shape in it is 0.
+                    else any(
+                        override == 0
+                        for override in cmds.getAttr(f"{shape}.overrideDisplayType")
+                    )
+                )
                 for shape in cmds.listRelatives(node, shapes=True) or ()
             ) and
-            # Check its parensts.
+
+            # Check its parent's visibility.
             mr_utilities.are_parents_visible(node)
         )
     )
@@ -153,6 +171,12 @@ def select_visible_curves_and_keyed_locators_in_panel():
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-05-27 - 0010:
+#   - get_visible_NURBS_curves_in_panel()
+#       - Edits based on working with unfinished rigs (that had part of its control shapes hidden).
+#           - Check if at least one of the node's shapes is visible.
+#           - Check if at least one of the node's shapes have their Drawing Override set to Normal.
+#
 # 2023-01-16 - 0009:
 #   - get_visible_NURBS_curves_in_panel()
 #       - Add check for if all parents are visible.
