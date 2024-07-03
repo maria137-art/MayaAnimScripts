@@ -1,7 +1,7 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_curveOffset.py
-# VERSION: 0002
+# VERSION: 0003
 #
 # CREATORS: Maria Robertson
 # CREDIT: Nicolas Prothais (for original np_curveOffset.mel script)
@@ -125,8 +125,9 @@ def offset_release():
 		else:
 			for j in range(len(list(all_keyable_attr))):
 				result.append(-1 * (attr_value[j] - second_attr_value[j]))
-				time_range_str = "{}:{}".format(time_range[0], time_range[-1])
-				cmds.keyframe(obj_attr_name[j], animation="objects", relative=True, time=(time_range_str), valueChange=(0 + result[j]))
+				# Pass the time range as a tuple.
+				time_range_tuple = (time_range[0], time_range[-1])
+				cmds.keyframe(obj_attr_name[j], animation="objects", relative=True, time=time_range_tuple, valueChange=(0 + result[j]))
 
 	finally:
 		# If auto keyframe was originally on, restore its state.
@@ -138,6 +139,9 @@ def offset_release():
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2024-02-02 - 0003:
+#	- Fixing error "Invalid arguments for flag 'time'.  Expected (time, [time]), got str", by passing time range as a tuple.
+#
 # 2024-02-02 - 0002:
 #	- Fixing undo queue, so autokeyframe doesn't unexpectadly get disabled when undoing.
 #
