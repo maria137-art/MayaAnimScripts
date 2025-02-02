@@ -24,10 +24,10 @@
 # RUN COMMAND:
 # ---------------------------------------
 import importlib
-import mr_round_rotations_toNearest360
-importlib.reload(mr_round_rotations_toNearest360)
+import mr_roundRotationsToNearest360
+importlib.reload(mr_roundRotationsToNearest360)
 
-mr_round_rotations_toNearest360.round_rotation()
+mr_roundRotationsToNearest360.round_rotation()
 
 # ---------------------------------------
 # WISH LIST:
