@@ -330,94 +330,98 @@ def reset_attributes_to_default_value(
     if original_autoKey_state: 
         cmds.autoKeyframe(state=False)
 
-    # ---------------------------------------
-    # 01. FOR EVERY OBJECT.
-    # ---------------------------------------
-    for obj in selection:
+    try:
+        # ---------------------------------------
+        # 01. FOR EVERY OBJECT.
+        # ---------------------------------------
+        for obj in selection:
 
-        # ---------------------------------------
-        # 02. GET ATTRIBUTES.
-        # ---------------------------------------
-        if not attributes:
-            if reset_selected_attributes:
-                attributes = get_selected_channels() or cmds.listAttr(obj, keyable=True, unlocked=True)
-            else:
-                attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
-
-        # ---------------------------------------
-        # 02. GET VAILD ATTRIBUTES.
-        # ---------------------------------------
-        if attributes:
-            valid_attributes = []
-            for attr in attributes:
-                # Check if it exists.
-                if cmds.attributeQuery(attr, node=obj, exists=True):
-
-                    # Skip if non-numeric attributes should be ignored.
-                    if not reset_non_numeric_attributes:
-                        if not is_attribute_numeric(obj, attr):
-                            continue
-                    valid_attributes.append(attr)
+            # ---------------------------------------
+            # 02. GET ATTRIBUTES.
+            # ---------------------------------------
+            if not attributes:
+                if reset_selected_attributes:
+                    attributes = get_selected_channels() or cmds.listAttr(obj, keyable=True, unlocked=True)
                 else:
-                    continue
-            if valid_attributes:
-                valid_object_attributes = get_object_attributes(
-                    selection=obj,
-                    attributes=valid_attributes, 
-                    filter_locked=True, 
-                    filter_muted=True, 
-                    filter_constrained=True, 
-                    filter_connected=True
-                )
+                    attributes = cmds.listAttr(obj, keyable=True, unlocked=True)
 
-        else:
-            print_warning_from_caller('Nothing to reset')
-            return
+            # ---------------------------------------
+            # 02. GET VAILD ATTRIBUTES.
+            # ---------------------------------------
+            valid_attributes = []
+            valid_object_attributes = [] 
 
-        # ---------------------------------------
-        # 02. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
-        # ---------------------------------------
-        all_keyable_object_attributes = cmds.listAttr(obj, keyable=True, unlocked=True, nodeName=True)
-        animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
+            if attributes:
+                for attr in attributes:
+                    # Check if it exists.
+                    if cmds.attributeQuery(attr, node=obj, exists=True):
 
-        for curve in animation_curves:
-            set_animation_curve_template_state(curve, lock_state=False)
-
-        # ---------------------------------------
-        # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
-        # ---------------------------------------
-        for obj_attr in valid_object_attributes:
-            obj, attr = obj_attr.split('.')
-
-            # Get the default value and check if the attribute is keyed.
-            defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
-            if defaultValue:
-                defaultValue = defaultValue[0]
-                has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
-
-                try:
-                    # Using a try, as don't know yet how to query if an attribute is connected.
-                    # e.g. ERROR: setAttr: The attribute 'rivet.translateX' is locked or connected and cannot be modified.
-
-                    # Set the attribute to its default value.
-                    cmds.setAttr(obj_attr, defaultValue)
-                    # Only set keys if the attribute already is keyed.
-                    if has_keyframes:
-                        cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
-                except:
-                    print(f"{obj_attr} could not be reset.")
-                finally:
-                    continue
+                        # Skip if non-numeric attributes should be ignored.
+                        if not reset_non_numeric_attributes:
+                            if not is_attribute_numeric(obj, attr):
+                                continue
+                        valid_attributes.append(attr)
+                    else:
+                        continue
+                if valid_attributes:
+                    valid_object_attributes = get_object_attributes(
+                        selection=obj,
+                        attributes=valid_attributes, 
+                        filter_locked=True, 
+                        filter_muted=True, 
+                        filter_constrained=True, 
+                        filter_connected=True
+                    )
 
             else:
-                # print(f"Attribute {attr} has no default value on object {obj}.")
+                print_warning_from_caller(f'{obj} has no valid attributes to reset.')
                 continue
+
+            # ---------------------------------------
+            # 02. UNTEMPLATE ALL KEYABLE ANIMATION CURVES.
+            # ---------------------------------------
+            all_keyable_object_attributes = cmds.listAttr(obj, keyable=True, unlocked=True, nodeName=True)
+            animation_curves = get_animation_curves_from_object_attributes(all_keyable_object_attributes)
+
+            for curve in animation_curves:
+                set_animation_curve_template_state(curve, lock_state=False)
+
+            # ---------------------------------------
+            # 01. RESET ATTRIBUTES TO DEFAULT VALUES.
+            # ---------------------------------------
+            for obj_attr in valid_object_attributes:
+                obj, attr = obj_attr.split('.')
+
+                # Get the default value and check if the attribute is keyed.
+                defaultValue = cmds.attributeQuery(attr, node=obj, listDefault=True)
+                if defaultValue:
+                    defaultValue = defaultValue[0]
+                    has_keyframes = cmds.keyframe(obj_attr, query=True, keyframeCount=True)
+
+                    try:
+                        # Using a try, as don't know yet how to query if an attribute is connected.
+                        # e.g. ERROR: setAttr: The attribute 'rivet.translateX' is locked or connected and cannot be modified.
+
+                        # Set the attribute to its default value.
+                        cmds.setAttr(obj_attr, defaultValue)
+                        # Only set keys if the attribute already is keyed.
+                        if has_keyframes:
+                            cmds.setKeyframe(obj, attribute=attr, value=defaultValue)
+                    except:
+                        print(f"{obj_attr} could not be reset.")
+                    finally:
+                        continue
+
+                else:
+                    # print(f"Attribute {attr} has no default value on object {obj}.")
+                    continue
 
     # ---------------------------------------
     # 01. RESTORE AUTOKEYFRAME STATE
     # ---------------------------------------
-    if original_autoKey_state:
-        cmds.autoKeyframe(state=True)
+    finally:
+        if original_autoKey_state:
+            cmds.autoKeyframe(state=True)
   
 ##################################################################################################################################################
 
@@ -614,7 +618,8 @@ def is_attribute_numeric(obj, attr):
         return
 
     attrType = cmds.getAttr(object_attribute_name, type=True)
-    return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
+    # return attrType in ["float", "bool", "doubleLinear", "doubleAngle", "double"]
+    return attrType in ["float", "doubleLinear", "doubleAngle", "double"]
 
 # ------------------------------------------------------------------------------ #
 def is_constrained(node):
@@ -901,7 +906,7 @@ def get_layered_attributes(obj, filter_selected_animation_layers=False):
     # ---------------------------------------
     animation_layers = cmds.listConnections(obj, type="animLayer")
     if not animation_layers:
-        print_warning_from_caller("No animation layers connected.")
+        display_viewport_warning("No animation layers connected.")
         return
     # Remove duplicates.
     animation_layers = list(set(animation_layers))
@@ -1130,7 +1135,7 @@ def display_viewport_warning(message, position='midCenterTop'):
     caller_function_name = inspect.currentframe().f_back.f_code.co_name
 
     OpenMaya.MGlobal.displayWarning(message)
-    fadeTime = min(len(message)*100, 2000)
+    fadeTime = min(len(message)*100, 500)
     cmds.inViewMessage( message=f"{message}\n\n    Warning from {caller_function_name}()", pos=position, fade=True, fadeStayTime=fadeTime, dragKill=True)
 
 # ------------------------------------------------------------------------------ #
@@ -1246,7 +1251,6 @@ def set_animation_curve_template_state(animation_curves, lock_state=False):
             if cmds.objExists(full_name):
                 cmds.setAttr(full_name, lock=lock_state)
 
-
 # ------------------------------------------------------------------------------ #
 def set_corresponding_attribute_states(source, target, mode, keyable=False, lock=True):
     """
@@ -1264,7 +1268,7 @@ def set_corresponding_attribute_states(source, target, mode, keyable=False, lock
 
         target_attr = target + "." + attr
         target_lock = cmds.getAttr(target_attr, lock=lock)
-        target_keyable = cmds.getAttr(target_attr, keyable=keyable)
+        target_keyable = cmds.getAttr(target_attr, keyable=True)
 
         if target_lock or not target_keyable:
             cmds.setAttr(source_attr, keyable=keyable)
@@ -1288,6 +1292,28 @@ def set_attribute_state(source, attr, keyable=False, lock=True):
     cmds.setAttr(source_attr, keyable=keyable)
     cmds.setAttr(source_attr, lock=lock)
 
+##################################################################################################################################################
+
+########################################################################
+#                                                                      #
+#                           TRANSFORM FUNCTIONS                        #
+#                                                                      #
+########################################################################
+
+def distribute_objects(x_distance=0):
+    """
+
+
+    """
+    selection = cmds.ls(selection=True)
+    if not selection:
+        display_viewport_warning("Please select objects to distribute.")
+        return
+    
+    num_objects = len(selection)
+    for i, obj in enumerate(selection):
+        new_translate_x = i * x_distance
+        cmds.setAttr(obj + ".translateX", new_translate_x)
 
 """
 ##################################################################################################################################################
