@@ -54,6 +54,16 @@ mr_keyscaler.main(0.8)
 
 import maya.cmds as cmds
 
+def ui():
+    if cmds.window("keyScalerWindow", exists=True):
+        cmds.deleteUI("keyScalerWindow")
+
+    window = cmds.window("keyScalerWindow", title="Multi Key Scaler", sizeable=False)
+    cmds.columnLayout(adjustableColumn=True)
+    slider = cmds.floatSliderGrp("scaleSlider", label="Scale", field=True, min=-1.0, max=3.0, value=1.0)
+    cmds.button(label="Scale It", command=lambda x: main(cmds.floatSliderGrp("scaleSlider", query=True, value=True)))
+    cmds.showWindow(window)
+
 def main(scale_amount=None):
 
     # ------------------------------------------------------------------- 
