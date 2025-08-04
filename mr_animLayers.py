@@ -274,8 +274,8 @@ def toggle_mute_selected_animation_layers():
         is_muted = cmds.getAttr(anim_layer + ".mute")
         cmds.animLayer(anim_layer, edit=True, mute=not is_muted)
 
-        # Re-evaluate the current frame to ensure any adjustments made to objects on the animation layer are preserved before toggling.
-        cmds.currentTime(cmds.currentTime(query=True), edit=True)
+    # Re-evaluate the current frame to ensure any adjustments made to objects on the animation layer are preserved before toggling.
+    cmds.currentTime(cmds.currentTime(query=True), edit=True)
 
 ##################################################################################################################################################
 
