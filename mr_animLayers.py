@@ -56,8 +56,8 @@ def bake_to_selected_override_animation_layer(simulation=True, preserveOutsideKe
 
     Example Uses
     -------
-    Found this helpful when working with multiple Override animation layers in a scene, and wanting to bake information from others layers to it.
-    Personally find it better than using Maya's Default Merge Layers, which currently seems to bake objects even if they aren't attached to other layers.
+    I found this helpful when working with multiple Override animation layers in a scene, and wanting to bake information from others layers to it.
+    Personally I find it better than using Maya's default "Merge Layers", which currently seems to bake objects even if they aren't attached to other layers.
 
     Wish List
     -------
@@ -91,7 +91,7 @@ def bake_to_selected_override_animation_layer(simulation=True, preserveOutsideKe
             cmds.refresh(suspend=1)
             if selected_layer == "BaseAnimation":
                 # Don't use -destinationLayer flag with "BaseAnimation".
-                # Otherwise, for some reason it stops user from setting keys on the object, until all animation layers are deleted.
+                # Otherwise, for some reason it stops users from setting keys on the object, until all animation layers are deleted.
                 cmds.bakeResults(
                     simulation=simulation,
                     time=(min_time, max_time),
@@ -186,7 +186,7 @@ def set_key_every_frame_on_animation_layers(
     reset_to_default_value=True
 ):
     """
-    (I can't remember why I made this... Maybe to clickly make manual noise on animation layers?
+    (I can't remember why I made this... Maybe to quickly make manual noise on animation layers?
     Or to reset every keyframe on animation layers? In which case, need to stop it processing every frame regardless.)
 
     :param filter_selected_animation_layers: If True, filter only selected animation layers.
@@ -255,6 +255,27 @@ def set_key_every_frame_on_animation_layers(
                 cmds.setKeyframe(selection, animLayer=layer, identity=True)
             else:
                 cmds.setKeyframe(selection, animLayer=layer)          
+
+# ------------------------------------------------------------------------------ #
+def toggle_mute_selected_animation_layers():
+    """
+    Toggle mute selected animation layers to quickly compare differences.
+
+    """
+
+    # Use MEL to get all highlighted animation layers in the AnimLayerTab
+    mel_cmd = 'getSelectedAnimLayer("AnimLayerTab")'
+    highlighted_layers = mel.eval(mel_cmd)
+
+    if not highlighted_layers:
+        return
+
+    for anim_layer in highlighted_layers:
+        is_muted = cmds.getAttr(anim_layer + ".mute")
+        cmds.animLayer(anim_layer, edit=True, mute=not is_muted)
+
+        # Re-evaluate the current frame to ensure any adjustments made to objects on the animation layer are preserved before toggling.
+        cmds.currentTime(cmds.currentTime(query=True), edit=True)
 
 ##################################################################################################################################################
 
@@ -688,6 +709,11 @@ def remove_object_attribute(animation_layer, object_attribute):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+#
+# 2025-08-04 - 0011:
+#   - Added function:
+#       - toggle_mute_selected_animation_layers()
+#
 # 2024-03-16 - 0010:
 #   - Adding functions:
 #       - remove_inactive_object_attributes()
