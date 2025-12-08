@@ -36,13 +36,14 @@ import maya.cmds as cmds
 def main():
     sel = cmds.ls(selection=True)
     if len(sel) >= 2:
-        # Get the pivot to match.
-        target_pivot = cmds.xform(sel[-1], query=True, worldSpace=True, rotatePivot=True)
+        # Get the target pivots (rotate + scale)
+        target_rotate = cmds.xform(sel[-1], q=True, ws=True, rp=True)
+        target_scale  = cmds.xform(sel[-1], q=True, ws=True, sp=True)
 
-        # For every selected object (except the last one),
+        # Apply to all but last object
         for obj in sel[:-1]:
-            # match its pivot to the target_pivot.
-            cmds.xform(obj, worldSpace=True, rotatePivot=target_pivot)
+            cmds.xform(obj, ws=True, rp=target_rotate)
+            cmds.xform(obj, ws=True, sp=target_scale)
 
         # Deselect the target_pivot's object (to make it clearer the script has finished).
         cmds.select(sel[-1], deselect=True)
