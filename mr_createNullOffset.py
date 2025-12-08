@@ -122,7 +122,7 @@ def mr_createNullOffset_keyed():
     # If keyed, bake them to spare locators, to hold their worldspace position while placing the item in a parent.
     if keyed_objects:
         cmds.select(keyed_objects)
-        mr_bakeToWorldspace.mr_bakeToWorldspace("both")
+        mr_bakeToWorldspace.main("both")
                   
     # Create null group.
     
@@ -226,7 +226,7 @@ def mr_createNullOffset_static():
 
     if keyed_objects:
         cmds.select(keyed_objects)
-        mr_bakeToWorldspace.mr_bakeToWorldspace("both")
+        mr_bakeToWorldspace.main("both")
 
     for item in sel:
         if parent and parent[0].endswith("_offset_grp"):
