@@ -1,12 +1,12 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_selectCurveTangents.py
-# VERSION: 0003
+# VERSION: 0004
 #
 # CREATORS: Maria Robertson
 # CREDIT: Morten Andersen (for original select_curve_tangents.py)
 # ---------------------------------------
-#
+# Last tested for Autodesk Maya 2027
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
@@ -14,8 +14,6 @@
 #
 # Adapted from Morten Anderson's select_curve_tangents.py, to switch between in and out tangents.
 #   https://github.com/monoteba/maya/blob/master/scripts/animation/select_curve_tangents/select_curve_tangents.py
-#
-# Modified 
 #
 # ---------------------------------------
 # RUN COMMANDS:
@@ -30,9 +28,66 @@ mr_selectCurveTangents.main(tangent_handle='inTangent')
 # TO TOGGLE BETWEEN THEM:
 mr_selectCurveTangents.toggle()
 
+"""
+
+import maya.cmds as cmds
+ 
+def main(tangent_handle=None):
+    """
+    Select the specified tangent handle type for selected keys in the Graph Editor.
+ 
+    :param tangent_handle: The tangent handle to manipulate, either 'inTangent' or 'outTangent'.
+    :type tangent_handle: str
+    """
+    if tangent_handle not in ['inTangent', 'outTangent']:
+        cmds.warning("Invalid tangent_handle. Please use 'inTangent' or 'outTangent'.")
+        return
+ 
+    anim_curves = cmds.keyframe(query=True, name=True)
+    if not anim_curves:
+        return
+ 
+    for curve in anim_curves:
+        keys = cmds.keyframe(curve, query=True, timeChange=True, selected=True)
+        if not keys:
+            continue
+ 
+        for key in keys:
+            if tangent_handle == 'inTangent':
+                cmds.selectKey(curve, add=True, inTangent=True, time=(key, key))
+                cmds.selectKey(curve, remove=True, outTangent=True, time=(key, key))
+ 
+            elif tangent_handle == 'outTangent':
+                cmds.selectKey(curve, remove=True, inTangent=True, time=(key, key))
+                cmds.selectKey(curve, add=True, outTangent=True, time=(key, key))
+ 
+ 
+# -------------------------------------------------------------------
+def toggle():
+    """
+    Toggle between the in and out tangent of selected keys in the Graph Editor.
+    """
+    global last_tangent_type
+ 
+    if 'last_tangent_type' not in globals():
+        last_tangent_type = 'inTangent'
+ 
+    if last_tangent_type == 'inTangent':
+        main(tangent_handle='outTangent')
+        last_tangent_type = 'outTangent'
+    else:
+        main(tangent_handle='inTangent')
+        last_tangent_type = 'inTangent'
+
+"""
+##################################################################################################################################################
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2026-05-28
+#   - Updating for Maya 2027:
+#       - Removing PyMel.
+#
 # 2023-01-12 - 0003:
 #   - Updating script name and descriptions.
 #
@@ -41,49 +96,6 @@ mr_selectCurveTangents.toggle()
 #
 # 2023-12-17 - 0001:
 # - First pass.
-# ------------------------------------------------------------------------------ #
+# ---------------------------------------
+##################################################################################################################################################
 """
-
-import pymel.core as pm
-
-def main(tangent_handle=None):
-    """
-    Select the specified tangent handle type for selected keys in the Graph Editor.
-
-    :param tangent_handle: The tangent handle to manipulate, either 'inTangent' or 'outTangent'.
-    :type tangent_handle: str
-    """
-    if tangent_handle not in ['inTangent', 'outTangent']:
-        pm.warning("Invalid tangent_handle. Please use 'inTangent' or 'outTangent'.")
-        return
-
-    anim_curves = pm.keyframe(query=True, name=True)
-
-    for curve in anim_curves:
-        keys = pm.keyframe(curve, query=True, timeChange=True, selected=True)
-
-        for key in keys:
-            if tangent_handle == 'inTangent':
-                pm.selectKey(curve, add=True, inTangent=True, time=key)
-                pm.selectKey(curve, remove=True, outTangent=True, time=key)
-                
-            elif tangent_handle == 'outTangent':
-                pm.selectKey(curve, remove=True, inTangent=True, time=key)
-                pm.selectKey(curve, add=True, outTangent=True, time=key)
-
-# -------------------------------------------------------------------
-def toggle():
-    """
-    Toggle between the select tangent of a key in the Graph Editor.
-    """
-    global last_tangent_type
-
-    if 'last_tangent_type' not in globals():
-        last_tangent_type = 'inTangent'
-
-    if last_tangent_type == 'inTangent':
-        main(tangent_handle='outTangent')
-        last_tangent_type = 'outTangent'
-    else:
-        main(tangent_handle='inTangent')
-        last_tangent_type = 'inTangent'
