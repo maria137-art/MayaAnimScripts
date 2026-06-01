@@ -1,11 +1,11 @@
 """
 # ------------------------------------------------------------------------------ #
 # SCRIPT: mr_set_currentTime_halfway.py
-# VERSION: 0006
+# VERSION: 0007
 #
 # CREATORS: Maria Robertson
 # ---------------------------------------
-# Last tested for Autodesk Maya 2023.3
+# Last tested for Autodesk Maya 2027
 # ---------------------------------------
 # DESCRIPTION: 
 # ---------------------------------------
@@ -92,14 +92,16 @@ def main(float=False):
     visible_animation_curves = cmds.animCurveEditor('graphEditor1GraphEd', query=True, curvesShown=True)
 
     if visible_animation_curves:
-        are_keys_at_currentTime = cmds.keyframe(query=True, time=(current_time, current_time), keyframeCount=True)
+        are_keys_at_currentTime = cmds.keyframe(
+            visible_animation_curves,
+            query=True,
+            time=(current_time, current_time),
+            keyframeCount=True
+        )
 
-        # If there are no keys,
         if are_keys_at_currentTime == 0:
-            # go to midpoint of next and previous keys.
             midPoint = get_midpoint_of_next_and_previous_key_at_currentTime(float=float)
             cmds.currentTime(midPoint)
-        # Otherwise, do nothing.
         else:
             return
 
@@ -154,6 +156,9 @@ def get_midpoint_of_next_and_previous_key_at_currentTime(float=False):
 # ---------------------------------------
 # CHANGELOG:
 # ---------------------------------------
+# 2026-06-01 - 0007:
+#   - Explicitly pass visible_animation_curves for are_keys_at_currentTime.
+#
 # 2024-02-25 - 0006:
 #   - Adding outcome for if mouse cursor is not over graph editor and no visible animation curves are there.
 #
